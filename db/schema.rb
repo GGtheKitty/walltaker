@@ -10,9 +10,8 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2024_10_27_161253) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_05_000900) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension "pg_trgm"
   enable_extension "plpgsql"
 
   # Custom types defined in this database.
@@ -198,18 +197,6 @@ ActiveRecord::Schema[7.2].define(version: 2024_10_27_161253) do
     t.index ["job_id"], name: "index_crono_jobs_on_job_id", unique: true
   end
 
-  create_table "form_elements", force: :cascade do |t|
-    t.string "label", null: false
-    t.integer "kind", null: false
-    t.bigint "survey_id", null: false
-    t.integer "sort_order", null: false
-    t.boolean "required", default: false, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["survey_id", "sort_order"], name: "index_form_elements_on_survey_id_and_sort_order", unique: true
-    t.index ["survey_id"], name: "index_form_elements_on_survey_id"
-  end
-
   create_table "friendships", force: :cascade do |t|
     t.bigint "sender_id", null: false
     t.bigint "receiver_id"
@@ -246,20 +233,24 @@ ActiveRecord::Schema[7.2].define(version: 2024_10_27_161253) do
   end
 
   create_table "kinks", force: :cascade do |t|
-    t.string "name", limit: 30, null: false
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.boolean "works_on_e621", default: false, null: false
+    t.index ["name"], name: "index_kinks_on_name"
   end
 
   create_table "leashes", force: :cascade do |t|
-    t.bigint "friendship_id", null: false
-    t.bigint "master_id", null: false
     t.bigint "pet_id", null: false
+    t.bigint "master_id", null: false
+    t.bigint "friendship_id", null: false
+    t.string "flair"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.text "flair"
+    t.datetime "accepted_at"
     t.index ["friendship_id"], name: "index_leashes_on_friendship_id"
     t.index ["master_id"], name: "index_leashes_on_master_id"
-    t.index ["pet_id"], name: "index_leashes_on_pet_id"
+    t.index ["pet_id"], name: "index_leashes_on_pet_id", unique: true
   end
 
   create_table "link_abilities", force: :cascade do |t|
@@ -395,9 +386,9 @@ ActiveRecord::Schema[7.2].define(version: 2024_10_27_161253) do
     t.bigint "user_id", null: false
     t.text "details"
     t.bigint "link_id"
+    t.boolean "was_shown", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.boolean "was_shown", default: false
     t.index ["link_id"], name: "index_scoops_on_link_id"
     t.index ["user_id"], name: "index_scoops_on_user_id"
   end
@@ -525,46 +516,23 @@ ActiveRecord::Schema[7.2].define(version: 2024_10_27_161253) do
 
   create_table "surrenders", force: :cascade do |t|
     t.bigint "user_id", null: false
+    t.bigint "controller_user_id", null: false
     t.bigint "friendship_id", null: false
-    t.datetime "expires_at", precision: nil
+    t.integer "duration_hours", default: 24, null: false
+    t.boolean "pending", default: false, null: false
+    t.datetime "accepted_at"
+    t.datetime "expires_at"
+    t.string "token", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "accepted_consequences", default: false
-    t.boolean "pending", default: false
     t.boolean "logged_in", default: false
     t.string "current_page"
+    t.index ["controller_user_id"], name: "index_surrenders_on_controller_user_id"
     t.index ["friendship_id"], name: "index_surrenders_on_friendship_id"
+    t.index ["token"], name: "index_surrenders_on_token", unique: true
+    t.index ["user_id", "controller_user_id"], name: "index_surrenders_on_user_id_and_controller_user_id"
     t.index ["user_id"], name: "index_surrenders_on_user_id"
-  end
-
-  create_table "survey_response_answers", force: :cascade do |t|
-    t.bigint "form_element_id", null: false
-    t.bigint "survey_response_id", null: false
-    t.text "value"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["form_element_id"], name: "index_survey_response_answers_on_form_element_id"
-    t.index ["survey_response_id"], name: "index_survey_response_answers_on_survey_response_id"
-  end
-
-  create_table "survey_responses", force: :cascade do |t|
-    t.bigint "survey_id", null: false
-    t.bigint "user_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.text "comment", default: ""
-    t.index ["survey_id"], name: "index_survey_responses_on_survey_id"
-    t.index ["user_id"], name: "index_survey_responses_on_user_id"
-  end
-
-  create_table "surveys", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.text "title", null: false
-    t.text "description", default: "", null: false
-    t.boolean "public", default: false, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["user_id"], name: "index_surveys_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -579,14 +547,14 @@ ActiveRecord::Schema[7.2].define(version: 2024_10_27_161253) do
     t.integer "set_count", default: 0, null: false
     t.bigint "viewing_link_id"
     t.string "password_reset_token"
+    t.boolean "is_reporter", default: false
+    t.boolean "advanced", default: false, null: false
     t.string "mascot"
     t.boolean "pervert"
     t.boolean "quarantined", default: false
     t.integer "colour_preference", default: 0
-    t.boolean "advanced", default: false, null: false
-    t.bigint "profile_id"
     t.boolean "flagged", default: false
-    t.boolean "is_reporter", default: false
+    t.bigint "profile_id"
     t.boolean "is_cutie", default: false
     t.boolean "is_supporter", default: false
     t.index ["email"], name: "unique_emails", unique: true
@@ -601,7 +569,6 @@ ActiveRecord::Schema[7.2].define(version: 2024_10_27_161253) do
   add_foreign_key "banned_ips", "users", column: "banned_by_id"
   add_foreign_key "comments", "links"
   add_foreign_key "comments", "users"
-  add_foreign_key "form_elements", "surveys"
   add_foreign_key "friendships", "users", column: "receiver_id"
   add_foreign_key "friendships", "users", column: "sender_id"
   add_foreign_key "history_events", "ahoy_visits"
@@ -637,11 +604,7 @@ ActiveRecord::Schema[7.2].define(version: 2024_10_27_161253) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "surrenders", "friendships"
   add_foreign_key "surrenders", "users"
-  add_foreign_key "survey_response_answers", "form_elements"
-  add_foreign_key "survey_response_answers", "survey_responses"
-  add_foreign_key "survey_responses", "surveys"
-  add_foreign_key "survey_responses", "users"
-  add_foreign_key "surveys", "users"
+  add_foreign_key "surrenders", "users", column: "controller_user_id"
   add_foreign_key "users", "links", column: "viewing_link_id"
   add_foreign_key "users", "profiles"
 end

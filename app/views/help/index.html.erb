@@ -71,8 +71,8 @@
               Once you have achieved the silver trophy (by having set 300 wallpapers to other users), then you will be
               able to set a custom URL.
               This means that in addition to your regular walltaker link URL
-              (<code>https://walltaker.joi.how/links/1</code>), you can provide your own
-              text for a custom url. It will also be accessible as <strong>https://walltaker.joi.how/links/
+              (<code><%= walltaker_url("/links/1") %></code>), you can provide your own
+              text for a custom url. It will also be accessible as <strong><%= walltaker_url("/links/") %>
               <mark>your-text-here</mark>
             </strong>
             </p>
@@ -350,7 +350,7 @@
 
     <p>
       Now it's time to share your link! This couldn't be easier. Just copy and paste the URL from your browser. it
-      should look like <code>https://walltaker.joi.how/links/420</code> where the last number is your link ID.
+      should look like <code><%= walltaker_url("/links/420") %></code> where the last number is your link ID.
       <strong>
         Share this with anyone you want! This is where people edit your wallpaper.
       </strong>

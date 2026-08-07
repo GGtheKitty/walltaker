@@ -1,22 +1,49 @@
 version: "3"
 services:
   database:
-    image: postgres
-    ports:
-      - "5432:5432"
+    image: postgres:14
     volumes:
       - ./.docker/volumes/walltaker_database2:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+  redis:
+    image: redis:7-alpine
 
   web:
     build: .
+    command: bash -lc 'ruby -rsocket -e "loop { begin; TCPSocket.new(\"database\", 5432).close; break; rescue; sleep 1; end }" && bundle exec rails assets:precompile && bundle exec rails db:prepare && bundle exec rails server -e production -b 0.0.0.0'
     volumes:
       - ./:/ror
     ports:
-      - "3100:3000"
+      - "3000:3000"
     depends_on:
       - database
+      - redis
     environment:
       - POSTGRES_USER=postgres
+      - DATABASE_URL=postgres://postgres@database:5432/walltaker
+      - SECRET_KEY_BASE=local_development_secret_key_base
+      - REDIS_URL=redis://redis:6379/1
+      - RAILS_SERVE_STATIC_FILES=true
+      - WALLTAKER_BASE_URL=https://devenv.playctrl.me
+      - WALLTAKER_HOST=devenv.playctrl.me
 
+  pornbot_scheduler:
+    build: .
+    command: bash -lc 'ruby -rsocket -e "loop { begin; TCPSocket.new(\"database\", 5432).close; break; rescue; sleep 1; end }" && while true; do bundle exec rake walltaker:porn_bot_round; sleep "$${PORNBOT_INTERVAL_SECONDS:-600}"; done'
+    volumes:
+      - ./:/ror
+    depends_on:
+      - database
+      - redis
+    environment:
+      - POSTGRES_USER=postgres
+      - DATABASE_URL=postgres://postgres@database:5432/walltaker
+      - SECRET_KEY_BASE=local_development_secret_key_base
+      - REDIS_URL=redis://redis:6379/1
+      - RAILS_ENV=production
+      - PORNBOT_INTERVAL_SECONDS=600
+      - WALLTAKER_BASE_URL=https://devenv.playctrl.me
+      - WALLTAKER_HOST=devenv.playctrl.me

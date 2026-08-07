@@ -2,6 +2,10 @@
 
 one:
   friendship: one
+  master: one
+  pet: one
 
 two:
   friendship: two
+  master: two
+  pet: two

@@ -42,9 +42,9 @@ class KinkController < ApplicationController
   end
 
   def update
-    kink_name = kink_params['name']
+    kink_name = Kink.normalize_name(kink_params['name'])
 
-    kink = Kink.find_by_name kink_name
+    kink = Kink.find_by(name: kink_name)
     if kink
       begin
         current_user.kinks << kink

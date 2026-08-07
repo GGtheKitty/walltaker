@@ -44,9 +44,19 @@ Rails.application.configure do
   # config.action_cable.mount_path = nil
   # config.action_cable.url = "wss://example.com/cable"
   # config.action_cable.allowed_request_origins = [ "http://example.com", /http:\/\/example.*/ ]
-  config.action_cable.allowed_request_origins = [ "https://walltaker.joi.how", /https:\/\/walltaker.joi.how/, /http:\/\/walltaker.joi.how/, "localhost", 'walltaker-7e4cf22c7c3d.herokuapp.com' ]
+  config.action_cable.allowed_request_origins = [
+    ENV.fetch("WALLTAKER_BASE_URL", "https://walltaker.joi.how"),
+    "https://devenv.playctrl.me",
+    /https:\/\/devenv.playctrl.me/,
+    /http:\/\/devenv.playctrl.me/,
+    "localhost",
+    'walltaker-7e4cf22c7c3d.herokuapp.com'
+  ]
   config.action_cable.disable_request_forgery_protection = true
   config.hosts << "localhost"
+  config.hosts << "127.0.0.1"
+  config.hosts << "0.0.0.0"
+  config.hosts << "devenv.playctrl.me"
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   # Can be used together with config.force_ssl for Strict-Transport-Security and secure cookies.

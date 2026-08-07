@@ -6,6 +6,7 @@
   <title><%= content_for?(:html_title) ? yield(:html_title) : "Walltaker" %></title>
   <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1">
   <meta name="rating" content="adult"/>
+  <meta name="walltaker-base-url" content="<%= walltaker_base_url %>"/>
   <%= favicon_link_tag 'mascot/KiHead.png' if mascot == 'ki' %>
   <%= favicon_link_tag 'mascot/WarrenHead.png' if mascot == 'warren' %>
   <%= favicon_link_tag 'mascot/TaylorHead.png' if mascot == 'taylor' %>

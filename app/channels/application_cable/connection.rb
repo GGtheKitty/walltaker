@@ -3,18 +3,34 @@ module ApplicationCable
     attr_accessor :watched_links, :current_user
 
     def connect
-      @watched_links = []
+      @watched_links = {}
       @current_user = connection_current_user
     end
 
     def disconnect
-      self.watched_links.each do |link|
-        link.live_client_started_at = nil
-        link.save
+      self.watched_links.each do |link_id, connection_id|
+        link = Link.find_by(id: link_id)
+        next unless link
+        next unless LinkPresence.leave(link, connection_id)
+
+        link.update(live_client_started_at: nil)
       end
-      
-      self.watched_links = []
+
+      self.watched_links = {}
       self.current_user&.leave_link
+    end
+
+    def user_agent
+      @request.user_agent
+    end
+
+    def client_identity
+      [
+        @request.user_agent,
+        @request.headers['joihow'],
+        @request.headers['User_Agent'],
+        @request.headers['Wallpaper-Engine-Client'].present? ? "Wallpaper-Engine-Client/#{@request.headers['Wallpaper-Engine-Client']}" : nil
+      ].compact_blank.join(' ')
     end
 
     private

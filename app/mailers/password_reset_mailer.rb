@@ -1,5 +1,5 @@
 class PasswordResetMailer < ApplicationMailer
-  default :from => 'mailgun@walltaker.joi.how'
+  default from: -> { SiteConfig.mail_from }
   
   # @param [User] user
   def reset_password(user)
