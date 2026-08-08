@@ -1,0 +1,37 @@
+<h2>Nut Tracker History</h2>
+
+<% if @nut_pledges.empty? %>
+  <p>No NNN pledges yet.</p>
+<% else %>
+  <table>
+    <thead>
+    <tr>
+      <th>Year</th>
+      <th>Status</th>
+      <th>Signed</th>
+    </tr>
+    </thead>
+    <tbody>
+    <% @nut_pledges.each do |pledge| %>
+      <tr>
+        <td>NNN<%= pledge.year %></td>
+        <td>
+          <% if pledge.failed? %>
+            <div class="nut-pledge-history__status">
+              <span>Failed on day <%= pledge.failed_on.strftime("%e") %></span>
+              <% if pledge.past_link.present? %>
+                <div class="nut-pledge-history__preview"><%= image_tag pledge.past_link.post_url %></div>
+              <% end %>
+            </div>
+          <% elsif pledge.succeeded? %>
+            Succeeded
+          <% else %>
+            In progress
+          <% end %>
+        </td>
+        <td><%= pledge.created_at.strftime("%B %-d, %Y") %></td>
+      </tr>
+    <% end %>
+    </tbody>
+  </table>
+<% end %>

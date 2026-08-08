@@ -21,7 +21,7 @@
         <% if link.is_online? %>
           <strong class="online">
             Online
-            <% if link.live_client_started_at %>
+            <% if LinkPresence.online?(link) %>
               <ion-icon name="pulse-sharp"></ion-icon>
             <% end %>
           </strong>

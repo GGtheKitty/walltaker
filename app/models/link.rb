@@ -28,8 +28,10 @@ class Link < ApplicationRecord
   pg_search_scope :search_negative, against: :blacklist, using: { tsearch: { dictionary: 'english', any_word: true } }
 
   scope :is_online, -> {
+    live_client_link_ids = LinkPresence.online_link_ids
+
     where('last_ping > ?', Time.now - 1.minute)
-      .or(where('live_client_started_at > ?', Time.now - LinkPresence::TTL))
+      .or(where(id: live_client_link_ids))
       .or(where("last_ping_user_agent LIKE '%widgetExtension%'").where('last_ping > ?', Time.now - 20.minutes))
   }
 
@@ -48,7 +50,7 @@ class Link < ApplicationRecord
 
     last_ping_online = last_ping > Time.now - 20.minutes if is_ios && last_ping_user_agent && last_ping
     last_ping_online = last_ping > Time.now - 1.minute if !is_ios && last_ping_user_agent && last_ping
-    live_client_online = LinkPresence.online?(self) || (live_client_started_at && (live_client_started_at > Time.now - LinkPresence::TTL))
+    live_client_online = LinkPresence.online?(self)
     !!(last_ping_online || live_client_online)
   end
 

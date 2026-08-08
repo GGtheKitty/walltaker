@@ -50,6 +50,20 @@
   <%= button_to "Recent Events", mod_tools_events_index_path, method: :get %>
 </section>
 
+<section>
+  <h3>Global Toggles</h3>
+  <% nut_tracker_enabled = SiteConfig.nut_tracker_enabled? %>
+  <%= button_to(
+        nut_tracker_enabled ? "Disable Nut Tracker (NNN)" : "Enable Nut Tracker (NNN)",
+        mod_tools_toggle_nut_tracker_path,
+        method: :post,
+        class: nut_tracker_enabled ? 'secondary' : nil,
+        data: {
+          turbo_confirm: "Are you sure you want to #{nut_tracker_enabled ? 'disable' : 'enable'} Nut Tracker (NNN)?"
+        }
+      ) %>
+</section>
+
 <!--<section>
   <h3>Moderation</h3>
   <%#= button_to "I need to ban a user with an account", mod_tools_passwords_index_path, method: :get %>

@@ -1,14 +1,37 @@
+<% mascot = @user&.mascot || 'ki' %>
+
 <%= turbo_frame_tag :pledge do %>
   <% if @nut_pledge %>
     <% if @nut_pledge.failed? %>
-      <div class="nut_pledge_failed">
-        <ion-icon name="water"></ion-icon>
-        Failed NNN2024 on day <%= @nut_pledge.failed_on.strftime("%e") %>
-        <% if @nut_pledge.id == 253 %>
-          with first anal orgasm
-        <% end %>
-        <% if @nut_pledge.past_link.present? %>
-          <div class="preview"><%= image_tag @nut_pledge.past_link.post_url %></div>
+      <div class="accent-block spaced flat-bottom">
+        <div class="nut_pledge_failed">
+          <ion-icon name="water"></ion-icon>
+          Failed NNN<%= @nut_pledge.failed_on.year %> on day <%= @nut_pledge.failed_on.strftime("%e") %>
+          <% if @nut_pledge.id == 253 %>
+            with first anal orgasm
+          <% end %>
+          <% if @nut_pledge.past_link.present? %>
+            <div class="preview"><%= image_tag @nut_pledge.past_link.post_url %></div>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <div class="accent-block spaced flat-bottom">
+        <div class="accent-block__charm">
+          No Nut November <%= @nut_pledge.year %>
+        </div>
+        <p>I hereby pledge, as <%= mascot.capitalize %> as my witness, that I will not cum, squirt, ejaculate,
+          orgasm, or otherwise experience any derivative thereof a pelvic sneeze, during the entire month of November,
+          so help me <%= mascot.capitalize %>.</p>
+        <p><strong>Signed <%= @nut_pledge.created_at.strftime("%B %-d, %Y") %>.</strong></p>
+        <p><%= link_to 'Tracker History', history_user_nut_pledge_path(@user.username), data: { turbo_frame: '_top' } %></p>
+
+        <% if @is_current_user %>
+          <div class="center">
+            <%= button_to user_nut_pledge_path(@user.username), class: 'danger-button', method: :put, form: { data: { 'turbo-frame': 'pledge', turbo_confirm: 'Are you sure you want to mark your NNN pledge as failed?' } } do %>
+              I Failed
+            <% end %>
+          </div>
         <% end %>
       </div>
     <% end %>

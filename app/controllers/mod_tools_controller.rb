@@ -4,6 +4,15 @@ class ModToolsController < ApplicationController
   def index
   end
 
+  def toggle_nut_tracker
+    SiteConfig.nut_tracker_enabled = !SiteConfig.nut_tracker_enabled?
+    state = SiteConfig.nut_tracker_enabled? ? 'enabled' : 'disabled'
+
+    track :regular, :mod_toggle_nut_tracker, by: current_user.username, enabled: SiteConfig.nut_tracker_enabled?
+
+    redirect_to mod_tools_index_path, notice: "Nut Tracker (NNN) #{state}."
+  end
+
   def show_password_reset
   end
 

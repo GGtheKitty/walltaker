@@ -292,6 +292,19 @@ form.orgasms .form__row {
     }
 }
 
+.nut-pledge-history__status {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+}
+
+.nut-pledge-history__preview img {
+    display: block;
+    max-height: 90px;
+    max-width: 120px;
+    object-fit: contain;
+}
+
 .form__row--stacking {
     flex-wrap: wrap;
 }

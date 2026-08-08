@@ -26,6 +26,43 @@ class LinkTest < ActiveSupport::TestCase
     assert_not link.is_online?
   end
 
+  test 'recent live_client_started_at does not make a link online without redis presence' do
+    link = links(:one)
+    link.update!(last_ping: nil, last_ping_user_agent: nil, live_client_started_at: Time.now.utc)
+
+    assert_not link.is_online?
+    assert_not_includes Link.is_online, link
+  end
+
+  test 'redis presence makes a link online even when live_client_started_at is old' do
+    link = links(:one)
+    link.update!(
+      last_ping: nil,
+      last_ping_user_agent: nil,
+      live_client_started_at: LinkPresence::TTL.ago - 1.minute
+    )
+
+    LinkPresence.join(link, 'test-connection')
+
+    assert link.is_online?
+    assert_includes Link.is_online, link
+  end
+
+  test 'redis ttl expiry makes live client presence go offline' do
+    link = links(:one)
+    link.update!(last_ping: nil, last_ping_user_agent: nil, live_client_started_at: Time.now.utc)
+
+    LinkPresence.join(link, 'test-connection')
+    assert link.is_online?
+
+    travel LinkPresence::TTL + 1.second
+
+    assert_not link.is_online?
+    assert_not_includes Link.is_online, link
+  ensure
+    travel_back
+  end
+
   test 'api_payload matches client update shape' do
     link = links(:one)
     link.user.update!(username: 'payloaduser', email: 'payload@example.com')
