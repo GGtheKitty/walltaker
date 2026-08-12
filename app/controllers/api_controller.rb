@@ -71,7 +71,7 @@ class ApiController < ApplicationController
     begin
       @link.response_type = params[:type].nil? ? "horny" : params[:type]
     rescue
-      return render json: { message: 'type must be "horny", "disgust", or "came"' }, status: 400
+      return render json: { message: 'type must be "horny", "disgust", "came", or "ok"' }, status: 400
     end
 
     @link.response_text = params[:text].nil? ? "" : params[:text]

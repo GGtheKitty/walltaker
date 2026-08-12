@@ -18,7 +18,7 @@ module LinksHelper
 
   def link_agent_to_icon(link_agent)
     return :unknown if link_agent.nil?
-    return :desktop if link_agent.include? 'Walltaker Go Client/'
+    return :desktop if link_agent.include? 'Walltaker Client'
     return :android if link_agent.include? 'walltaker-android-client/'
     return :joihow if link_agent.include? 'joihow'
     return :wallpaper_engine if link_agent.include? 'Wallpaper-Engine-Client'

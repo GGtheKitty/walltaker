@@ -1,4 +1,7 @@
 class UsersController < ApplicationController
+  PASSWORD_RESET_NOTICE = 'If an account exists for that email, a password reset email has been sent.'
+  PASSWORD_RESET_COOLDOWN = 10.minutes
+
   after_action :track_visit, only: %i[new show edit]
   before_action :authorize, only: %i[update toggle_details_mode]
 
@@ -81,18 +84,27 @@ class UsersController < ApplicationController
   end
 
   def password_reset
+    email = params[:email].to_s.strip.downcase
+    user = User.where("lower(email) = ?", email).first
+
+    unless user
+      track :nefarious, :password_reset_unknown_email, tried_email: email
+      return redirect_to login_path, notice: PASSWORD_RESET_NOTICE
+    end
+
+    if user.password_reset_sent_at && user.password_reset_sent_at > PASSWORD_RESET_COOLDOWN.ago
+      track :regular, :password_reset_throttled, user: user.username, tried_email: email
+      return redirect_to login_path, notice: PASSWORD_RESET_NOTICE
+    end
+
     begin
-      user = User.where("lower(email) = ?", params[:email]&.downcase).first
-
-      unless user
-        throw :nefarious
-      end
-
       PasswordResetMailer.reset_password(user).deliver
-      redirect_to login_path, notice: 'A password reset email has been sent to that user'
+      user.update_column(:password_reset_sent_at, Time.current)
+      track :regular, :password_reset_email_sent, user: user.username
+      redirect_to login_path, notice: PASSWORD_RESET_NOTICE
     rescue
-      track :nefarious, :failed_to_reset_password, tried_email: params['email'], exception: $!
-      redirect_to forgor_path, alert: 'User was not found with that email'
+      track :error, :failed_to_deliver_password_reset, tried_email: email, exception: $!
+      redirect_to forgor_path, alert: 'Password reset email could not be sent'
     end
   end
 

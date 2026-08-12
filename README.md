@@ -9,6 +9,22 @@ your friend's phones. This however leads to some weird cases where people post s
 blacklist. With that in mind, I wanted it to be restricted to e621.net results, with an enforced blacklist. This keeps
 you in control, but not _too much_ control.
 
+## Email
+
+Password reset emails are sent through Resend SMTP. Configure delivery with these environment variables:
+
+For Docker Compose development, use `.env.example` as the template for a local `.env` file. The real `.env` file is ignored by Git.
+
+| Variable | Default | Notes |
+|----------|---------|-------|
+| `RESEND_API_KEY` | | Resend API key used as the SMTP password. |
+| `RESEND_SMTP_ADDRESS` | `smtp.resend.com` | Override only if Resend changes hosts or you need a proxy. |
+| `RESEND_SMTP_PORT` | `587` | Resend supports `25`, `465`, `587`, `2465`, and `2587`. |
+| `RESEND_SMTP_USER_NAME` | `resend` | Resend's SMTP username. |
+| `RESEND_SMTP_AUTHENTICATION` | `plain` | Rails ActionMailer SMTP authentication mode. |
+| `RESEND_SMTP_ENABLE_STARTTLS_AUTO` | `true` | Use STARTTLS automatically for ports like `587`. |
+| `WALLTAKER_MAIL_FROM` | `walltaker@<host>` | Sender address for app emails. Must be allowed by your Resend domain. |
+
 ## Clients
 A client is required to set the wallpaper of a device. Here are some made by the awesome community!
 
