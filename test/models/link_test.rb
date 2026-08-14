@@ -83,6 +83,20 @@ class LinkTest < ActiveSupport::TestCase
     assert payload.key?(:online)
   end
 
+  test 'e621_post_md5 supports webp source urls' do
+    link = links(:one)
+    link.post_url = 'https://static1.e621.net/data/ab/cd/0123456789abcdef0123456789abcdef.webp'
+
+    assert_equal '0123456789abcdef0123456789abcdef', link.e621_post_md5
+  end
+
+  test 'e621_post_md5 returns nil for unsupported source urls' do
+    link = links(:one)
+    link.post_url = 'https://example.com/not-e621'
+
+    assert_nil link.e621_post_md5
+  end
+
   test 'metadata edits broadcast the full current client payload' do
     link = links(:one)
     setter = users(:two)

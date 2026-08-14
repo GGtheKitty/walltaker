@@ -162,9 +162,11 @@ class LinksController < ApplicationController
     respond_to do |format|
       if result_of_link_model_save
         format.html { redirect_to link_url(@link), notice: 'Link was successfully updated.' }
+        format.turbo_stream { redirect_to link_url(@link), notice: 'Link was successfully updated.', status: :see_other }
         format.json { render :show, status: :ok, location: @link }
       else
         format.html { render :edit, status: :unprocessable_entity }
+        format.turbo_stream { render :edit, status: :unprocessable_entity }
         format.json { render json: @link.errors, status: :unprocessable_entity }
       end
     end

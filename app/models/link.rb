@@ -111,6 +111,10 @@ class Link < ApplicationRecord
     past_links.last.present? ? Time.now - past_links.last.created_at : 99999
   end
 
+  def e621_post_md5
+    post_url&.match(%r{/([0-9a-f]{32})\.(png|jpe?g|bmp|webm|mp4|gif|webp)(?:\?|$)}i)&.[](1)
+  end
+
   after_update_commit do
     next unless client_visible_fields_previously_changed?
 
