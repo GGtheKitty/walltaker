@@ -296,7 +296,7 @@ class LinksController < ApplicationController
         return true
       end
 
-      return redirect_to @link, alert: 'Only the link owner\'s master can change this link right now.' if @link.check_ability('is_master_only') && action_name == 'update'
+      return redirect_to @link, alert: "Only this link owner's leash owner can change this link right now." if @link.check_ability('is_master_only') && action_name == 'update'
 
       authorize if @link.friends_only
 

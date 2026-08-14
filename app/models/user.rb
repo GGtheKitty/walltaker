@@ -10,7 +10,7 @@ class User < ApplicationRecord
   has_many :ahoy_visits, :class_name => 'Ahoy::Visit'
   has_many :nut_pledges, dependent: :destroy
   has_many :kink_havers, -> { order(created_at: :asc, id: :asc) }
-  has_many :kinks, -> { order('kink_havers.created_at ASC, kink_havers.id ASC') }, through: :kink_havers
+  has_many :kinks, -> { joins(:kink_havers).order('kink_havers.created_at ASC, kink_havers.id ASC') }, through: :kink_havers
   attribute :colour_preference, :integer
   belongs_to :viewing_link, foreign_key: :viewing_link_id, class_name: 'Link', optional: true
   has_many :message_thread_participants
