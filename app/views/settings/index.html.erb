@@ -36,3 +36,45 @@
     <%= f.submit 'Save', class: 'accent-block__button' %>
   <% end %>
 </div>
+
+<div class="accent-block">
+  <div class="accent-block__charm">
+    <ion-icon role="img" name="person-circle"></ion-icon>
+    Username
+  </div>
+  <%= form_with model: @user, url: settings_path, method: :post, data: { 'turbo': 'false' } do |f| %>
+    <%= hidden_field_tag :settings_action, :username %>
+    <div class="form__group">
+      <div class="form__row">
+        <%= f.label :username %>
+        <%= f.text_field :username, autocomplete: 'username' %>
+      </div>
+    </div>
+    <%= f.submit 'Change username', class: 'accent-block__button' %>
+  <% end %>
+</div>
+
+<div class="accent-block">
+  <div class="accent-block__charm">
+    <ion-icon role="img" name="key"></ion-icon>
+    Password
+  </div>
+  <%= form_with model: @user, url: settings_path, method: :post, data: { 'turbo': 'false' } do |f| %>
+    <%= hidden_field_tag :settings_action, :password %>
+    <div class="form__group">
+      <div class="form__row">
+        <%= f.label :current_password %>
+        <%= f.password_field :current_password, autocomplete: 'current-password', value: nil %>
+      </div>
+      <div class="form__row">
+        <%= f.label :password, 'New password' %>
+        <%= f.password_field :password, autocomplete: 'new-password', value: nil %>
+      </div>
+      <div class="form__row">
+        <%= f.label :password_confirmation, 'Confirm new password' %>
+        <%= f.password_field :password_confirmation, autocomplete: 'new-password', value: nil %>
+      </div>
+    </div>
+    <%= f.submit 'Change password', class: 'accent-block__button' %>
+  <% end %>
+</div>

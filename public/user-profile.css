@@ -589,6 +589,21 @@ h2.with-chart #chart-1 {
     font-size: 0.7rem;
 }
 
+.profiles__browse-link {
+    float: right;
+    font-size: 1rem;
+    font-weight: bold;
+    margin-top: 0.8rem;
+}
+
+@media screen and (max-width: 475px) {
+    .profiles__browse-link {
+        display: block;
+        float: none !important;
+        margin-top: 0.75rem !important;
+    }
+}
+
 .profiles {
     display: flex;
     flex-direction: column;
