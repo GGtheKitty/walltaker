@@ -1,5 +1,6 @@
 <% target = "link_details_#{link.id}" %>
-<% e621_url = "https://e621.net/posts?md5=#{ CGI.escape(link.post_url[/\w*(?=\.(png|jpg|bmp|webm|mp4|gif)$)/]) }" if link.post_url %>
+<% e621_md5 = link.e621_post_md5 %>
+<% e621_url = "https://e621.net/posts?md5=#{CGI.escape(e621_md5)}" if e621_md5 %>
 <% client = link_agent_to_icon link.last_ping_user_agent %>
 <% devices = {
   desktop: :desktop,
@@ -78,9 +79,11 @@
           <span class="show-for-ki show-for-perverts text-ensmallen">That's plenty~</span>
           <span class="show-for-ki show-for-nonperverts text-ensmallen">Collapse</span>
         </button>
-        <%= link_to e621_url, class: 'small' do %>
-          Show on E621
-          <ion-icon role="presentation" name="arrow-forward"></ion-icon>
+        <% if e621_url %>
+          <%= link_to e621_url, class: 'small' do %>
+            Show on E621
+            <ion-icon role="presentation" name="arrow-forward"></ion-icon>
+          <% end %>
         <% end %>
       </div>
         <%= simple_format link.post_description %>
