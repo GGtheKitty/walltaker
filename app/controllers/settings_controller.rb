@@ -34,24 +34,33 @@ class SettingsController < ApplicationController
   end
 
   def update_username
-    new_username = user_params[:username].to_s.strip
+    @user.with_lock do
+      return redirect_to settings_path, alert: "The evil account's username cannot be changed." if @user.evil_account?
+      unless @user.can_change_username?
+        return redirect_to settings_path, alert: 'Username can only be changed once a week.'
+      end
 
-    return redirect_to settings_path, alert: "Username can't be blank." if new_username.blank?
+      new_username = user_params[:username].to_s.strip
 
-    if username_taken?(new_username)
-      return redirect_to settings_path, alert: "#{new_username} is not available."
-    end
+      return redirect_to settings_path, alert: "Username can't be blank." if new_username.blank?
 
-    @user.username = new_username
+      if username_taken?(new_username)
+        return redirect_to settings_path, alert: "#{new_username} is not available."
+      end
 
-    if @user.save
-      redirect_to user_path(@user.username), notice: "Username changed successfully!"
-    else
-      redirect_to settings_path, alert: @user.errors.full_messages.to_sentence
+      @user.username = new_username
+
+      if @user.save
+        redirect_to user_path(@user.username), notice: "Username changed successfully!"
+      else
+        redirect_to settings_path, alert: @user.errors.full_messages.to_sentence
+      end
     end
   end
 
   def update_password
+    return redirect_to settings_path, alert: "The evil account's password cannot be changed." if @user.evil_account?
+
     unless @user.authenticate(user_params[:current_password].to_s)
       return redirect_to settings_path, alert: "Current password is incorrect."
     end

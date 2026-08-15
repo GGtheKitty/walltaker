@@ -17,10 +17,29 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "title", /SettingsUser walltaker settings/
     assert_select "h2", /SettingsUser's settings/
-    assert_select "input[name='user[username]'][value='SettingsUser']"
-    assert_select "input[name='user[current_password]']"
-    assert_select "input[name='user[password]']"
-    assert_select "input[name='user[password_confirmation]']"
+    assert_select "small.settings__username-note", text: "You can only change your username once a week"
+    assert_select ".settings__username-fields" do
+      assert_select "input[name='user[username]'][value='SettingsUser']"
+    end
+    assert_select ".settings__password-fields" do
+      assert_select "input[name='user[current_password]']"
+      assert_select "input[name='user[password]']"
+      assert_select "input[name='user[password_confirmation]']"
+    end
+  end
+
+  test "does not show username or password settings for the evil account" do
+    user = create_user(username: "evil", email: "evil@example.com")
+
+    log_in(user)
+    get settings_url
+
+    assert_response :success
+    assert_select "input[name='user[colour_preference]']"
+    assert_select "input[name='user[username]']", count: 0
+    assert_select "input[name='user[current_password]']", count: 0
+    assert_select "input[name='user[password]']", count: 0
+    assert_select "input[name='user[password_confirmation]']", count: 0
   end
 
   test "surrender controller sees their own settings instead of the surrendered user's settings" do
@@ -63,6 +82,53 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to user_path("NewUsername")
     assert_equal "NewUsername", user.reload.username
+    assert_in_delta Time.current, user.username_changed_at, 1.second
+  end
+
+  test "does not show username form during the rename cooldown" do
+    user = create_user(
+      username: "RecentlyRenamed",
+      email: "recently-renamed@example.com",
+      username_changed_at: 2.days.ago
+    )
+
+    log_in(user)
+    get settings_url
+
+    assert_response :success
+    assert_select "input[name='user[username]']", count: 0
+    assert_select "time[datetime='#{user.next_username_change_at.iso8601}']"
+    assert_select "input[name='user[current_password]']"
+  end
+
+  test "does not change username again during the cooldown" do
+    user = create_user(
+      username: "CooldownUser",
+      email: "cooldown-user@example.com",
+      username_changed_at: 6.days.ago
+    )
+
+    log_in(user)
+    post settings_url, params: { settings_action: "username", user: { username: "TooSoon" } }
+
+    assert_redirected_to settings_path
+    assert_equal "CooldownUser", user.reload.username
+    assert_equal "Username can only be changed once a week.", flash[:alert]
+  end
+
+  test "changes username once the cooldown has elapsed" do
+    user = create_user(
+      username: "CooldownElapsed",
+      email: "cooldown-elapsed@example.com",
+      username_changed_at: 1.week.ago
+    )
+
+    log_in(user)
+    post settings_url, params: { settings_action: "username", user: { username: "AvailableAgain" } }
+
+    assert_redirected_to user_path("AvailableAgain")
+    assert_equal "AvailableAgain", user.reload.username
+    assert_in_delta Time.current, user.username_changed_at, 1.second
   end
 
   test "does not change username when the requested username is unavailable" do
@@ -76,6 +142,17 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to settings_path
     assert_equal "AvailableUser", user.reload.username
     assert_equal "takenuser is not available.", flash[:alert]
+  end
+
+  test "does not change the evil account username" do
+    user = create_user(username: "evil", email: "evil-rename@example.com")
+
+    log_in(user)
+    post settings_url, params: { settings_action: "username", user: { username: "NotEvil" } }
+
+    assert_redirected_to settings_path
+    assert_equal "evil", user.reload.username
+    assert_equal "The evil account's username cannot be changed.", flash[:alert]
   end
 
   test "surrender controller changes their own username instead of the surrendered user's username" do
@@ -130,6 +207,24 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Current password is incorrect.", flash[:alert]
   end
 
+  test "does not change the evil account password" do
+    user = create_user(username: "evil", email: "evil-password@example.com")
+
+    log_in(user)
+    post settings_url, params: {
+      settings_action: "password",
+      user: {
+        current_password: "password",
+        password: "new-password",
+        password_confirmation: "new-password"
+      }
+    }
+
+    assert_redirected_to settings_path
+    assert user.reload.authenticate("password")
+    assert_equal "The evil account's password cannot be changed.", flash[:alert]
+  end
+
   test "does not change password to a blank password" do
     user = create_user(username: "BlankPasswordUser", email: "blank-password-user@example.com")
 
@@ -155,13 +250,14 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     post session_index_path, params: { email: user.email, password: "password" }
   end
 
-  def create_user(username:, email:, colour_preference: :auto)
+  def create_user(username:, email:, colour_preference: :auto, username_changed_at: nil)
     User.create!(
       username:,
       email:,
       password: "password",
       password_confirmation: "password",
-      colour_preference:
+      colour_preference:,
+      username_changed_at:
     )
   end
 

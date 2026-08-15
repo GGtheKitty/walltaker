@@ -187,6 +187,51 @@ form.orgasms .form__row {
     margin: 0;
 }
 
+.settings__username-note {
+    display: block;
+    text-align: center;
+    width: 100%;
+}
+
+.settings__field-grid {
+    align-items: center;
+    display: grid;
+    column-gap: 0.75rem;
+    grid-template-columns: max-content minmax(0, 1fr);
+    row-gap: 1rem;
+    width: 100%;
+}
+
+.settings__field-grid .form__row {
+    display: contents;
+}
+
+.settings__field-grid label {
+    white-space: nowrap;
+}
+
+.settings__field-grid input {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+}
+
+@media screen and (max-width: 400px) {
+    .settings__field-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings__field-grid .form__row {
+        align-items: stretch;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .settings__field-grid label {
+        white-space: normal;
+    }
+}
+
 .form__row {
     display: flex;
     gap: 0.5rem;

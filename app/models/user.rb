@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  USERNAME_CHANGE_COOLDOWN = 1.week
+
   include ActiveModel::SecurePassword
   has_secure_password
   has_many :link, dependent: :destroy
@@ -35,6 +37,10 @@ class User < ApplicationRecord
   validates_uniqueness_of :email, :case_sensitive => false
   validates :password, confirmation: true
   validates :username, presence: true, format: { with: /\A[a-zA-Z0-9]+\Z/ }
+  validate :evil_account_credentials_are_immutable, on: :update
+  validate :username_change_cooldown_has_elapsed, on: :update
+
+  before_update :record_username_change, if: :will_save_change_to_username?
 
   enum colour_preference: %i[auto light dark]
 
@@ -49,6 +55,18 @@ class User < ApplicationRecord
 
   def master
     masters.first || nil
+  end
+
+  def evil_account?
+    username == 'evil' || username_in_database == 'evil'
+  end
+
+  def can_change_username?(at: Time.current)
+    username_changed_at.nil? || username_changed_at <= at - USERNAME_CHANGE_COOLDOWN
+  end
+
+  def next_username_change_at
+    username_changed_at + USERNAME_CHANGE_COOLDOWN if username_changed_at
   end
 
   def flair
@@ -198,5 +216,25 @@ class User < ApplicationRecord
         viewing_link_id
       ]
     ).any?
+  end
+
+  private
+
+  def evil_account_credentials_are_immutable
+    return unless username_in_database == 'evil'
+
+    errors.add(:username, 'cannot be changed for the evil account') if will_save_change_to_username?
+    errors.add(:password, 'cannot be changed for the evil account') if will_save_change_to_password_digest?
+  end
+
+  def username_change_cooldown_has_elapsed
+    return unless will_save_change_to_username?
+    return if can_change_username?
+
+    errors.add(:username, 'can only be changed once a week')
+  end
+
+  def record_username_change
+    self.username_changed_at = Time.current
   end
 end
