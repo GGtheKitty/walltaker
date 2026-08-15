@@ -1,5 +1,5 @@
-BRANCH ?= $(shell git branch --show-current 2>/dev/null || printf 'Test')
-REPO ?= $(shell git config --get remote.origin.url 2>/dev/null || printf 'https://github.com/Lycraon/walltaker.git')
+BRANCH ?= $(shell git branch --show-current 2>/dev/null || printf 'main')
+REPO ?= $(shell git config --get remote.origin.url 2>/dev/null || printf 'https://github.com/GGtheKitty/walltaker.git')
 REPO_URL ?= $(REPO)\#$(BRANCH)
 
 PROJECT ?= -p walltaker
