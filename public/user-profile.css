@@ -318,6 +318,7 @@ form.orgasms .form__row {
             top: 0;
             transform: translateX(-50%);
             z-index: 99;
+            pointer-events: none;
             content: "";
             display: block;
             width: 120px;

@@ -115,6 +115,7 @@ class ApplicationController < ActionController::Base
 
       last_past_link = PastLink.where(link_id: link.id).where.not(post_url: link.post_url).order('created_at').last
 
+      link.e621_post_id = last_past_link ? last_past_link.e621_post_id : nil
       link.post_url = last_past_link ? last_past_link.post_url : nil
       link.post_thumbnail_url = last_past_link ? last_past_link.post_thumbnail_url : nil
     end

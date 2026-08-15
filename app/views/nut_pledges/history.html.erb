@@ -19,9 +19,7 @@
           <% if pledge.failed? %>
             <div class="nut-pledge-history__status">
               <span>Failed on day <%= pledge.failed_on.strftime("%e") %></span>
-              <% if pledge.past_link.present? %>
-                <div class="nut-pledge-history__preview"><%= image_tag pledge.past_link.post_url %></div>
-              <% end %>
+              <%= render 'nut_pledges/failure_preview', past_link: pledge.past_link, css_class: 'nut-pledge-history__preview' %>
             </div>
           <% elsif pledge.succeeded? %>
             Succeeded

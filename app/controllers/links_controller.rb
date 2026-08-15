@@ -369,6 +369,7 @@ class LinksController < ApplicationController
 
     link.update(
       {
+        e621_post_id: e621_post['id'],
         post_url: e621_post['file']['url'],
         post_thumbnail_url: e621_post['sample']['url'] || e621_post['preview']['url'],
         post_description: e621_post['description'],

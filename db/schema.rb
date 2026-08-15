@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_15_184500) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_15_195000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -293,6 +293,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_15_184500) do
     t.string "custom_url"
     t.bigint "forked_from_id"
     t.string "wizard_page"
+    t.bigint "e621_post_id"
+    t.index ["e621_post_id"], name: "index_links_on_e621_post_id"
     t.index ["forked_from_id"], name: "index_links_on_forked_from_id"
     t.index ["user_id"], name: "index_links_on_user_id"
   end
@@ -362,6 +364,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_15_184500) do
     t.bigint "set_by_id"
     t.bigint "ahoy_visit_id"
     t.text "tags", default: "", null: false
+    t.bigint "e621_post_id"
+    t.index ["e621_post_id"], name: "index_past_links_on_e621_post_id"
     t.index ["link_id"], name: "index_past_links_on_link_id"
     t.index ["set_by_id"], name: "index_past_links_on_set_by_id"
     t.index ["user_id"], name: "index_past_links_on_user_id"
