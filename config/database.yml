@@ -13,7 +13,7 @@ development: &development
   <<: *default
   adapter: postgresql
   encoding: unicode
-  database: walltaker
+  database: <%= ENV['DB_Name'] %>
   username: postgres
   password:
   host: localhost
@@ -24,10 +24,11 @@ development: &development
 # Do not set this db to the same as development or production.
 test:
   <<: *development
-  database: walltaker_test
+  database: <%= ENV['DB_Name'] %>_test
 
 production:
   adapter: postgresql
   encoding: unicode
   timeout: 5000
   url: <%= ENV['DATABASE_URL'] %>
+  port: <%= ENV['DB_PORT'] %>

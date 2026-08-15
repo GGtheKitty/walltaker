@@ -26,9 +26,7 @@ module Walltaker
     config.eager_load_paths << Rails.root.join("services")
     Rails.application.config.hosts << "joi.how"
     Rails.application.config.hosts << "walltaker.joi.how"
-    Rails.application.config.hosts << "walltaker-heroku-24-6dcd77a4ae7b.herokuapp.com"
     Rails.application.config.hosts << "10.244.14.67"
     Rails.application.config.hosts << "walltaker-master-39nrv.ondigitalocean.app"
-    Rails.application.config.hosts << "walltaker-7e4cf22c7c3d.herokuapp.com"
   end
 end

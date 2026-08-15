@@ -162,7 +162,7 @@
                 <ion-icon role="presentation" name="cloud-download"></ion-icon>
                 Install WCS
               <% end %>
-              <%= link_to "widget://add_widget?url=https://walltaker.joi.how/api/links/#{@link.id}/widget.json", class: 'no-underline secondary' do %>
+              <%= link_to "widget://add_widget?url=#{walltaker_url("/api/links/#{@link.id}/widget.json")}", class: 'no-underline secondary' do %>
                 <ion-icon role="presentation" name="duplicate"></ion-icon>
                 Add Widget
               <% end %>

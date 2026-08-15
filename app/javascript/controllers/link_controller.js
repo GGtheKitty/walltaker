@@ -17,6 +17,10 @@ function copy(str) {
     }
 };
 
+function walltakerBaseUrl() {
+    return document.querySelector('meta[name="walltaker-base-url"]')?.content || window.location.origin
+}
+
 class LinkController extends Controller {
     static targets = ['cancel', 'copy', 'shareIcon', 'checkmarkIcon']
     static values = {
@@ -42,7 +46,7 @@ class LinkController extends Controller {
     copyLink(e) {
         e.preventDefault()
         try {
-            copy(`https://walltaker.joi.how/links/${this.idValue}`)
+            copy(`${walltakerBaseUrl()}/links/${this.idValue}`)
             if (this.checkmarkIconTarget) {
                 this.checkmarkIconTarget.style.display = 'inline-block'
             }

@@ -37,13 +37,13 @@
         <% end %>
         <div data-theme-form-target="container">
           <p class="text-light">
-            In addition to your regular walltaker link URL (https://walltaker.joi.how/links/1), you can provide your own
-            text for a custom url. It will be accessible as <strong>https://walltaker.joi.how/links/
+            In addition to your regular walltaker link URL (<%= walltaker_url("/links/1") %>), you can provide your own
+            text for a custom url. It will be accessible as <strong><%= walltaker_url("/links/") %>
             <mark>your-text-here</mark>
           </strong>
           </p>
 
-          walltaker.joi.how/links/ <%= form.text_field :custom_url, placeholder: 'horny-deer-please', 'data-theme-form-target': 'input' %>
+          <%= walltaker_url("/links") %> <%= form.text_field :custom_url, placeholder: 'horny-deer-please', 'data-theme-form-target': 'input' %>
         </div>
       </div>
     </div>

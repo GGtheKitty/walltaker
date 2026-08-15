@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  mount ActionCable.server => '/cable'
   resources :leashes, except: %i[index], as: :leashes
   get 'news_room/index'
   resources :scoops
