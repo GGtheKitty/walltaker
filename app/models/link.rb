@@ -1,6 +1,7 @@
 class Link < ApplicationRecord
   include PgSearch::Model
   belongs_to :user
+  default_scope { joins(:user).merge(User.active) }
   belongs_to :set_by, foreign_key: :set_by_id, class_name: 'User', optional: true
   belongs_to :forked_from, foreign_key: :forked_from_id, class_name: 'Link', inverse_of: :forks, optional: true
   has_many :forks, foreign_key: :forked_from_id, class_name: 'Link', inverse_of: :forked_from, dependent: :nullify

@@ -44,6 +44,9 @@ class User < ApplicationRecord
 
   enum colour_preference: %i[auto light dark]
 
+  scope :active, -> { where(deleted_at: nil) }
+  scope :deleted, -> { where.not(deleted_at: nil) }
+
   scope :has_friendship_with, ->(other) {
     Friendship.find_friendship(other, self)
   }
@@ -59,6 +62,80 @@ class User < ApplicationRecord
 
   def evil_account?
     username == 'evil' || username_in_database == 'evil'
+  end
+
+  def deleted?
+    deleted_at.present?
+  end
+
+  def soft_delete!
+    with_lock do
+      raise ActiveRecord::RecordNotDestroyed, 'The evil account cannot be deleted.' if evil_account?
+      return true if deleted?
+
+      original_username = username
+      tombstone_username = unique_deleted_username(original_username)
+      update_columns(
+        deleted_at: Time.current,
+        deleted_username: original_username,
+        username: tombstone_username
+      )
+      User.broadcast_api_update_for_username(original_username)
+      true
+    end
+  end
+
+  def restore_account!
+    with_lock do
+      return true unless deleted?
+
+      restored_username = deleted_username
+      restored_username = username if restored_username.blank? || username_exists?(restored_username)
+      update_columns(deleted_at: nil, username: restored_username)
+      true
+    end
+  end
+
+  def purge!
+    raise ActiveRecord::RecordNotDestroyed, 'Only deleted accounts can be purged.' unless deleted?
+    raise ActiveRecord::RecordNotDestroyed, 'The evil account cannot be purged.' if evil_account?
+
+    transaction do
+      user_id = id
+      link_ids = Link.unscoped.where(user_id:).pluck(:id)
+      past_link_ids = PastLink.where(user_id:).pluck(:id)
+      profile_ids = Profile.unscoped.where(user_id:).pluck(:id)
+
+      BannedIp.where(banned_by_id: user_id).update_all(banned_by_id: nil)
+      HistoryEvent.where(surrender_controller_id: user_id).update_all(surrender_controller_id: nil)
+      Link.unscoped.where(set_by_id: user_id).update_all(set_by_id: nil)
+      Nuttracker::Orgasm.where(caused_by_user_id: user_id).update_all(caused_by_user_id: nil)
+      PastLink.where(set_by_id: user_id).update_all(set_by_id: nil)
+      User.where(profile_id: profile_ids).update_all(profile_id: nil)
+      NutPledge.where(past_link_id: past_link_ids).update_all(past_link_id: nil)
+      Scoop.where(link_id: link_ids).update_all(link_id: nil)
+
+      Surrender.where(controller_user_id: user_id).delete_all
+      Friendship.involving(self).find_each(&:destroy!)
+      Message.where(from_user_id: user_id).delete_all
+      MessageThreadParticipant.where(user_id: user_id).delete_all
+      Comment.where(user_id: user_id).delete_all
+      Report.where(reporter_id: user_id).or(Report.where(reportable_type: 'User', reportable_id: user_id)).delete_all
+      Report.where(reportable_type: 'Link', reportable_id: link_ids).delete_all
+      Notification.where(user_id: user_id).delete_all
+      KinkHaver.where(user_id: user_id).delete_all
+      NutPledge.where(user_id: user_id).delete_all
+      Nuttracker::Orgasm.where(user_id: user_id).delete_all
+      Scoop.where(user_id: user_id).delete_all
+      Ahoy::Event.where(user_id: user_id).update_all(user_id: nil)
+      Ahoy::Visit.where(user_id: user_id).update_all(user_id: nil)
+
+      Link.unscoped.where(id: link_ids).find_each(&:destroy!)
+      PastLink.where(id: past_link_ids).delete_all
+      Profile.unscoped.where(id: profile_ids).find_each(&:destroy!)
+      HistoryEvent.where(user_id: user_id).delete_all
+      destroy!
+    end
   end
 
   def can_change_username?(at: Time.current)
@@ -236,5 +313,16 @@ class User < ApplicationRecord
 
   def record_username_change
     self.username_changed_at = Time.current
+  end
+
+  def unique_deleted_username(original_username)
+    loop do
+      candidate = "#{original_username}#{SecureRandom.alphanumeric(10)}"
+      return candidate unless User.where('lower(username) = ?', candidate.downcase).exists?
+    end
+  end
+
+  def username_exists?(candidate)
+    User.where('lower(username) = ?', candidate.downcase).where.not(id: id).exists?
   end
 end

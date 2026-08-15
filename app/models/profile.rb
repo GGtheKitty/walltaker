@@ -1,4 +1,6 @@
 class Profile < ApplicationRecord
+  default_scope { joins(:user).merge(User.active) }
+
   belongs_to :user
   belongs_to :origin, optional: true, class_name: 'Profile'
   has_many :forks, dependent: :nullify, class_name: 'Profile', foreign_key: :origin_id

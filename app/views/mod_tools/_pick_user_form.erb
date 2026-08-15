@@ -5,8 +5,8 @@
 
 <%= turbo_frame_tag :mod_tools_pick_user_form do %>
   <%= form_with url: mod_tools_users_index_url, method: :get do |f| %>
-    <%= f.label :email, 'Email address user claims is theirs:', style: "display: block" %>
-    <%= f.text_field :email, value: params['email'] %>
+    <%= f.label :query, 'Email address or username:', style: "display: block" %>
+    <%= f.text_field :query, value: params[:query].presence || params[:email] %>
     <%= f.submit 'Lookup' %>
   <% end %>
   <% if user || fail %>

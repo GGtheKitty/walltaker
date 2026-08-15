@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_15_170000) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_15_184500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -195,6 +195,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_15_170000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["job_id"], name: "index_crono_jobs_on_job_id", unique: true
+  end
+
+  create_table "emoji_link_decorations", force: :cascade do |t|
+    t.bigint "link_id", null: false
+    t.string "emoji", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["link_id"], name: "index_emoji_link_decorations_on_link_id", unique: true
   end
 
   create_table "friendships", force: :cascade do |t|
@@ -569,6 +577,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_15_170000) do
     t.boolean "is_supporter", default: false
     t.datetime "password_reset_sent_at"
     t.datetime "username_changed_at"
+    t.datetime "deleted_at"
+    t.string "deleted_username"
+    t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["email"], name: "unique_emails", unique: true
     t.index ["profile_id"], name: "index_users_on_profile_id"
     t.index ["set_count"], name: "index_users_on_set_count", order: :desc

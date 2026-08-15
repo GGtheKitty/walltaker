@@ -93,12 +93,12 @@ class ApiController < ApplicationController
   # GET /api/users/:username.json
   def show_user
     if params['api_key'].present?
-      current_user_or_api_user = User.find_by(api_key: params['api_key'])
+      current_user_or_api_user = User.active.find_by(api_key: params['api_key'])
     else
       current_user_or_api_user = current_user.present? ? current_user : nil
     end
 
-    @user = User.find_by(username: params[:username])
+    @user = User.active.find_by(username: params[:username])
     @user_api_payload = @user.api_payload(current_user_or_api_user)
 
     expires_in 5.seconds

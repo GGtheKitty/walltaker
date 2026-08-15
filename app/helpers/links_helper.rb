@@ -1,19 +1,7 @@
 module LinksHelper
   def link_id_for_decoration(link_id)
-    return '🐕' if link_id == 1
-    return '🐇' if link_id == 69
-    return '🏳️‍🌈' if link_id == 346
-    return '🥎' if link_id == 348
-    return '⚙️' if link_id == 581
-    return '🐈' if link_id == 658 || link_id == 656
-    return '🐺' if link_id == 666 || link_id == 343
-    return '🦊' if link_id == 1964
-    return '🐶' if link_id == 7900
-    return '🦴' if link_id == 7914
-    return '🐈‍⬛' if link_id == 11002 || link_id == 11011 || link_id == 12069 || link_id == 12594 || link_id == 16191
-    return '🪢' if link_id == 12916 || link_id == 12951 || link_id == 13535 || link_id == 13577 || link_id == 15194
-    return '🪟' if link_id == 15673
-    link_id
+    @emoji_link_decorations ||= EmojiLinkDecoration.emoji_map
+    @emoji_link_decorations.fetch(link_id.to_i, link_id)
   end
 
   def link_agent_to_icon(link_agent)

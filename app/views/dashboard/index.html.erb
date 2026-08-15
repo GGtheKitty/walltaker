@@ -10,7 +10,7 @@
 
 <% unless current_user.nil? %>
   <% content_for(:html_title) { 'Walltaker Dashboard' } %>
-  <% if SiteConfig.nut_tracker_enabled? %>
+  <% if SiteConfig.nnn_enabled? %>
     <% if current_user.current_nut_pledge.nil? %>
       <div class="dashboard-header">
         <%= link_to new_user_nut_pledge_path(current_user.username) do %>

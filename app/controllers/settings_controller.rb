@@ -18,6 +18,23 @@ class SettingsController < ApplicationController
     end
   end
 
+  def destroy
+    @user = settings_user
+
+    return redirect_to settings_path, alert: 'The evil account cannot be deleted.' if @user.evil_account?
+    unless @user.authenticate(account_deletion_params[:password].to_s)
+      return redirect_to settings_path, alert: 'Current password is incorrect.'
+    end
+
+    @user.soft_delete!
+    cookies.delete :permanent_session_id
+    cookies.delete :surrender_id
+    reset_session
+    redirect_to login_path, notice: 'Your account has been deleted.'
+  rescue ActiveRecord::RecordNotDestroyed
+    redirect_to settings_path, alert: 'Your account could not be deleted.'
+  end
+
   private
 
   def update_colour_preference
@@ -79,6 +96,10 @@ class SettingsController < ApplicationController
 
   def user_params
     params.require(:user).permit(:colour_preference, :username, :current_password, :password, :password_confirmation)
+  end
+
+  def account_deletion_params
+    params.require(:account).permit(:password)
   end
 
   def settings_user

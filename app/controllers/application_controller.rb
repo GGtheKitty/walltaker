@@ -52,8 +52,8 @@ class ApplicationController < ActionController::Base
   end
 
   def current_user
-    @current_user ||= User.find(cookies.signed[:permanent_session_id]) if cookies.signed[:permanent_session_id]
-    @current_user ||= User.find(session[:user_id]) if session[:user_id]
+    @current_user ||= User.active.find_by(id: cookies.signed[:permanent_session_id]) if cookies.signed[:permanent_session_id]
+    @current_user ||= User.active.find_by(id: session[:user_id]) if session[:user_id]
 
     @current_user
   end
@@ -103,7 +103,7 @@ class ApplicationController < ActionController::Base
     # If a came reaction, log an orgasm.
     Nuttracker::Orgasm.create rating: 3, is_ruined: false, user: link.user, caused_by: link.set_by if link.response_type == 'came'
 
-    if SiteConfig.nut_tracker_enabled? && link.response_type == 'came' && link.user.current_nut_pledge.present?
+    if SiteConfig.nnn_enabled? && link.response_type == 'came' && link.user.current_nut_pledge.present?
       link.user.current_nut_pledge.past_link = link.past_links.last
       link.user.current_nut_pledge.save
     end

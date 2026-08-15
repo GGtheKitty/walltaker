@@ -4,13 +4,73 @@ class ModToolsController < ApplicationController
   def index
   end
 
-  def toggle_nut_tracker
-    SiteConfig.nut_tracker_enabled = !SiteConfig.nut_tracker_enabled?
-    state = SiteConfig.nut_tracker_enabled? ? 'enabled' : 'disabled'
+  def toggle_nnn
+    SiteConfig.nnn_enabled = !SiteConfig.nnn_enabled?
+    state = SiteConfig.nnn_enabled? ? 'enabled' : 'disabled'
 
-    track :regular, :mod_toggle_nut_tracker, by: current_user.username, enabled: SiteConfig.nut_tracker_enabled?
+    track :regular, :mod_toggle_nnn, by: current_user.username, enabled: SiteConfig.nnn_enabled?
 
-    redirect_to mod_tools_index_path, notice: "Nut Tracker (NNN) #{state}."
+    redirect_to mod_tools_index_path, notice: "NNN #{state}."
+  end
+
+  def emoji_links
+    load_emoji_links
+    @emoji_link_decoration = EmojiLinkDecoration.new
+  end
+
+  def system_analytics
+    @metrics = SystemMetrics.snapshot
+  end
+
+  def activity_analytics
+    now = Time.current
+    @activity = {
+      online_users: Link.is_online.distinct.count(:user_id),
+      online_links: Link.is_online.count,
+      users_viewing_links: User.active.where.not(viewing_link_id: nil).count,
+      links_with_wallpapers: Link.where.not(post_url: nil).count,
+      wallpapers_last_hour: PastLink.where(created_at: (now - 1.hour)..now).count,
+      wallpapers_last_day: PastLink.where(created_at: (now - 24.hours)..now).count,
+      wallpapers_last_week: PastLink.where(created_at: (now - 7.days)..now).count,
+      wallpapers_total: PastLink.count,
+      visits_last_day: Ahoy::Visit.where(started_at: (now - 24.hours)..now).count,
+      new_users_last_day: User.active.where(created_at: (now - 24.hours)..now).count,
+      orgasms_last_day: Nuttracker::Orgasm.where(created_at: (now - 24.hours)..now).count,
+      open_reports: Report.where(is_closed: false).count
+    }
+    @wallpapers_by_hour = PastLink.where(created_at: (now - 24.hours)..now)
+                                  .group_by_hour(:created_at, range: (now - 24.hours)..now)
+                                  .count
+  end
+
+  def create_emoji_link
+    decoration = EmojiLinkDecoration.new(emoji_link_params)
+    if decoration.save
+      track :regular, :mod_create_emoji_link, by: current_user.username, link_id: decoration.link_id, emoji: decoration.emoji
+      redirect_to mod_tools_emoji_links_path, notice: 'Emoji link added.'
+    else
+      load_emoji_links
+      @emoji_link_decoration = decoration
+      render :emoji_links, status: :unprocessable_entity
+    end
+  end
+
+  def update_emoji_link
+    decoration = EmojiLinkDecoration.find(params[:id])
+    if decoration.update(emoji_link_params)
+      track :regular, :mod_update_emoji_link, by: current_user.username, link_id: decoration.link_id, emoji: decoration.emoji
+      redirect_to mod_tools_emoji_links_path, notice: 'Emoji link updated.'
+    else
+      redirect_to mod_tools_emoji_links_path, alert: decoration.errors.full_messages.to_sentence
+    end
+  end
+
+  def destroy_emoji_link
+    decoration = EmojiLinkDecoration.find(params[:id])
+    link_id = decoration.link_id
+    decoration.destroy!
+    track :regular, :mod_destroy_emoji_link, by: current_user.username, link_id: link_id
+    redirect_to mod_tools_emoji_links_path, notice: 'Emoji link removed.'
   end
 
   def show_password_reset
@@ -24,8 +84,8 @@ class ModToolsController < ApplicationController
     end
 
     # Prepared statement, rails escapes and wraps template var here.
-    matches = User.where('lower(email) LIKE ?', "%#{email.downcase}%").all if params['commit'] == 'Try to generate a reset link (case insensitive)'
-    matches = User.where('email LIKE ?', "%#{email}%").all if params['commit'] == 'Try to generate a reset link (case sensitive)'
+    matches = User.active.where('lower(email) LIKE ?', "%#{email.downcase}%").all if params['commit'] == 'Try to generate a reset link (case insensitive)'
+    matches = User.active.where('email LIKE ?', "%#{email}%").all if params['commit'] == 'Try to generate a reset link (case sensitive)'
 
     if matches.length > 1
       if matches.length == 2 && (matches[0].email.downcase === matches[1].email.downcase)
@@ -52,23 +112,47 @@ class ModToolsController < ApplicationController
   end
 
   def show_user
-    if params['email']
-      email = params.permit(:email)['email']
-      user = User.where('lower(email) LIKE ?', "%#{email.downcase}%").first
+    raw_query = params[:query].presence || params[:email].presence
+    if raw_query
+      query = raw_query.to_s.strip.downcase
+      exact_match = User.where('lower(email) = :query OR lower(username) = :query OR lower(deleted_username) = :query', query:)
+      partial_match = User.where('lower(email) LIKE :query OR lower(username) LIKE :query OR lower(deleted_username) LIKE :query', query: "%#{User.sanitize_sql_like(query)}%")
+      user = exact_match.first || partial_match.order(:username).first
 
-      render 'show_user', locals: { user: }
+      render 'show_user', locals: { user:, fail: user ? nil : 'That user does not exist.' }
     end
+  end
+
+  def deleted_users
+    @deleted_users = User.deleted.order(deleted_at: :desc)
   end
 
   def assume_user
     user = User.find(params['user'])
 
-    unless user
+    unless user && !user.deleted?
       redirect_to mod_tools_users_index_url, alert: 'Failed to assume that user.'
       return
     end
 
     log_in_as(user)
+  end
+
+  def restore_user
+    user = User.deleted.find(params[:user])
+    original_username = user.deleted_username
+    user.restore_account!
+    restored_original = user.username.casecmp?(original_username.to_s)
+    notice = restored_original ? 'Account restored.' : 'Account restored, but its original username was unavailable.'
+    redirect_to account_lifecycle_return_path(user), notice:
+  end
+
+  def purge_user
+    user = User.deleted.find(params[:user])
+    user.purge!
+    redirect_to account_lifecycle_return_path, notice: 'Deleted account was permanently purged.'
+  rescue ActiveRecord::RecordNotDestroyed
+    redirect_to account_lifecycle_return_path, alert: 'Deleted account could not be purged.'
   end
 
   def update_user
@@ -143,5 +227,21 @@ class ModToolsController < ApplicationController
     redirect_to mod_tools_events_index_url, notice: "IP banned #{event.visit.ip}"
   end
 
+  private
+
+  def emoji_link_params
+    params.require(:emoji_link_decoration).permit(:link_id, :emoji)
+  end
+
+  def load_emoji_links
+    @emoji_link_decorations = EmojiLinkDecoration.order(:link_id)
+  end
+
+  def account_lifecycle_return_path(user = nil)
+    return mod_tools_users_deleted_path if params[:return_to] == 'deleted_accounts'
+    return mod_tools_users_index_path(email: user.email) if user
+
+    mod_tools_users_index_path
+  end
 
 end

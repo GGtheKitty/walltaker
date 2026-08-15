@@ -15,7 +15,7 @@ class UsersController < ApplicationController
   end
 
   def sets
-    @user = User.find_by(username: params[:username])
+    @user = User.active.find_by(username: params[:username])
     @past_links = PastLink.where(set_by_id: @user.id).order(id: :desc).limit(50)
   end
 
@@ -36,7 +36,7 @@ class UsersController < ApplicationController
   end
 
   def update
-    @user = User.find(params[:id])
+    @user = User.active.find(params[:id])
     return redirect_to user_path(@user.username), { alert: 'Not Authorized.' } if current_user.id != @user.id
 
     if @user.profile
@@ -85,7 +85,7 @@ class UsersController < ApplicationController
 
   def password_reset
     email = params[:email].to_s.strip.downcase
-    user = User.where("lower(email) = ?", email).first
+    user = User.active.where("lower(email) = ?", email).first
 
     unless user
       track :nefarious, :password_reset_unknown_email, tried_email: email
@@ -113,7 +113,7 @@ class UsersController < ApplicationController
   end
 
   def commit_apply_new_password
-    user = User.find_by(password_reset_token: params['password_reset_token'])
+    user = User.active.find_by(password_reset_token: params['password_reset_token'])
 
     if user && params['password'] && params['password_confirmation'] && (params['password'] == params['password_confirmation'])
       user.password = params['password']
@@ -130,7 +130,7 @@ class UsersController < ApplicationController
   end
 
   def new_api_key
-    @user = User.find_by(username: params[:username])
+    @user = User.active.find_by(username: params[:username])
     if (@user.id == current_user.id)
       @user.assign_new_api_key
     end
@@ -147,13 +147,13 @@ class UsersController < ApplicationController
   end
 
   def details
-    @user = User.find(params[:id])
+    @user = User.active.find(params[:id])
   end
 
   private
 
   def set_user_vars
-    @user = User.find_by(username: params[:username])
+    @user = User.active.find_by(username: params[:username])
     if @user.present?
       @is_current_user = current_user && current_user.id == @user.id
       @has_friendship = Friendship.find_friendship(current_user, @user).exists? if current_user

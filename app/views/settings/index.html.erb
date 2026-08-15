@@ -92,4 +92,25 @@
       <%= f.submit 'Change password', class: 'accent-block__button' %>
     <% end %>
   </div>
+
+  <div class="accent-block danger spaced">
+    <div class="accent-block__charm">
+      <ion-icon role="img" name="warning"></ion-icon>
+      Danger Zone
+    </div>
+    <p>
+      This action will delete your account forever. Enter your current password to continue.
+    </p>
+    <%= form_with scope: :account, url: settings_path, method: :delete, data: { turbo_confirm: 'Delete your account? You will be signed out immediately.' } do |f| %>
+      <div class="form__group">
+        <div class="settings__field-grid settings__delete-account-fields">
+          <div class="form__row">
+            <%= f.label :password, 'Current password' %>
+            <%= f.password_field :password, autocomplete: 'current-password', value: nil, required: true %>
+          </div>
+        </div>
+      </div>
+      <%= f.submit 'Delete Account', class: 'danger-button accent-block__button' %>
+    <% end %>
+  </div>
 <% end %>

@@ -138,12 +138,19 @@ Rails.application.routes.draw do
 
   get '/settings', to: 'settings#index', as: 'settings'
   post '/settings', to: 'settings#save'
+  delete '/settings', to: 'settings#destroy'
 
   mount Blazer::Engine, at: "blazer"
 
   scope path: :mod_tools, as: 'mod_tools' do
     get '/', to: 'mod_tools#index', as: 'index'
-    post 'global_toggles/nut_tracker', to: 'mod_tools#toggle_nut_tracker', as: 'toggle_nut_tracker'
+    post 'global_toggles/nnn', to: 'mod_tools#toggle_nnn', as: 'toggle_nnn'
+    get 'emoji_links', to: 'mod_tools#emoji_links', as: 'emoji_links'
+    post 'emoji_links', to: 'mod_tools#create_emoji_link'
+    patch 'emoji_links/:id', to: 'mod_tools#update_emoji_link', as: 'emoji_link'
+    delete 'emoji_links/:id', to: 'mod_tools#destroy_emoji_link'
+    get 'analytics/system', to: 'mod_tools#system_analytics', as: 'system_analytics'
+    get 'analytics/activity', to: 'mod_tools#activity_analytics', as: 'activity_analytics'
 
     resources :reports, except: %i[new create]
 
@@ -154,8 +161,11 @@ Rails.application.routes.draw do
 
     scope path: :users, as: 'users' do
       get '/', to: 'mod_tools#show_user', as: 'index'
+      get '/deleted', to: 'mod_tools#deleted_users', as: 'deleted'
       get '/assume/:user', to: 'mod_tools#assume_user', as: 'assume'
       post 'update', to: 'mod_tools#update_user', as: 'update'
+      post ':user/restore', to: 'mod_tools#restore_user', as: 'restore'
+      delete ':user/purge', to: 'mod_tools#purge_user', as: 'purge'
     end
 
     scope path: :quarantine, as: 'quarantine' do

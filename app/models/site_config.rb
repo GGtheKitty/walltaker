@@ -51,11 +51,11 @@ class SiteConfig
     ENV.fetch("E621_USER_AGENT", "#{host} (by ailurus on e621)")
   end
 
-  def self.nut_tracker_enabled?
-    SiteSetting.cached_boolean("nut_tracker_enabled", default: false)
+  def self.nnn_enabled?
+    SiteSetting.cached_boolean("nnn_enabled", default: false)
   end
 
-  def self.nut_tracker_enabled=(enabled)
-    SiteSetting.set_boolean("nut_tracker_enabled", enabled)
+  def self.nnn_enabled=(enabled)
+    SiteSetting.set_boolean("nnn_enabled", enabled)
   end
 end

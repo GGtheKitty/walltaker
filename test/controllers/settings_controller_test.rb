@@ -26,6 +26,10 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[name='user[password]']"
       assert_select "input[name='user[password_confirmation]']"
     end
+    assert_select ".accent-block.danger" do
+      assert_select "input[name='account[password]']"
+      assert_select "input[type='submit'][value='Delete Account']"
+    end
   end
 
   test "does not show username or password settings for the evil account" do
@@ -40,6 +44,66 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='user[current_password]']", count: 0
     assert_select "input[name='user[password]']", count: 0
     assert_select "input[name='user[password_confirmation]']", count: 0
+    assert_select "input[name='account[password]']", count: 0
+    assert_select "input[type='submit'][value='Delete Account']", count: 0
+  end
+
+  test "does not delete an account when the password is incorrect" do
+    user = create_user(username: "KeepMyAccount", email: "keep-account@example.com")
+
+    log_in(user)
+    delete settings_url, params: { account: { password: "wrong-password" } }
+
+    assert_redirected_to settings_path
+    assert_not user.reload.deleted?
+    assert_equal "Current password is incorrect.", flash[:alert]
+  end
+
+  test "soft deletes an account and preserves its hidden data" do
+    user = create_user(username: "DeleteMyAccount", email: "delete-account@example.com")
+    profile = user.profiles.create!(content: "Preserved profile")
+    user.update_column(:profile_id, profile.id)
+    link = user.link.create!(never_expires: true, min_score: 0)
+    user.update_columns(api_key: "keep-key", viewing_link_id: link.id)
+    api_key = user.api_key
+    viewing_link_id = user.viewing_link_id
+
+    log_in(user)
+    delete settings_url, params: { account: { password: "password" } }
+
+    assert_redirected_to login_path
+    deleted_user = User.find(user.id)
+    assert deleted_user.deleted?
+    assert_equal "DeleteMyAccount", deleted_user.deleted_username
+    assert_match(/\ADeleteMyAccount[[:alnum:]]{10}\z/, deleted_user.username)
+    assert_not User.active.exists?(user.id)
+    assert_not Link.exists?(link.id)
+    assert Link.unscoped.exists?(link.id)
+    assert_not Profile.exists?(profile.id)
+    assert Profile.unscoped.exists?(profile.id)
+    assert_equal api_key, deleted_user.api_key
+    assert_equal viewing_link_id, deleted_user.viewing_link_id
+
+    get "/users/DeleteMyAccount"
+    assert_response :not_found
+    get "/api/links/#{link.id}.json"
+    assert_response :not_found
+
+    assert User.create!(username: "DeleteMyAccount", email: "reused-name@example.com", password: "password")
+
+    post session_index_path, params: { email: deleted_user.email, password: "password" }
+    assert_response :unprocessable_entity
+  end
+
+  test "does not delete the evil account through a crafted request" do
+    user = create_user(username: "evil", email: "evil-delete@example.com")
+
+    log_in(user)
+    delete settings_url, params: { account: { password: "password" } }
+
+    assert_redirected_to settings_path
+    assert_not user.reload.deleted?
+    assert_equal "The evil account cannot be deleted.", flash[:alert]
   end
 
   test "surrender controller sees their own settings instead of the surrendered user's settings" do
