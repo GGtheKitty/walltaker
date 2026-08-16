@@ -8,12 +8,12 @@ class WebPresenceChannel < ApplicationCable::Channel
   end
 
   def view_link(data)
-    if data['link_id']
-      link = Link.find(data['link_id'])
-      if link && connection.current_user
-        connection.current_user.view_link(link)
-      end
-    end
+    return unless data['link_id'] && connection.current_user
+
+    link_id = data['link_id'].to_i
+    return unless Link.exists?(link_id)
+
+    connection.current_user.view_link(link_id)
   end
 
   def leave_link

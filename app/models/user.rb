@@ -8,6 +8,7 @@ class User < ApplicationRecord
   has_many :caused_orgasms, foreign_key: :caused_by_user_id, class_name: 'Nuttracker::Orgasm'
   has_many :notifications
   has_many :ahoy_visits, :class_name => 'Ahoy::Visit'
+  has_many :nut_pledges, dependent: :destroy
   has_many :kink_havers, -> { order(created_at: :asc, id: :asc) }
   has_many :kinks, -> { order('kink_havers.created_at ASC, kink_havers.id ASC') }, through: :kink_havers
   attribute :colour_preference, :integer
@@ -25,7 +26,7 @@ class User < ApplicationRecord
   belongs_to :profile, optional: true
   has_one :current_surrender, class_name: 'Surrender', dependent: :destroy
   has_many :scoops
-  has_one :nut_pledge, dependent: :destroy
+  has_one :current_nut_pledge, -> { where(year: Time.current.year) }, class_name: 'NutPledge'
 
   validates_uniqueness_of :username
 
@@ -83,12 +84,17 @@ class User < ApplicationRecord
     save
   end
 
-  def view_link(link)
-    self.viewing_link_id = link.id
+  def view_link(link_or_id)
+    link_id = link_or_id.respond_to?(:id) ? link_or_id.id : link_or_id
+    return if viewing_link_id == link_id
+
+    self.viewing_link_id = link_id
     save
   end
 
   def leave_link
+    return if viewing_link_id.nil?
+
     self.viewing_link_id = nil
     save
   end

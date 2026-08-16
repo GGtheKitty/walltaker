@@ -7,9 +7,9 @@ module Nuttracker
     validates :rating, presence: true
 
     after_create_commit do
-      if  Time.now.between?(Time.new(2024, 11, 1, 12, 0, 0), Time.new(2024, 11, 31, 23, 0, 0)) && user.nut_pledge.present? && !user.nut_pledge.failed?
-        user.nut_pledge.failed_on = Time.now
-        user.nut_pledge.save
+      if SiteConfig.nut_tracker_enabled? && user.current_nut_pledge.present? && !user.current_nut_pledge.failed?
+        user.current_nut_pledge.failed_on = Time.now
+        user.current_nut_pledge.save
       end
     end
 

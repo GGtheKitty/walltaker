@@ -8,10 +8,7 @@ class UsersController < ApplicationController
 
   def show
     set_user_vars
-    @total_orgasms_by_day = @user.orgasms.where('created_at > ?', 1.weeks.ago.midnight).group_by_day(:created_at, range: 1.weeks.ago.midnight..Time.now).count
-    @total_orgasms = @user.orgasms.where('created_at > ?', 1.weeks.ago.midnight).count
-    @total_orgasms_caused = @user.caused_orgasms.where('caused_by_user_id <> user_id').count unless @user.username == 'gray'
-    @total_orgasms_caused = Nuttracker::Orgasm.count if @user.username == 'gray'
+    set_nut_tracker_vars
   end
 
   def sets
@@ -21,10 +18,18 @@ class UsersController < ApplicationController
 
   def edit
     set_user_vars
+    set_nut_tracker_vars
     @is_editing = true
     return redirect_to user_path(@user.username) unless @is_current_user
 
     render 'users/show'
+  end
+
+  def set_nut_tracker_vars
+    @total_orgasms_by_day = @user.orgasms.where('created_at > ?', 1.weeks.ago.midnight).group_by_day(:created_at, range: 1.weeks.ago.midnight..Time.now).count
+    @total_orgasms = @user.orgasms.where('created_at > ?', 1.weeks.ago.midnight).count
+    @total_orgasms_caused = @user.caused_orgasms.where('caused_by_user_id <> user_id').count unless @user.username == 'gray'
+    @total_orgasms_caused = Nuttracker::Orgasm.count if @user.username == 'gray'
   end
 
   def update

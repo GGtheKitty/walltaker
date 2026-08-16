@@ -134,7 +134,7 @@
       <% end %>
     </h2>
 
-    <%= turbo_frame_tag :pledge, src: user_nut_pledge_path(@user.username) %>
+    <%= turbo_frame_tag :pledge, src: user_nut_pledge_path(@user.username) if SiteConfig.nut_tracker_enabled? && @user.current_nut_pledge.present? %>
 
     <% unless @is_editing %>
       <%= render 'users/details', { user: @user, is_current_user: @is_current_user } %><%= render partial: 'users/past_links', locals: { past_links: @past_links } %>

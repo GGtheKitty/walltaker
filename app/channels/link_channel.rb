@@ -15,20 +15,19 @@ class LinkChannel < ApplicationCable::Channel
     end
 
     watch_link(link)
-    stream_from stream_name(link)
+    @watched_link_id = link.id
+    @watched_link_stream = stream_name(link)
+
+    stream_from @watched_link_stream
     transmit link.reload.api_payload
   end
 
   def unsubscribed
-    link_identifier = params[:id].presence || params[:link_id].presence
     stop_watching_user
-    return unless link_identifier
+    return unless @watched_link_id
 
-    link = find_link(link_identifier)
-    return unless link
-
-    stop_stream_from stream_name(link)
-    leave_link(link)
+    stop_stream_from @watched_link_stream if @watched_link_stream
+    leave_link_id(@watched_link_id)
   end
 
   def check
@@ -100,28 +99,36 @@ class LinkChannel < ApplicationCable::Channel
 
   def watch_link(link)
     connection.watched_links[link.id] ||= SecureRandom.uuid
+    was_offline = LinkPresence.offline?(link)
+
     LinkPresence.join(link, connection.watched_links[link.id])
-    link.live_client_started_at = Time.now.utc
+    link.live_client_started_at = Time.now.utc if was_offline
     link.last_ping_user_agent = client_identity_from(params) || connection.client_identity
     link.save
   end
 
   def refresh_presence
-    connection&.watched_links&.each_key do |link_id|
-      link = Link.find_by(id: link_id)
-      next unless link
-
-      LinkPresence.refresh(link)
-      link.update_column(:live_client_started_at, Time.now.utc)
-    end
+    connection&.watched_links&.each_key { |link_id| LinkPresence.refresh_id(link_id) }
   end
 
   def leave_link(link)
-    connection_id = connection.watched_links.delete(link.id)
-    return unless connection_id && LinkPresence.leave(link, connection_id)
+    leave_link_id(link.id)
+  end
 
-    link.live_client_started_at = nil
-    link.save
+  def leave_link_id(link_id)
+    connection_id = connection.watched_links.delete(link_id)
+    return unless connection_id && LinkPresence.leave_id(link_id, connection_id)
+
+    link = Link.find_by(id: link_id)
+    return unless link
+
+    broadcast_presence_update(link)
+  end
+
+  def broadcast_presence_update(link)
+    link.broadcast_link_page_updates
+    ActionCable.server.broadcast("Link::#{link.id}", link.reload.api_payload)
+    User.broadcast_api_update(link.user)
   end
 
   def client_identity_from(data)

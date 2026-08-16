@@ -28,6 +28,28 @@ class LinkChannelTest < ActionCable::Channel::TestCase
     assert_equal true, payload[:online]
   end
 
+  test 'refreshing presence does not update live_client_started_at heartbeat' do
+    subscribe id: @link.id
+    started_at = @link.reload.live_client_started_at
+
+    travel 45.seconds
+    subscription.send(:refresh_presence)
+
+    assert_equal started_at.to_i, @link.reload.live_client_started_at.to_i
+  ensure
+    travel_back
+  end
+
+  test 'unsubscribing keeps live_client_started_at as historical timestamp' do
+    subscribe id: @link.id
+    started_at = @link.reload.live_client_started_at
+
+    unsubscribe
+
+    assert_equal started_at.to_i, @link.reload.live_client_started_at.to_i
+    assert_not @link.reload.is_online?
+  end
+
   test 'rejects subscriptions without a link identifier' do
     subscribe
 

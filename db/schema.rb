@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_05_000900) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_07_121000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -337,7 +337,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_05_000900) do
     t.datetime "failed_on"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "year", null: false
     t.index ["past_link_id"], name: "index_nut_pledges_on_past_link_id"
+    t.index ["user_id", "year"], name: "index_nut_pledges_on_user_id_and_year", unique: true
     t.index ["user_id"], name: "index_nut_pledges_on_user_id"
   end
 
@@ -401,6 +403,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_05_000900) do
     t.boolean "was_shown", default: false
     t.index ["link_id"], name: "index_scoops_on_link_id"
     t.index ["user_id"], name: "index_scoops_on_user_id"
+  end
+
+  create_table "site_settings", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "value", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_site_settings_on_key", unique: true
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|

@@ -74,7 +74,9 @@ Rails.application.routes.draw do
   resources :users do
     resources :reports, only: %i[new create]
     resources :leashes, only: %i[index]
-    resource :nut_pledge
+    resource :nut_pledge do
+      get :history
+    end
     post 'profile', to: 'profiles#set_profile', as: 'set_profile'
 
     member do
@@ -141,6 +143,7 @@ Rails.application.routes.draw do
 
   scope path: :mod_tools, as: 'mod_tools' do
     get '/', to: 'mod_tools#index', as: 'index'
+    post 'global_toggles/nut_tracker', to: 'mod_tools#toggle_nut_tracker', as: 'toggle_nut_tracker'
 
     resources :reports, except: %i[new create]
 
