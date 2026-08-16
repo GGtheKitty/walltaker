@@ -1,6 +1,11 @@
 <h2>
   <ion-icon role="presentation" name="color-palette" class="big"></ion-icon>
   Profile Styles
+  <% if @user %>
+    <%= link_to profiles_path, class: 'profiles__browse-link', style: 'float: right; font-size: 1rem; font-weight: bold; margin-top: 0.8rem;' do %>
+      Browse Styles
+    <% end %>
+  <% end %>
   <small>Decorate your user profile with a community-made style!</small>
 </h2>
 
@@ -34,13 +39,17 @@
 
 <% else %>
   <h4>No profile styles</h4>
-  <% if current_user != @user %>
-  <p>
-    <%= @user.username %> has no profile styles available. They may have removed an old profile style, or set it to private. <%= link_to "You can always send them a message to ask.", resolve_message_thread_index_path(@user) %>
-  </p>
-    <% else %>
+  <% if @user.nil? %>
+    <p>
+      No public profile styles are available yet.
+    </p>
+  <% elsif current_user != @user %>
+    <p>
+      <%= @user.username %> has no profile styles available. They may have removed an old profile style, or set it to private. <%= link_to "You can always send them a message to ask.", resolve_message_thread_index_path(@user) %>
+    </p>
+  <% else %>
     <p>
       You have no public styles. You can set some of your profile styles to public on <%= link_to "the profile edit page.", edit_user_path(@user.username) %> Afterwards, they will appear here, and be installable by others.
     </p>
-    <% end %>
+  <% end %>
 <% end %>

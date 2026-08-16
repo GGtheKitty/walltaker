@@ -44,7 +44,7 @@ class FriendshipsController < ApplicationController
 
   # POST /friendships or /friendships.json
   def create
-    receiver = User.find_by username: params['receiver_username']
+    receiver = User.active.find_by username: params['receiver_username']
     if receiver.nil?
       redirect_back_or_to root_path, alert: 'User was not found.'
       return

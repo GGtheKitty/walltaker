@@ -1,0 +1,92 @@
+x-database-env: &database
+  DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+
+x-redis-env: &redis
+  REDIS_URL: redis://${CACHE_HOST}:${CACHE_PORT}/1
+
+x-walltaker-env: &walltaker
+  WALLTAKER_HOST: ${WALLTAKER_HOST?error}
+  WALLTAKER_BASE_URL: ${WALLTAKER_URL?error}
+  E621_USER_AGENT: ${WALLTAKER_HOST} (forked from ailurus and run by ${E621_USER})
+
+services:
+  database:
+    image: postgres:14
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "${DB_HOST_PORT}:${DB_PORT}"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    ports:
+      - "${CACHE_HOST_PORT}:${CACHE_PORT}"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    networks:
+      - backend
+
+  web:
+    build: .
+    restart: unless-stopped
+    command: bash -lc 'ruby -rsocket -e "loop { begin; TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; break; rescue; sleep 1; end }" && bundle exec rails assets:precompile && bundle exec rails db:prepare && bundle exec rails server -e production -b 0.0.0.0'
+    volumes:
+      - ./:/ror
+    ports:
+      - "${RAILS_HOST_PORT}:3000"
+    depends_on:
+      - database
+      - redis
+    environment:
+      <<: [*database, *redis, *walltaker]
+      ENV: PROD
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      RAILS_ENV: production
+      RAILS_SERVE_STATIC_FILES: true
+    networks:
+      - backend
+      - frontend
+
+  pornbot_scheduler:
+    build: .
+    restart: unless-stopped
+    command: bash -lc 'ruby -rsocket -e "loop { begin; TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; break; rescue; sleep 1; end }" && while true; do bundle exec rake walltaker:porn_bot_round; sleep "$${PORNBOT_INTERVAL_SECONDS:-600}"; done'
+    volumes:
+      - ./:/ror
+    depends_on:
+      - database
+      - redis
+    environment:
+      <<: [*database, *redis, *walltaker]
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      RAILS_ENV: production
+      PORNBOT_INTERVAL_SECONDS: ${PORNBOT_INTERVAL_SECONDS:-600}
+    networks:
+      - backend
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  backend:
+  frontend:

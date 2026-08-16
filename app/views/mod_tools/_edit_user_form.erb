@@ -1,5 +1,17 @@
 <%= turbo_frame_tag :mod_tools_edit_user_form do %>
-  <%= link_to "Log in as #{user.username}", mod_tools_users_assume_path(user), target: '_top' %>
+  <% if user.deleted? %>
+    <div class="accent-block danger spaced">
+      <div class="accent-block__charm">
+        <ion-icon role="presentation" name="warning"></ion-icon>
+        Deleted Account
+      </div>
+      <p>Original username: <strong><%= user.deleted_username %></strong></p>
+      <%= button_to 'Restore Account', mod_tools_users_restore_path(user), class: 'accent-block__button' %>
+      <%= button_to 'Permanently Purge Account', mod_tools_users_purge_path(user), method: :delete, class: 'accent-block__button danger-button', form: { data: { turbo_confirm: 'Permanently purge this account and all of its data? This cannot be undone.' } } %>
+    </div>
+  <% else %>
+    <%= link_to "Log in as #{user.username}", mod_tools_users_assume_path(user), target: '_top' %>
+  <% end %>
   <%= form_with model: user, method: :post, url: mod_tools_users_update_path do |f| %>
     <% user.class.columns.each do |col| %>
       <div>

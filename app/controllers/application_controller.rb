@@ -52,8 +52,8 @@ class ApplicationController < ActionController::Base
   end
 
   def current_user
-    @current_user ||= User.find(cookies.signed[:permanent_session_id]) if cookies.signed[:permanent_session_id]
-    @current_user ||= User.find(session[:user_id]) if session[:user_id]
+    @current_user ||= User.active.find_by(id: cookies.signed[:permanent_session_id]) if cookies.signed[:permanent_session_id]
+    @current_user ||= User.active.find_by(id: session[:user_id]) if session[:user_id]
 
     @current_user
   end
@@ -100,12 +100,12 @@ class ApplicationController < ActionController::Base
     Comment.create user_id: link.user.id, link_id: link.id, content: comment_text
     Comment.create user_id: link.user.id, link_id: link.id, content: link.response_text unless link.response_type.nil?
 
-    # If a came reaction, log an orgasm
+    # If a came reaction, log an orgasm.
     Nuttracker::Orgasm.create rating: 3, is_ruined: false, user: link.user, caused_by: link.set_by if link.response_type == 'came'
 
-    if link.response_type == 'came' && link.user.nut_pledge.present?
-      link.user.nut_pledge.past_link = link.past_links.last
-      link.user.nut_pledge.save
+    if SiteConfig.nnn_enabled? && link.response_type == 'came' && link.user.current_nut_pledge.present?
+      link.user.current_nut_pledge.past_link = link.past_links.last
+      link.user.current_nut_pledge.save
     end
 
     # If a disgust reaction, revert to old wallpaper
@@ -115,6 +115,7 @@ class ApplicationController < ActionController::Base
 
       last_past_link = PastLink.where(link_id: link.id).where.not(post_url: link.post_url).order('created_at').last
 
+      link.e621_post_id = last_past_link ? last_past_link.e621_post_id : nil
       link.post_url = last_past_link ? last_past_link.post_url : nil
       link.post_thumbnail_url = last_past_link ? last_past_link.post_thumbnail_url : nil
     end

@@ -162,9 +162,11 @@ class LinksController < ApplicationController
     respond_to do |format|
       if result_of_link_model_save
         format.html { redirect_to link_url(@link), notice: 'Link was successfully updated.' }
+        format.turbo_stream { redirect_to link_url(@link), notice: 'Link was successfully updated.', status: :see_other }
         format.json { render :show, status: :ok, location: @link }
       else
         format.html { render :edit, status: :unprocessable_entity }
+        format.turbo_stream { render :edit, status: :unprocessable_entity }
         format.json { render json: @link.errors, status: :unprocessable_entity }
       end
     end
@@ -294,7 +296,7 @@ class LinksController < ApplicationController
         return true
       end
 
-      return redirect_to @link, alert: 'Only the link owner\'s master can change this link right now.' if @link.check_ability('is_master_only') && action_name == 'update'
+      return redirect_to @link, alert: "Only this link owner's leash owner can change this link right now." if @link.check_ability('is_master_only') && action_name == 'update'
 
       authorize if @link.friends_only
 
@@ -367,6 +369,7 @@ class LinksController < ApplicationController
 
     link.update(
       {
+        e621_post_id: e621_post['id'],
         post_url: e621_post['file']['url'],
         post_thumbnail_url: e621_post['sample']['url'] || e621_post['preview']['url'],
         post_description: e621_post['description'],

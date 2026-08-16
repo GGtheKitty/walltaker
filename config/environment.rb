@@ -5,12 +5,13 @@ require_relative "application"
 Rails.application.initialize!
 
 ActionMailer::Base.smtp_settings = {
-  :port => ENV['MAILGUN_SMTP_PORT'],
-  :address => ENV['MAILGUN_SMTP_SERVER'],
-  :user_name => ENV['MAILGUN_SMTP_LOGIN'],
-  :password => ENV['MAILGUN_SMTP_PASSWORD'],
+  :port => SiteConfig.resend_smtp_port,
+  :address => SiteConfig.resend_smtp_address,
+  :user_name => SiteConfig.resend_smtp_user_name,
+  :password => SiteConfig.resend_smtp_password,
   :domain => SiteConfig.host,
-  :authentication => :plain
+  :authentication => SiteConfig.resend_smtp_authentication,
+  :enable_starttls_auto => SiteConfig.resend_smtp_starttls_auto?
 }
 ActionMailer::Base.delivery_method = :smtp
 ActionMailer::Base.perform_deliveries = true

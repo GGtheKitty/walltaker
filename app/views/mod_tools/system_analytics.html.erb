@@ -1,0 +1,79 @@
+<div data-turbo-prefetch="false" class="task-tools">
+  <div class="left">
+    <%= link_to 'Cancel', mod_tools_index_path %>
+  </div>
+  <div class="right">
+    <%= link_to 'Activity', mod_tools_activity_analytics_path %>
+  </div>
+</div>
+
+<h2>
+  <ion-icon role="presentation" name="hardware-chip" class="big"></ion-icon>
+  System
+  <small>Updated <%= time_tag @metrics[:captured_at] %></small>
+</h2>
+
+<h3>Machine</h3>
+<% machine = @metrics[:machine] %>
+<% if machine[:unavailable] %>
+  <p>Machine metrics unavailable.</p>
+<% else %>
+  <table>
+    <tbody>
+      <tr><th>CPU</th><td><%= machine[:cpu_percent] %>% across <%= pluralize(machine[:cpu_count], 'core') %></td></tr>
+      <tr><th>Load</th><td><%= machine[:load_averages].join(' / ') %></td></tr>
+      <tr><th>RAM</th><td><%= number_to_human_size(machine[:memory_used]) %> / <%= number_to_human_size(machine[:memory_total]) %> (<%= machine[:memory_percent] %>%)</td></tr>
+      <tr><th>Swap</th><td><%= number_to_human_size(machine[:swap_used]) %> / <%= number_to_human_size(machine[:swap_total]) %></td></tr>
+      <tr><th>Storage</th><td><%= number_to_human_size(machine[:disk][:used]) %> / <%= number_to_human_size(machine[:disk][:total]) %> (<%= machine[:disk][:percent] %>%)</td></tr>
+      <tr><th>Uptime</th><td><%= distance_of_time_in_words(machine[:uptime_seconds]) %></td></tr>
+    </tbody>
+  </table>
+<% end %>
+
+<h3>Services</h3>
+<table>
+  <thead>
+    <tr><th>Service</th><th>Health</th><th>Response</th><th>Usage</th></tr>
+  </thead>
+  <tbody>
+    <% database = @metrics[:database] %>
+    <tr>
+      <td>PostgreSQL</td>
+      <td><%= database[:healthy] ? 'Healthy' : 'Unavailable' %></td>
+      <td><%= "#{database[:response_ms]} ms" if database[:healthy] %></td>
+      <td>
+        <% if database[:healthy] %>
+          <%= number_to_human_size(database[:size]) %><br>
+          <small><%= database[:pool][:busy] %> / <%= database[:pool][:size] %> connections busy</small>
+        <% end %>
+      </td>
+    </tr>
+    <% redis = @metrics[:redis] %>
+    <tr>
+      <td>Redis</td>
+      <td><%= redis[:healthy] ? 'Healthy' : 'Unavailable' %></td>
+      <td><%= "#{redis[:response_ms]} ms" if redis[:healthy] %></td>
+      <td>
+        <% if redis[:healthy] %>
+          <%= number_to_human_size(redis[:used_memory]) %><br>
+          <small><%= number_to_human_size(redis[:peak_memory]) %> peak</small>
+        <% end %>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Job Queue</h3>
+<% queue = @metrics[:queue] %>
+<% if queue[:unavailable] %>
+  <p>Queue metrics unavailable.</p>
+<% else %>
+  <table>
+    <tbody>
+      <tr><th>Ready</th><td><%= number_with_delimiter(queue[:ready]) %></td></tr>
+      <tr><th>Running</th><td><%= number_with_delimiter(queue[:claimed]) %></td></tr>
+      <tr><th>Scheduled</th><td><%= number_with_delimiter(queue[:scheduled]) %></td></tr>
+      <tr><th>Failed</th><td><%= number_with_delimiter(queue[:failed]) %></td></tr>
+    </tbody>
+  </table>
+<% end %>

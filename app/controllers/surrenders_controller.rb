@@ -1,8 +1,8 @@
 class SurrendersController < ApplicationController
   before_action :authorize, except: %i[show destroy]
   before_action :authorize_for_surrendered_accounts, only: %i[show destroy]
-  before_action :set_friendship_options, only: %i[new edit]
-  before_action :set_surrender, only: %i[show edit destroy assume]
+  before_action :set_friendship_options, only: %i[new]
+  before_action :set_surrender, only: %i[show destroy assume]
   before_action :protect_own_surrender, only: %i[show destroy]
 
   def index
@@ -23,6 +23,8 @@ class SurrendersController < ApplicationController
       surrender = current_user.create_current_surrender(
         expires_at: expires_at,
         friendship: friendship,
+        controller_user: friendship.other_user(current_user),
+        duration_hours: duration_hours,
         accepted_consequences: surrender_params[:accepted_consequences],
         pending: surrender_params[:pending]
       )

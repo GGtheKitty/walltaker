@@ -92,6 +92,8 @@
       <%= link_to 'Client Building Guide', client_guide_path, target: '_top' %>
     </p>
     <small>
+      <% commit_hash = SiteConfig.commit_hash %>
+      <% commit_time = SiteConfig.commit_time %>
       © joi.how 2024 / Commit
       <a href="<%= ENV.fetch('COMMIT_LINK', 'https://github.com/Lycraon/walltaker/commit/main')%>">#<%= ENV['COMMIT_HASH'].present? ? ENV['COMMIT_HASH'][0..8] : '' %> <%= (time_ago_in_words Time.new(ENV['RELEASE_CREATED_AT'])) + " ago" if ENV['RELEASE_CREATED_AT'].present? %></a>
       <% if current_user && current_user.admin %>

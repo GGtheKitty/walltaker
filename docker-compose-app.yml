@@ -41,7 +41,7 @@ services:
     environment:
       <<: [*database, *redis, *walltaker]
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      PORNBOT_INTERVAL_SECONDS: 600
+      PORNBOT_INTERVAL_SECONDS: ${PORNBOT_INTERVAL_SECONDS:-600}
       RAILS_ENV: production
     networks:
     - backend

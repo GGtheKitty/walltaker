@@ -25,14 +25,14 @@
   </p>
   <br/>
   <p>
-    If you fuck up with tools I provide to you on this panel, you will lose all access. - Gray
+    If you fuck up with tools provided to you on this panel, you will lose all access.
   </p>
 </div>
 
 <h2>
   <ion-icon role="presentation" name="nuclear" class="big"></ion-icon>
   Mod Tools
-  <small>Gray trusts you. The highlighted button in each category is the most useful.</small>
+  <small>The highlighted button in each category is the most useful.</small>
 </h2>
 
 <%= button_to "Report Queue (#{Report.where(is_closed: false).count})", mod_tools_reports_path, method: :get %>
@@ -48,6 +48,27 @@
   <h3>Raiding</h3>
   <%= button_to "Quarantine account(s)", mod_tools_quarantine_index_path, method: :get %>
   <%= button_to "Recent Events", mod_tools_events_index_path, method: :get %>
+</section>
+
+<section>
+  <h3>Misc. Fun</h3>
+  <% nnn_enabled = SiteConfig.nnn_enabled? %>
+  <%= button_to(
+        nnn_enabled ? "Disable NNN" : "Enable NNN",
+        mod_tools_toggle_nnn_path,
+        method: :post,
+        class: nnn_enabled ? 'secondary' : nil,
+        data: {
+          turbo_confirm: "Are you sure you want to #{nnn_enabled ? 'disable' : 'enable'} NNN?"
+        }
+      ) %>
+  <%= button_to 'Emoji Links', mod_tools_emoji_links_path, method: :get, class: 'secondary' %>
+</section>
+
+<section>
+  <h3>Analytics</h3>
+  <%= button_to 'System', mod_tools_system_analytics_path, method: :get %>
+  <%= button_to 'Activity', mod_tools_activity_analytics_path, method: :get, class: 'secondary' %>
 </section>
 
 <!--<section>

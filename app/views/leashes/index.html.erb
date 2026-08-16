@@ -29,26 +29,26 @@
       Your failure to read this is not a bug.
     </div>
     <p>
-      A leash is an upgrade you can apply to any confirmed friendship. It's a master/pet relationship, so
+      A leash is an upgrade you can apply to any confirmed friendship. It's an owner/pet relationship, so
       be careful! <u>There are some things you should know before leashing yourself.</u>
     </p>
 
     <ul>
       <li>A leash can only be created by the pet.</li>
-      <li>A pet can only have <u>ONE</u> direct master.</li>
-      <li>A master can have multiple pets.</li>
-      <li>A pet <u>CANNOT REVOKE</u> a leash. It <u>must</u> be removed by the master.</li>
+      <li>A pet can only have <u>ONE</u> direct owner.</li>
+      <li>An owner can have multiple pets.</li>
+      <li>A pet <u>CANNOT REVOKE</u> a leash. It <u>must</u> be removed by the owner.</li>
     </ul>
 
     <!-- maybe later
     <h4>Packs</h4>
 
     <ul>
-      <li>A pet can be a master for another user. This forms a chain of leashes.</li>
-      <li>If your master is a pet for someone else, <u>you are part of a pack.</u></li>
-      <li>Pack privileges lead upwards, <u>your master's master is your master.</u></li>
+      <li>A pet can be an owner for another user. This forms a chain of leashes.</li>
+      <li>If your owner is a pet for someone else, <u>you are part of a pack.</u></li>
+      <li>Pack privileges lead upwards, <u>your owner's owner is your owner.</u></li>
       <li>
-        Your position in the pack is determined by the distance to the first non-leashed master.
+        Your position in the pack is determined by the distance to the first non-leashed owner.
         <ul>
           <li>α Alpha = First Pet</li>
           <li>β Beta = Second Pet</li>
@@ -59,21 +59,21 @@
     </ul>
     -->
 
-    <h4>What can masters do?</h4>
+    <h4>What can owners do?</h4>
 
     <ul>
       <li>
-        Masters <u>DO NOT</u> get surrender access.<br>
-        <em>If you surrender to your master, nothing is different from a regular surrender.</em><br>
+        Owners <u>DO NOT</u> get surrender access.<br>
+        <em>If you surrender to your owner, nothing is different from a regular surrender.</em><br>
         <%= link_to 'Read more about surrenders', surrenders_path %>
       </li>
-      <li>Masters can add a label to your profile that will be shown publicly.
-        You will still have control of your profile, but this one segment will be uneditable. Only your master can
+      <li>Owners can add a label to your profile that will be shown publicly.
+        You will still have control of your profile, but this one segment will be uneditable. Only your owner can
         change
         change/remove it.
       </li>
-      <li>Masters will have a public list of their pets on their profile, featuring your name.</li>
-      <li>Masters can lock any of your links to "Pack Property", meaning only they can set
+      <li>Owners will have a public list of their pets on their profile, featuring your name.</li>
+      <li>Owners can lock any of your links to "Pack Property", meaning only they can set
         wallpapers for it. (You cannot.)
       </li>
     </ul>
@@ -82,7 +82,7 @@
 <% end %>
 
 <% if @master %>
-  <h3>Master</h3>
+  <h3>Owner</h3>
   <%= render 'users/user', user: @master %>
 <% end %>
 

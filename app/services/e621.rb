@@ -34,7 +34,7 @@ class E621
       before_id = before.gsub(/\D/, '') if before
       url = "#{url}&page=a#{before_id}" if before_id
       url = "#{url}&limit=#{limit}"
-      response = Excon.get(url, headers: { 'User-Agent': { 'User-Agent': SiteConfig.e621_user_agent } })
+      response = Excon.get(url, headers: { 'User-Agent': SiteConfig.e621_user_agent })
       if response.status != 200
         track :error, :e621_posts_api_fail, response: response
         return nil

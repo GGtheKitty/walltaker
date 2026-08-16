@@ -1,0 +1,43 @@
+<div data-turbo-prefetch="false" class="task-tools">
+  <div class="left">
+    <%= link_to 'Back to User Search', mod_tools_users_index_path %>
+  </div>
+</div>
+
+<h2>
+  <ion-icon role="presentation" name="warning" class="big"></ion-icon>
+  Deleted Account Queue
+  <small><%= pluralize(@deleted_users.count, 'account') %></small>
+</h2>
+
+<% if @deleted_users.empty? %>
+  <p>There are no deleted accounts.</p>
+<% else %>
+  <table>
+    <thead>
+      <tr>
+        <th>Account</th>
+        <th>Deleted</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @deleted_users.each do |user| %>
+        <tr id="<%= dom_id(user) %>">
+          <td>
+            <%= link_to user.deleted_username, mod_tools_users_index_path(query: user.deleted_username) %><br>
+            <small><%= user.email %></small>
+          </td>
+          <td>
+            <%= user.deleted_at %><br>
+            <small><%= time_ago_in_words(user.deleted_at) %> ago</small>
+          </td>
+          <td>
+            <%= button_to 'Recover', mod_tools_users_restore_path(user), params: { return_to: 'deleted_accounts' } %>
+            <%= button_to 'Permanently Purge', mod_tools_users_purge_path(user), method: :delete, params: { return_to: 'deleted_accounts' }, class: 'danger-button', form: { data: { turbo_confirm: 'Permanently purge this account and all of its data? This cannot be undone.' } } %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

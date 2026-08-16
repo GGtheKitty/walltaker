@@ -1,4 +1,7 @@
 class UsersController < ApplicationController
+  PASSWORD_RESET_NOTICE = 'If an account exists for that email, a password reset email has been sent.'
+  PASSWORD_RESET_COOLDOWN = 10.minutes
+
   after_action :track_visit, only: %i[new show edit]
   before_action :authorize, only: %i[update toggle_details_mode]
 
@@ -8,27 +11,32 @@ class UsersController < ApplicationController
 
   def show
     set_user_vars
-    @total_orgasms_by_day = @user.orgasms.where('created_at > ?', 1.weeks.ago.midnight).group_by_day(:created_at, range: 1.weeks.ago.midnight..Time.now).count
-    @total_orgasms = @user.orgasms.where('created_at > ?', 1.weeks.ago.midnight).count
-    @total_orgasms_caused = @user.caused_orgasms.where('caused_by_user_id <> user_id').count unless @user.username == 'gray'
-    @total_orgasms_caused = Nuttracker::Orgasm.count if @user.username == 'gray'
+    set_nut_tracker_vars
   end
 
   def sets
-    @user = User.find_by(username: params[:username])
+    @user = User.active.find_by(username: params[:username])
     @past_links = PastLink.where(set_by_id: @user.id).order(id: :desc).limit(50)
   end
 
   def edit
     set_user_vars
+    set_nut_tracker_vars
     @is_editing = true
     return redirect_to user_path(@user.username) unless @is_current_user
 
     render 'users/show'
   end
 
+  def set_nut_tracker_vars
+    @total_orgasms_by_day = @user.orgasms.where('created_at > ?', 1.weeks.ago.midnight).group_by_day(:created_at, range: 1.weeks.ago.midnight..Time.now).count
+    @total_orgasms = @user.orgasms.where('created_at > ?', 1.weeks.ago.midnight).count
+    @total_orgasms_caused = @user.caused_orgasms.where('caused_by_user_id <> user_id').count unless @user.username == 'gray'
+    @total_orgasms_caused = Nuttracker::Orgasm.count if @user.username == 'gray'
+  end
+
   def update
-    @user = User.find(params[:id])
+    @user = User.active.find(params[:id])
     return redirect_to user_path(@user.username), { alert: 'Not Authorized.' } if current_user.id != @user.id
 
     if @user.profile
@@ -76,18 +84,27 @@ class UsersController < ApplicationController
   end
 
   def password_reset
+    email = params[:email].to_s.strip.downcase
+    user = User.active.where("lower(email) = ?", email).first
+
+    unless user
+      track :nefarious, :password_reset_unknown_email, tried_email: email
+      return redirect_to login_path, notice: PASSWORD_RESET_NOTICE
+    end
+
+    if user.password_reset_sent_at && user.password_reset_sent_at > PASSWORD_RESET_COOLDOWN.ago
+      track :regular, :password_reset_throttled, user: user.username, tried_email: email
+      return redirect_to login_path, notice: PASSWORD_RESET_NOTICE
+    end
+
     begin
-      user = User.where("lower(email) = ?", params[:email]&.downcase).first
-
-      unless user
-        throw :nefarious
-      end
-
       PasswordResetMailer.reset_password(user).deliver
-      redirect_to login_path, notice: 'A password reset email has been sent to that user'
+      user.update_column(:password_reset_sent_at, Time.current)
+      track :regular, :password_reset_email_sent, user: user.username
+      redirect_to login_path, notice: PASSWORD_RESET_NOTICE
     rescue
-      track :nefarious, :failed_to_reset_password, tried_email: params['email'], exception: $!
-      redirect_to forgor_path, alert: 'User was not found with that email'
+      track :error, :failed_to_deliver_password_reset, tried_email: email, exception: $!
+      redirect_to forgor_path, alert: 'Password reset email could not be sent'
     end
   end
 
@@ -96,7 +113,7 @@ class UsersController < ApplicationController
   end
 
   def commit_apply_new_password
-    user = User.find_by(password_reset_token: params['password_reset_token'])
+    user = User.active.find_by(password_reset_token: params['password_reset_token'])
 
     if user && params['password'] && params['password_confirmation'] && (params['password'] == params['password_confirmation'])
       user.password = params['password']
@@ -113,7 +130,7 @@ class UsersController < ApplicationController
   end
 
   def new_api_key
-    @user = User.find_by(username: params[:username])
+    @user = User.active.find_by(username: params[:username])
     if (@user.id == current_user.id)
       @user.assign_new_api_key
     end
@@ -130,13 +147,13 @@ class UsersController < ApplicationController
   end
 
   def details
-    @user = User.find(params[:id])
+    @user = User.active.find(params[:id])
   end
 
   private
 
   def set_user_vars
-    @user = User.find_by(username: params[:username])
+    @user = User.active.find_by(username: params[:username])
     if @user.present?
       @is_current_user = current_user && current_user.id == @user.id
       @has_friendship = Friendship.find_friendship(current_user, @user).exists? if current_user

@@ -9,6 +9,22 @@ your friend's phones. This however leads to some weird cases where people post s
 blacklist. With that in mind, I wanted it to be restricted to e621.net results, with an enforced blacklist. This keeps
 you in control, but not _too much_ control.
 
+## Email
+
+Password reset emails are sent through Resend SMTP. Configure delivery with these environment variables:
+
+For Docker Compose development, use `.env.example` as the template for `walltaker.env`. The real `walltaker.env` file is ignored by Git.
+
+| Variable | Default | Notes |
+|----------|---------|-------|
+| `RESEND_API_KEY` | | Resend API key used as the SMTP password. |
+| `RESEND_SMTP_ADDRESS` | `smtp.resend.com` | Override only if Resend changes hosts or you need a proxy. |
+| `RESEND_SMTP_PORT` | `587` | Resend supports `25`, `465`, `587`, `2465`, and `2587`. |
+| `RESEND_SMTP_USER_NAME` | `resend` | Resend's SMTP username. |
+| `RESEND_SMTP_AUTHENTICATION` | `plain` | Rails ActionMailer SMTP authentication mode. |
+| `RESEND_SMTP_ENABLE_STARTTLS_AUTO` | `true` | Use STARTTLS automatically for ports like `587`. |
+| `WALLTAKER_MAIL_FROM` | `walltaker@<host>` | Sender address for app emails. Must be allowed by your Resend domain. |
+
 ## Clients
 A client is required to set the wallpaper of a device. Here are some made by the awesome community!
 
@@ -38,7 +54,7 @@ can skip downloading if it hasn't changed since the last one.
 
 ---
 
-### GET `https://walltaker.joi.how/api/links/[id].json`
+### GET `https://<your-walltaker-host>/api/links/[id].json`
 
 🔓 No API key required
 
@@ -66,7 +82,7 @@ Get the current post details for a given link.
 
 ---
 
-### POST `https://walltaker.joi.how/api/links/[id]/response.json`
+### POST `https://<your-walltaker-host>/api/links/[id]/response.json`
 
 🔑 Requires user's API Key
 
@@ -84,7 +100,7 @@ Set a response for a given link. There are 3 kinds of responses.
 The body must be a valid JSON string, like shown below
 
 ```http request
-POST https://walltaker.joi.how/api/links/[id]/response.json HTTP/1.1
+POST https://<your-walltaker-host>/api/links/[id]/response.json HTTP/1.1
 Content-Type: application/json;
 {
   "api_key": "23unFe3i",  // User's API key, always 8 characters long, REQUIRED
@@ -102,7 +118,7 @@ Content-Type: application/json;
 
 ---
 
-### GET `https://walltaker.joi.how/api/users/[username].json?api_key=xxxxxxxx`
+### GET `https://<your-walltaker-host>/api/users/[username].json?api_key=xxxxxxxx`
 
 🔓/🔐 API key required for some, but not all data
 

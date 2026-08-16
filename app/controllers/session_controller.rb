@@ -8,7 +8,7 @@ class SessionController < ApplicationController
       return
     end
 
-    user = User.where("lower(email) = ?",login_params[:email]&.downcase).first
+    user = User.active.where("lower(email) = ?",login_params[:email]&.downcase).first
     if !user.nil?
       if user.username == 'PornBot'
         @error = 'You don\'t look like a robot... Your IP address has been flagged.'

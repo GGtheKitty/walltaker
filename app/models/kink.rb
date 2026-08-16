@@ -1,10 +1,14 @@
 class Kink < ApplicationRecord
   include PgSearch::Model
+  def self.normalize_name(name)
+    name.to_s.gsub(/[^\w\d_\-\(\)\/\s]/, '').strip.squish.downcase.gsub(/\s/, '_')
+  end
+
   validates_uniqueness_of :name
   validates_length_of :name, maximum: 30, minimum: 1
   validates_associated :kink_havers, message: 'must only have one of each kink.'
 
-  normalizes :name, with: -> name { name.gsub(/[^\w\d_\-\(\)\/\s]/, '').strip.squish.downcase.gsub(/\s/, '_') }
+  normalizes :name, with: -> name { normalize_name(name) }
 
   has_many :kink_havers
   has_many :users, through: :kink_havers

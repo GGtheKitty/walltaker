@@ -209,7 +209,7 @@
       Leash in use
     </div>
     <%= @link.user.username.capitalize %> is leashed to
-    Master <%= link_to @link.user.master.username.capitalize, user_path(@link.user.master.username) %>, who opted to make this link
+    Owner <%= link_to @link.user.master.username.capitalize, user_path(@link.user.master.username) %>, who opted to make this link
     pack property.
     <% if @link.user.flair.present? %>
       <blockquote>
@@ -223,7 +223,7 @@
   <div class="abilities accent-block">
     <div class="accent-block__charm">
       <ion-icon role="presentation" name="eye-off"></ion-icon>
-      Only you see this, as you are the master of <%= @link.user.username %>
+      Only you see this, as you are the owner of <%= @link.user.username %>
     </div>
     <div class="abilities__ability">
       <% is_master_only = @link.check_ability 'is_master_only' %>
@@ -235,11 +235,11 @@
           <% else %>
             <ion-icon name="eye"></ion-icon>
           <% end %>
-          <%= is_master_only ? 'Master Only' : 'Public' %>
+          <%= is_master_only ? 'Owner Only' : 'Public' %>
         </strong>
         <p>
           <% if is_master_only %>
-            Only bots and you, the master of <%= @link.user.username %>, will be able to set wallpapers.
+            Only bots and you, the owner of <%= @link.user.username %>, will be able to set wallpapers.
           <% else %>
             Anyone can set wallpapers for this link.
           <% end %>
@@ -247,7 +247,7 @@
       </div>
       <div class="abilities__ability__controls">
         <%= button_to toggle_link_ability_link_path(ability: :is_master_only), method: :post, class: is_master_only ? 'enabled' : 'disabled' do %>
-          <%= is_master_only ? 'Make Public' : 'Make Master Only' %>
+          <%= is_master_only ? 'Make Public' : 'Make Owner Only' %>
         <% end %>
       </div>
     </div>

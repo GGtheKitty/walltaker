@@ -13,4 +13,14 @@ class Rack::Attack
       req.ip
     end
   end
+
+  throttle('password_resets/ip', limit: 5, period: 15.minutes) do |req|
+    req.ip if req.path == '/i-forgor' && req.post?
+  end
+
+  throttle('password_resets/email', limit: 5, period: 1.hour) do |req|
+    if req.path == '/i-forgor' && req.post?
+      req.params['email'].to_s.strip.downcase.presence
+    end
+  end
 end
