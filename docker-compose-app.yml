@@ -13,21 +13,42 @@ x-walltaker-env: &walltaker
     WALLTAKER_BASE_URL: ${WALLTAKER_URL?error}
     WALLTAKER_MAIL_FROM: ${WALLTAKER_MAIL_FROM:-mailgun@${WALLTAKER_HOST}}
     E621_USER_AGENT: ${WALLTAKER_HOST} (forked from ailurus and run by ${E621_USER?error})
+    RAILS_ENV: ${RAILS_ENV:-production}
+    SECRET_KEY_BASE: ${SECRET_KEY_BASE}
 
 services:
   web:
     build: .
     restart: unless-stopped
-    command: bash -lc 'ruby -rsocket -e "loop { begin; TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; break; rescue; sleep 1; end }" && bundle exec rails assets:precompile && bundle exec rails db:prepare && bundle exec rails server -e production -b 0.0.0.0'
+    command: > 
+      bash -lc '
+        ruby -rsocket -e "
+          loop { 
+            begin; 
+            TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; 
+            break; 
+            rescue; 
+            sleep 1; 
+            end 
+        }" && 
+        bundle exec rails assets:precompile && 
+        bundle exec rails db:prepare && 
+        bundle exec rails server -b 0.0.0.0
+      '
     volumes:
       - ./:/ror
     ports:
-      - "${RAILS_HOST_PORT}:3000"
+      - "${RAILS_HOST_PORT:-3000}:3000"
     environment:
       <<: [*database, *redis, *walltaker]
-      ENV: PROD
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       RAILS_SERVE_STATIC_FILES: true
+    develop:
+      watch:
+        #sync static content
+        - path: .
+          #action: rebuild
+          action: sync
+          target: ./ror
     networks:
       - backend
       - frontend
@@ -35,14 +56,26 @@ services:
   pornbot_scheduler:
     build: .
     restart: unless-stopped
-    command: bash -lc 'ruby -rsocket -e "loop { begin; TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; break; rescue; sleep 1; end }" && while true; do bundle exec rake walltaker:porn_bot_round; sleep "$${PORNBOT_INTERVAL_SECONDS:-600}"; done'
+    command: >
+      bash -lc '
+        ruby -rsocket -e "loop { 
+          begin; 
+          TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; 
+          break; 
+          rescue; 
+          sleep 1; 
+          end 
+        }" &&
+        while true; 
+        do bundle exec rake walltaker:porn_bot_round; 
+        sleep "$${PORNBOT_INTERVAL_SECONDS:-600}"; 
+        done
+      '
     volumes:
       - ./:/ror
     environment:
       <<: [*database, *redis, *walltaker]
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      PORNBOT_INTERVAL_SECONDS: 600
-      RAILS_ENV: production
+      PORNBOT_INTERVAL_SECONDS: ${PORNBOT_INTERVAL_SECONDS:-600}
     networks:
     - backend
 
