@@ -13,8 +13,6 @@ you in control, but not _too much_ control.
 
 Password reset emails are sent through Resend SMTP. Configure delivery with these environment variables:
 
-For Docker Compose development, use `.env.example` as the template for `walltaker.env`. The real `walltaker.env` file is ignored by Git.
-
 | Variable | Default | Notes |
 |----------|---------|-------|
 | `RESEND_API_KEY` | | Resend API key used as the SMTP password. |
