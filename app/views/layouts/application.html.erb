@@ -95,9 +95,7 @@
       <% commit_hash = SiteConfig.commit_hash %>
       <% commit_time = SiteConfig.commit_time %>
       © joi.how 2024 / Commit
-      <% if commit_hash.present? %>
-        <a href="https://github.com/GGtheKitty/walltaker/commit/<%= commit_hash %>">#<%= commit_hash[0..8] %> <%= (time_ago_in_words(commit_time) + " ago") if commit_time.present? %></a>
-      <% end %>
+      <a href="<%= ENV.fetch('COMMIT_LINK', 'https://github.com/Lycraon/walltaker/commit/main')%>">#<%= ENV['COMMIT_HASH'].present? ? ENV['COMMIT_HASH'][0..8] : '' %> <%= (time_ago_in_words Time.new(ENV['RELEASE_CREATED_AT'])) + " ago" if ENV['RELEASE_CREATED_AT'].present? %></a>
       <% if current_user && current_user.admin %>
         <%= link_to blazer_path do %>
           <ion-icon role="presentation" name="stats-chart"></ion-icon>
