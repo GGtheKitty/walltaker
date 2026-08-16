@@ -39,3 +39,7 @@
 # Ignore environment files (does not include .env.example etc).
 *.env
 *.env.prod
+
+# Local database dumps and Docker volumes
+*.dump
+.docker/volumes/

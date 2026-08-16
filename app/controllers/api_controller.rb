@@ -65,7 +65,7 @@ class ApiController < ApplicationController
     valid = !@link.user.api_key.nil? && @link.user.api_key == params[:api_key]
 
     unless valid
-      return render json: { message: 'Bad API key. Get an API key from your profile page on Walltaker.joi.how' }, status: 403
+      return render json: { message: 'Bad API key. Get an API key from your profile page on #{SiteConfig.host}' }, status: 403
     end
 
     begin
@@ -99,15 +99,7 @@ class ApiController < ApplicationController
     end
 
     @user = User.find_by(username: params[:username])
-    @has_friendship = Rails.cache.fetch("v1/user-api/#{@user.username}/#{current_user_or_api_user&.username || 'anon'}/has_friendship", expires: 1.hour) { Friendship.find_friendship(current_user_or_api_user, @user).exists? } if current_user_or_api_user
-    online_links_ids = Rails.cache.fetch("v1/user-api/#{@user.username}/online-links/as-anon", expires: 7.minutes) { @user.link.where(friends_only: false).and(@user.link.where('expires > ?', Time.now).or(@user.link.where(never_expires: true))).and(@user.link.is_online).pluck(:id) } unless @has_friendship
-    online_links_ids = Rails.cache.fetch("v1/user-api/#{@user.username}/online-links/as-friend", expires: 7.minutes) { @user.link.where('expires > ?', Time.now).or(@user.link.where(never_expires: true)).and(@user.link.is_online).pluck(:id) } if @has_friendship
-
-    @is_self = @user.id == current_user_or_api_user.id if current_user_or_api_user
-    @is_self = false unless current_user_or_api_user
-    @is_online = online_links_ids.length > 0
-    @is_authenticated = !!current_user_or_api_user
-    @public_links = @user.link.where(friends_only: false).and(@user.link.where('expires > ?', Time.now).or(@user.link.where(never_expires: true)))
+    @user_api_payload = @user.api_payload(current_user_or_api_user)
 
     expires_in 5.seconds
   rescue => e

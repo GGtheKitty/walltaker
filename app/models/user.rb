@@ -8,8 +8,8 @@ class User < ApplicationRecord
   has_many :caused_orgasms, foreign_key: :caused_by_user_id, class_name: 'Nuttracker::Orgasm'
   has_many :notifications
   has_many :ahoy_visits, :class_name => 'Ahoy::Visit'
-  has_many :kink_havers
-  has_many :kinks, -> { order(id: :desc) }, through: :kink_havers
+  has_many :kink_havers, -> { order(created_at: :asc, id: :asc) }
+  has_many :kinks, -> { order('kink_havers.created_at ASC, kink_havers.id ASC') }, through: :kink_havers
   attribute :colour_preference, :integer
   belongs_to :viewing_link, foreign_key: :viewing_link_id, class_name: 'Link', optional: true
   has_many :message_thread_participants
@@ -120,7 +120,53 @@ class User < ApplicationRecord
     username
   end
 
+  def api_payload(viewer = nil)
+    has_friendship = Rails.cache.fetch("v1/user-api/#{username}/#{viewer&.username || 'anon'}/has_friendship", expires: 1.hour) { Friendship.find_friendship(viewer, self).exists? } if viewer
+    online_links_ids = Rails.cache.fetch("v1/user-api/#{username}/online-links/as-anon", expires: 7.minutes) { link.where(friends_only: false).and(link.where('expires > ?', Time.now).or(link.where(never_expires: true))).and(link.is_online).pluck(:id) } unless has_friendship
+    online_links_ids = Rails.cache.fetch("v1/user-api/#{username}/online-links/as-friend", expires: 7.minutes) { link.where('expires > ?', Time.now).or(link.where(never_expires: true)).and(link.is_online).pluck(:id) } if has_friendship
+    public_links = link.where(friends_only: false).and(link.where('expires > ?', Time.now).or(link.where(never_expires: true)))
+
+    payload = {
+      username: username,
+      id: id,
+      set_count: set_count,
+      is_reporter: is_reporter,
+      is_cutie: is_cutie,
+      is_supporter: is_supporter,
+      online: online_links_ids.length > 0,
+      authenticated: !!viewer,
+      links: public_links.map(&:api_payload_for_user),
+      flair: flair || "",
+      master: master&.username || false,
+      pets: pets.map(&:username) || []
+    }
+
+    if viewer
+      payload[:friend] = !!has_friendship
+      payload[:self] = id == viewer.id
+    end
+
+    payload
+  end
+
+  def self.broadcast_api_update(user)
+    return unless user
+
+    broadcast_api_update_for_username(user.username)
+  end
+
+  def self.broadcast_api_update_for_username(username)
+    return unless username
+
+    ActionCable.server.broadcast("User::#{username}", { type: 'user.changed' })
+  end
+
   after_commit do
+    if api_visible_fields_previously_changed?
+      User.broadcast_api_update(self)
+      User.broadcast_api_update_for_username(username_before_last_save) if username_previously_changed?
+    end
+
     if viewing_link_id
       viewed_link = Link.find(viewing_link_id)
     elsif viewing_link_id_before_last_save
@@ -132,5 +178,19 @@ class User < ApplicationRecord
       broadcast_replace_to "link_viewing_users_#{viewed_link.id}", target: "link_viewing_users_#{viewed_link.id}", partial: 'links/viewing_users', locals: { link: viewed_link }
       broadcast_replace_to "dashboard_users_viewing_links", target: "users_viewing_links", partial: 'dashboard/users_viewing_links', locals: { users_viewing_links: }
     end
+  end
+
+  def api_visible_fields_previously_changed?
+    (
+      previous_changes.keys & %w[
+        is_cutie
+        is_reporter
+        is_supporter
+        profile_id
+        set_count
+        username
+        viewing_link_id
+      ]
+    ).any?
   end
 end

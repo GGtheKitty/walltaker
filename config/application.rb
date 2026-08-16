@@ -1,5 +1,6 @@
 require_relative "boot"
 
+require "uri"
 require "rails/all"
 
 # Require the gems listed in Gemfile, including any gems
@@ -24,9 +25,10 @@ module Walltaker
     # config.time_zone = "Central Time (US & Canada)"
     config.eager_load_paths << Rails.root.join("scrubbers")
     config.eager_load_paths << Rails.root.join("services")
+    configured_host = URI.parse(ENV.fetch("WALLTAKER_BASE_URL", "https://walltaker.joi.how")).host
+    Rails.application.config.hosts << configured_host if configured_host.present?
+    Rails.application.config.hosts << ENV["WALLTAKER_HOST"] if ENV["WALLTAKER_HOST"].present?
     Rails.application.config.hosts << "joi.how"
     Rails.application.config.hosts << "walltaker.joi.how"
-    Rails.application.config.hosts << "10.244.14.67"
-    Rails.application.config.hosts << "walltaker-master-39nrv.ondigitalocean.app"
   end
 end

@@ -6,4 +6,7 @@ class HelpController < ApplicationController
 
   def client_guide
   end
+
+  def deprecated_client_guide
+  end
 end

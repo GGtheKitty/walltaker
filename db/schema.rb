@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2024_10_27_161253) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_05_000900) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -248,6 +248,7 @@ ActiveRecord::Schema[7.2].define(version: 2024_10_27_161253) do
   create_table "kinks", force: :cascade do |t|
     t.string "name", limit: 30, null: false
     t.boolean "works_on_e621", default: false, null: false
+    t.index ["name"], name: "index_kinks_on_name"
   end
 
   create_table "leashes", force: :cascade do |t|
