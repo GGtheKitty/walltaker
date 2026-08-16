@@ -42,13 +42,6 @@ services:
     environment:
       <<: [*database, *redis, *walltaker]
       RAILS_SERVE_STATIC_FILES: true
-    develop:
-      watch:
-        #sync static content
-        - path: .
-          #action: rebuild
-          action: sync
-          target: ./ror
     networks:
       - backend
       - frontend
