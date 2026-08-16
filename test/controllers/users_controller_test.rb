@@ -45,4 +45,13 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to login_path
     assert_equal UsersController::PASSWORD_RESET_NOTICE, flash[:notice]
   end
+
+  test "footer links to the current commit" do
+    get signup_path
+
+    assert_response :success
+    assert_equal `git rev-parse refs/remotes/origin/main`.strip, SiteConfig.commit_hash
+    assert_select "footer a[href='https://github.com/GGtheKitty/walltaker/commit/#{SiteConfig.commit_hash}']",
+                  text: /##{SiteConfig.commit_hash[0..8]}.*ago/
+  end
 end

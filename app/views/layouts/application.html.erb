@@ -92,8 +92,12 @@
       <%= link_to 'Client Building Guide', client_guide_path, target: '_top' %>
     </p>
     <small>
+      <% commit_hash = SiteConfig.commit_hash %>
+      <% commit_time = SiteConfig.commit_time %>
       © joi.how 2024 / Commit
-      <a href="https://github.com/pupgray/walltaker/commit">#<%= ENV['HEROKU_SLUG_COMMIT'].present? ? ENV['HEROKU_SLUG_COMMIT'][0..8] : '' %> <%= (time_ago_in_words Time.new(ENV['HEROKU_RELEASE_CREATED_AT'])) + " ago" if ENV['HEROKU_RELEASE_CREATED_AT'].present? %></a>
+      <% if commit_hash.present? %>
+        <a href="https://github.com/GGtheKitty/walltaker/commit/<%= commit_hash %>">#<%= commit_hash[0..8] %> <%= (time_ago_in_words(commit_time) + " ago") if commit_time.present? %></a>
+      <% end %>
       <% if current_user && current_user.admin %>
         <%= link_to blazer_path do %>
           <ion-icon role="presentation" name="stats-chart"></ion-icon>
