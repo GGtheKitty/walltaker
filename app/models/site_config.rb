@@ -81,6 +81,14 @@ class SiteConfig
     SiteSetting.set_boolean("nnn_enabled", enabled)
   end
 
+  def self.invite_only?
+    SiteSetting.cached_boolean("invite_only", default: false)
+  end
+
+  def self.invite_only=(enabled)
+    SiteSetting.set_boolean("invite_only", enabled)
+  end
+
   def self.git_value(*arguments)
     output, status = Open3.capture2("git", "-C", Rails.root.to_s, *arguments)
     output.strip.presence if status.success?

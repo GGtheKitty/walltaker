@@ -3,7 +3,7 @@ services:
     image: postgres:14
     restart: unless-stopped
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - ./.docker/volumes/walltaker_database2:/var/lib/postgresql/data
     ports:
       - ${DB_HOST_PORT}:${DB_PORT}
     environment:
@@ -45,4 +45,3 @@ volumes:
 networks:
   backend:
   frontend:
-

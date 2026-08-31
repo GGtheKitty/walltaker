@@ -7,6 +7,7 @@ class UsersController < ApplicationController
 
   def new
     @user = User.new
+    @invite_only = SiteConfig.invite_only?
   end
 
   def show
@@ -67,8 +68,11 @@ class UsersController < ApplicationController
       return
     end
 
+    @invite_only = SiteConfig.invite_only?
     @user = User.new(user_params)
-    if @user.save
+    user_created = @invite_only ? create_user_with_invite : @user.save
+
+    if user_created
       session[:user_id] = @user.id
       track :regular, :signed_up_and_first_log_in
       ahoy.authenticate(@user)
@@ -151,6 +155,26 @@ class UsersController < ApplicationController
   end
 
   private
+
+  def create_user_with_invite
+    submitted_code = params[:invite_code].to_s.strip.upcase
+    created = false
+
+    User.transaction do
+      invite = InviteCode.available.lock.find_by(code: submitted_code)
+      unless invite
+        @user.errors.add(:base, 'Invite code is invalid or has already been used.')
+        raise ActiveRecord::Rollback
+      end
+
+      raise ActiveRecord::Rollback unless @user.save
+
+      invite.redeem!(@user)
+      created = true
+    end
+
+    created
+  end
 
   def set_user_vars
     @user = User.active.find_by(username: params[:username])

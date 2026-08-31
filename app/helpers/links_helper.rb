@@ -4,27 +4,11 @@ module LinksHelper
     @emoji_link_decorations.fetch(link_id.to_i, link_id)
   end
 
-  def link_agent_to_icon(link_agent)
-    return :unknown if link_agent.nil?
-    return :desktop if link_agent.include? 'Walltaker Client'
-    return :android if link_agent.include? 'walltaker-android-client/'
-    return :joihow if link_agent.include? 'joihow'
-    return :wallpaper_engine if link_agent.include? 'Wallpaper-Engine-Client'
-    return :automate if link_agent.include? 'walltaker-android-automate'
-    return :arson_automate if link_agent.include? 'arson-walltaker-automate'
-    return :ioswidget if link_agent.include? 'widgetExtension'
-    return :swift if link_agent.include? 'CFNetwork/'
-    return :android_changer if link_agent.include? 'Walltaker-Changer/'
-    return :windows_checker if link_agent.include? 'Walltaker-Checker/'
-    return :gg_widget if link_agent.include? 'GGWidget/'
-    return :jberliner if link_agent.include? 'JBerliner'
-    return :chewtoy if link_agent.include? 'WalltakerEngine-chewtoy/'
-    return :kemkem_userscript if link_agent.include? 'Walltaker for Walltaker (kemkem)'
-    return :xenofluff if link_agent.include? 'Walltaker_eXPerience'
-    return :pawslut if link_agent.include? 'PawSlut'
-    return :collin if link_agent.include? 'umbrella Collin\'s Walltaker Setter Thing'
-    return :pawbies if link_agent.include? 'WTPopOutViewer'
-    :unknown
+  def client_for_user_agent(user_agent)
+    return if user_agent.blank?
+
+    @recognized_wallpaper_clients ||= WallpaperClient.recognized.to_a
+    @recognized_wallpaper_clients.find { |client| user_agent.include?(client.match_text) }
   end
 
   def lizard_to_description(lizard_name, is_perverted)

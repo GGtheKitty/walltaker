@@ -11,6 +11,7 @@ class ApplicationController < ActionController::Base
   helper_method :get_search_base
   helper_method :get_post
 
+  before_action :disallow_evil_during_invite_only
   before_action :broadcast_flash_message
 
   def e621_module
@@ -30,6 +31,15 @@ class ApplicationController < ActionController::Base
   end
 
   private
+
+  def disallow_evil_during_invite_only
+    return unless SiteConfig.invite_only? && current_user&.evil_account?
+
+    session[:user_id] = nil
+    cookies.delete :permanent_session_id
+    @current_user = nil
+    redirect_to login_path, alert: 'The evil account is unavailable while invite-only mode is enabled.'
+  end
 
   # @param [Symbol<:regular, :nefarious, :visit>] level
   # @param [Symbol, String] id

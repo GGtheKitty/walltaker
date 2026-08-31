@@ -10,7 +10,10 @@ class ApplyPornLizardProfiles < ActiveRecord::Migration[7.2]
       user = User.find_by(username:)
       next unless user
 
-      profile = user.profiles.find_or_initialize_by(name: 'Imported')
+      # Profile's default scope joins User.active, which depends on the
+      # deleted_at column added by a later migration. Avoid application scopes
+      # here so this migration also works when building a database from scratch.
+      profile = Profile.unscoped.find_or_initialize_by(user_id: user.id, name: 'Imported')
       profile.content = content
       profile.save!
       user.update!(profile:)

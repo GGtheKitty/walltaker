@@ -147,57 +147,15 @@
   </tr>
   </thead>
   <tbody>
-  <tr>
-    <td><a href="https://github.com/Lycraon/Walltaker-for-WallpaperEngine" target="_blank">Lycraon's Wallpaper Engine
-      Client</a></td>
-    <td><a href="https://store.steampowered.com/app/431960/Wallpaper_Engine/">Wallpaper Engine for Windows</a></td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://github.com/gios2/Walltaker-Changer/releases/latest" target="_blank">Gios' Android Client</a>
-    </td>
-    <td>Android 7+</td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/GGtheKitty/GGs-Walltaker-Widget/releases/latest" target="_blank">GG's Android Widget</a>
-    </td>
-    <td>Android 12+</td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://github.com/GGtheKitty/Walltaker-Desktop-Client" target="_blank">Desktop
-        Client</a>
-    </td>
-    <td>Windows / Linux</td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://github.com/PawCorp/walltaker-macos/releases/latest" target="_blank" style="color: var(--text-light)">macOS Client</a>
-      <strong>(Deprecated)</strong>
-    </td>
-    <td>macOS</td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://github.com/PawCorp/walltaker/blob/main/ios.md#ios-widget" target="_blank" style="color: var(--text-light)">iOS Widget</a>
-      <strong>(Deprecated)</strong>
-    </td>
-    <td>iOS</td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://github.com/FerretPaws/WalltakerPopOutViewer" target="_blank" style="color: var(--text-light)">Popout Viewer</a>
-      <strong>(Deprecated)</strong>
-    </td>
-    <td>Windows</td>
-  </tr>
-  <tr>
-    <td>
-      <a href="https://github.com/PawCorp/walltaker-android-client/releases/latest" target="_blank" style="color: var(--text-light)">Android
-        Client</a>
-      <strong>(Deprecated)</strong>
-    <td>Android 12+</td>
-  </tr>
+  <% @wallpaper_clients.each do |client| %>
+    <tr>
+      <td>
+        <%= link_to client.name, client.url, target: '_blank', rel: 'noopener', class: ('subdued' if client.deprecated?) %>
+        <strong><%= '(Deprecated)' if client.deprecated? %></strong>
+      </td>
+      <td><%= client.platform %></td>
+    </tr>
+  <% end %>
   </tbody>
 </table>
 Please try using clients that are not deprecated. For devs, follow our client guide for updating deprecated clients.
@@ -214,11 +172,15 @@ Please try using clients that are not deprecated. For devs, follow our client gu
   </tr>
   </thead>
   <tbody>
-  <tr>
-    <td><a href="https://github.com/gios2/Walltaker-Explorer/releases/latest">Gios' Explorer</a>
-    </td>
-    <td>Android 7+</td>
-  </tr>
+  <% @companion_apps.each do |client| %>
+    <tr>
+      <td>
+        <%= link_to client.name, client.url, target: '_blank', rel: 'noopener', class: ('subdued' if client.deprecated?) %>
+        <strong><%= '(Deprecated)' if client.deprecated? %></strong>
+      </td>
+      <td><%= client.platform %></td>
+    </tr>
+  <% end %>
   </tbody>
 </table>
 

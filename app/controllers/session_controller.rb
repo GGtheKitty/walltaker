@@ -10,7 +10,11 @@ class SessionController < ApplicationController
 
     user = User.active.where("lower(email) = ?",login_params[:email]&.downcase).first
     if !user.nil?
-      if user.username == 'PornBot'
+      if user.evil_account? && SiteConfig.invite_only?
+        @error = 'The evil account is unavailable while invite-only mode is enabled.'
+        track :nefarious, :tried_to_log_in_as_evil_during_invite_only
+        render 'new', status: :unprocessable_entity
+      elsif user.username == 'PornBot'
         @error = 'You don\'t look like a robot... Your IP address has been flagged.'
         track :nefarious, :tried_to_log_in_as_porn_bot
         render 'new', status: :unprocessable_entity
@@ -53,6 +57,10 @@ class SessionController < ApplicationController
   end
 
   def be_evil
+    if SiteConfig.invite_only?
+      return redirect_to login_path, alert: 'The evil account is unavailable while invite-only mode is enabled.'
+    end
+
     evil_user = User.find_by_username('evil')
     if evil_user
       cookies.signed[:surrender_id] = nil

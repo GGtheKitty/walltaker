@@ -135,64 +135,10 @@
       <em><%= link.user.username %></em>
 
       <div class="link--device-in-use">
-        <% case link_agent_to_icon link.last_ping_user_agent %>
-        <% when :desktop %>
-          <span>Walltaker Desktop</span>
-          <ion-icon role="presentation" name="laptop-outline"></ion-icon>
-        <% when :android %>
-          <span>Pawcorp Android</span>
-          <ion-icon role="presentation" name="phone-portrait-outline"></ion-icon>
-        <% when :joihow %>
-          <span>JOI.how</span>
-          <ion-icon role="presentation" name="earth-outline"></ion-icon>
-        <% when :automate %>
-          <span>Deans' Client</span>
-          <svg height="28" width="28">
-            <use xlink:href="/icon-automate.svg#Calque_1"></use>
-          </svg>
-        <% when :arson_automate %>
-          <span>Arson's Client</span>
-          <ion-icon role="presentation" name="bonfire"></ion-icon>
-        <% when :wallpaper_engine %>
-          <span>Lycaon's Wallpaper Engine</span>
-          <ion-icon role="presentation" name="cog"></ion-icon>
-        <% when :ioswidget %>
-          <span>iOS Widget</span>
-          <ion-icon role="presentation" class="apple-icon" name="logo-apple"></ion-icon>
-        <% when :swift %>
-          <span>Mac Client</span>
-          <ion-icon role="presentation" class="apple-icon" name="logo-apple"></ion-icon>
-        <% when :android_changer %>
-          <span>Gios Changer</span>
-          <ion-icon name="logo-octocat"></ion-icon>
-        <% when :windows_checker %>
-          <span>Gios Checker</span>
-          <ion-icon name="logo-gitlab"></ion-icon>
-        <% when :gg_widget %>
-          <span>GG's Android Widget</span>
-          <ion-icon name="aperture-outline"></ion-icon>
-        <% when :jberliner %>
-          <span>JBerliner's Walltaker.sh</span>
-          <ion-icon name="pint"></ion-icon>
-        <% when :chewtoy %>
-          <span>Walltaker Engine</span>
-          <ion-icon name="car-sport"></ion-icon>
-        <% when :kemkem_userscript %>
-          <span>Walltaker For Walltaker</span>
-          <ion-icon role="presentation" name="sync-circle-outline"></ion-icon>
-        <% when :xenofluff %>
-          <span>Walltaker eXPerience</span>
-          <ion-icon name="terminal-outline"></ion-icon>
-        <% when :pawslut %>
-          <span>Pawslut's Client</span>
-          <ion-icon name="paw"></ion-icon>
-        <% when :collin %>
-          <span>Collin's Walltaker Setter Thing</span>
-          <ion-icon name="umbrella"></ion-icon>
-        <% when :pawbies %>
-          <span>WT Popout</span>
-          <iconify-icon icon="token:rfox"></iconify-icon>
-        <% when :unknown %>
+        <% if (client = client_for_user_agent(link.last_ping_user_agent)) %>
+          <span><%= client.link_label %></span>
+          <ion-icon role="presentation" name="<%= client.icon_name.presence || 'help-circle-outline' %>"></ion-icon>
+        <% else %>
           <ion-icon role="presentation" name="help-circle-outline"></ion-icon>
         <% end %>
       </div>

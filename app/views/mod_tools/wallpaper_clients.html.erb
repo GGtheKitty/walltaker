@@ -1,0 +1,88 @@
+<div data-turbo-prefetch="false" class="task-tools">
+  <div class="left">
+    <%= link_to 'Cancel', mod_tools_index_path %>
+  </div>
+</div>
+
+<h2>
+  <ion-icon role="presentation" name="phone-portrait" class="big"></ion-icon>
+  Clients
+  <small><%= pluralize(@wallpaper_clients.count, 'client') %></small>
+</h2>
+
+<p>
+  Entries are displayed and matched from top to bottom. Choose where each entry appears on the homepage. To recognize a
+  client on user links, provide a unique piece of its user-agent or announced client name in “Match text.” Hidden
+  entries can still be used for link recognition.
+</p>
+
+<%= form_with model: @wallpaper_client, url: mod_tools_wallpaper_clients_path do |form| %>
+  <% if @wallpaper_client.errors.any? %>
+    <p><strong><%= @wallpaper_client.errors.full_messages.to_sentence %></strong></p>
+  <% end %>
+  <div class="form__row">
+    <%= form.label :name %>
+    <%= form.text_field :name, required: true %>
+  </div>
+  <div class="form__row">
+    <%= form.label :section %>
+    <%= form.select :section, [['Clients', 'clients'], ['Companion/Explorer Apps', 'companion_apps'], ['Hidden', 'hidden']] %>
+  </div>
+  <div class="form__row">
+    <%= form.label :url, 'Download URL' %>
+    <%= form.url_field :url %>
+  </div>
+  <div class="form__row">
+    <%= form.label :platform %>
+    <%= form.text_field :platform %>
+  </div>
+  <div class="form__row">
+    <%= form.label :match_text, 'Match text' %>
+    <%= form.text_field :match_text %>
+  </div>
+  <div class="form__row">
+    <%= form.label :link_name, 'Name on user links' %>
+    <%= form.text_field :link_name %>
+  </div>
+  <div class="form__row">
+    <%= form.label :icon_name, 'Ionicon name' %>
+    <%= form.text_field :icon_name, placeholder: 'laptop-outline' %>
+  </div>
+  <div class="form__row">
+    <%= form.label :device_type %>
+    <%= form.select :device_type, [['Desktop', 'desktop'], ['Mobile', 'mobile']], include_blank: 'Unspecified' %>
+  </div>
+  <div class="form__row">
+    <%= form.label :deprecated %>
+    <%= form.check_box :deprecated %>
+  </div>
+  <%= form.submit 'Add' %>
+<% end %>
+
+<% @wallpaper_clients.each do |client| %>
+    <% edit_form_id = dom_id(client, :edit) %>
+    <div class="accent-block" id="<%= dom_id(client) %>">
+      <div class="accent-block__charm inline">
+        <ion-icon name="<%= client.icon_name.presence || 'help-circle-outline' %>"></ion-icon>
+        <strong><%= client.name %></strong>
+        <small><%= { 'clients' => 'Clients', 'companion_apps' => 'Companion/Explorer Apps', 'hidden' => 'Hidden' }.fetch(client.section) %></small>
+      </div>
+      <%= form_with model: client, url: mod_tools_wallpaper_client_path(client), method: :patch, html: { id: edit_form_id } do |form| %>
+        <div class="form__row"><%= form.label :name %><%= form.text_field :name, required: true %></div>
+        <div class="form__row"><%= form.label :section %><%= form.select :section, [['Clients', 'clients'], ['Companion/Explorer Apps', 'companion_apps'], ['Hidden', 'hidden']] %></div>
+        <div class="form__row"><%= form.label :url, 'Download URL' %><%= form.url_field :url %></div>
+        <div class="form__row"><%= form.label :platform %><%= form.text_field :platform %></div>
+        <div class="form__row"><%= form.label :match_text, 'Match text' %><%= form.text_field :match_text %></div>
+        <div class="form__row"><%= form.label :link_name, 'Name on user links' %><%= form.text_field :link_name %></div>
+        <div class="form__row"><%= form.label :icon_name, 'Ionicon name' %><%= form.text_field :icon_name %></div>
+        <div class="form__row"><%= form.label :device_type %><%= form.select :device_type, [['Desktop', 'desktop'], ['Mobile', 'mobile']], include_blank: 'Unspecified' %></div>
+        <div class="form__row"><%= form.label :deprecated %><%= form.check_box :deprecated %></div>
+      <% end %>
+      <div>
+        <%= button_to 'Move Up', mod_tools_wallpaper_client_move_up_path(client), method: :post %>
+        <%= button_to 'Move Down', mod_tools_wallpaper_client_move_down_path(client), method: :post %>
+        <%= button_tag 'Save', type: 'submit', form: edit_form_id %>
+        <%= button_to 'Remove', mod_tools_wallpaper_client_path(client), method: :delete, class: 'danger-button', form: { data: { turbo_confirm: "Remove #{client.name}?" } } %>
+      </div>
+    </div>
+<% end %>

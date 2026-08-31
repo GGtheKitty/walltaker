@@ -13,9 +13,43 @@ class ModToolsController < ApplicationController
     redirect_to mod_tools_index_path, notice: "NNN #{state}."
   end
 
+  def invites
+    load_invites
+  end
+
+  def create_invite
+    invite = InviteCode.generate!(generated_by: current_user)
+    track :regular, :mod_create_invite, by: current_user.username, invite_id: invite.id
+    redirect_to mod_tools_invites_path, notice: 'Invite code generated.'
+  end
+
+  def destroy_invite
+    invite = InviteCode.find(params[:id])
+    invite.destroy!
+    track :regular, :mod_destroy_invite, by: current_user.username, invite_id: invite.id
+    redirect_to mod_tools_invites_path, notice: 'Invite code deleted.'
+  end
+
+  def toggle_invite_only
+    SiteConfig.invite_only = !SiteConfig.invite_only?
+    state = SiteConfig.invite_only? ? 'enabled' : 'disabled'
+    track :regular, :mod_toggle_invite_only, by: current_user.username, enabled: SiteConfig.invite_only?
+    redirect_to mod_tools_invites_path, notice: "Invite-only mode #{state}."
+  end
+
   def emoji_links
     load_emoji_links
     @emoji_link_decoration = EmojiLinkDecoration.new
+  end
+
+  def user_icons
+    load_user_icons
+    @user_icon = UserIcon.new
+  end
+
+  def wallpaper_clients
+    load_wallpaper_clients
+    @wallpaper_client = WallpaperClient.new(section: 'clients', device_type: 'desktop')
   end
 
   def system_analytics
@@ -71,6 +105,77 @@ class ModToolsController < ApplicationController
     decoration.destroy!
     track :regular, :mod_destroy_emoji_link, by: current_user.username, link_id: link_id
     redirect_to mod_tools_emoji_links_path, notice: 'Emoji link removed.'
+  end
+
+  def create_user_icon
+    user_icon = UserIcon.new(icon_name: user_icon_params[:icon_name])
+    user_icon.user = User.active.find_by('lower(username) = ?', user_icon_params[:username].to_s.strip.downcase)
+
+    if user_icon.save
+      track :regular, :mod_create_user_icon, by: current_user.username, user: user_icon.user.username, icon_name: user_icon.icon_name
+      redirect_to mod_tools_user_icons_path, notice: 'User icon added.'
+    else
+      load_user_icons
+      @user_icon = user_icon
+      @user_icon.username = user_icon_params[:username]
+      render :user_icons, status: :unprocessable_entity
+    end
+  end
+
+  def update_user_icon
+    user_icon = UserIcon.find(params[:id])
+    if user_icon.update(icon_name: user_icon_params[:icon_name])
+      track :regular, :mod_update_user_icon, by: current_user.username, user: user_icon.user.username, icon_name: user_icon.icon_name
+      redirect_to mod_tools_user_icons_path, notice: 'User icon updated.'
+    else
+      redirect_to mod_tools_user_icons_path, alert: user_icon.errors.full_messages.to_sentence
+    end
+  end
+
+  def destroy_user_icon
+    user_icon = UserIcon.find(params[:id])
+    username = user_icon.user.username
+    user_icon.destroy!
+    track :regular, :mod_destroy_user_icon, by: current_user.username, user: username
+    redirect_to mod_tools_user_icons_path, notice: 'User icon removed.'
+  end
+
+  def create_wallpaper_client
+    wallpaper_client = WallpaperClient.new(wallpaper_client_params)
+    if wallpaper_client.save
+      track :regular, :mod_create_wallpaper_client, by: current_user.username, client: wallpaper_client.name
+      redirect_to mod_tools_wallpaper_clients_path, notice: 'Client added.'
+    else
+      load_wallpaper_clients
+      @wallpaper_client = wallpaper_client
+      render :wallpaper_clients, status: :unprocessable_entity
+    end
+  end
+
+  def update_wallpaper_client
+    wallpaper_client = WallpaperClient.find(params[:id])
+    if wallpaper_client.update(wallpaper_client_params)
+      track :regular, :mod_update_wallpaper_client, by: current_user.username, client: wallpaper_client.name
+      redirect_to mod_tools_wallpaper_clients_path, notice: 'Client updated.'
+    else
+      redirect_to mod_tools_wallpaper_clients_path, alert: wallpaper_client.errors.full_messages.to_sentence
+    end
+  end
+
+  def destroy_wallpaper_client
+    wallpaper_client = WallpaperClient.find(params[:id])
+    name = wallpaper_client.name
+    wallpaper_client.destroy!
+    track :regular, :mod_destroy_wallpaper_client, by: current_user.username, client: name
+    redirect_to mod_tools_wallpaper_clients_path, notice: 'Client removed.'
+  end
+
+  def move_wallpaper_client_up
+    move_wallpaper_client(:move_up!)
+  end
+
+  def move_wallpaper_client_down
+    move_wallpaper_client(:move_down!)
   end
 
   def show_password_reset
@@ -233,8 +338,37 @@ class ModToolsController < ApplicationController
     params.require(:emoji_link_decoration).permit(:link_id, :emoji)
   end
 
+  def user_icon_params
+    params.require(:user_icon).permit(:username, :icon_name)
+  end
+
+  def wallpaper_client_params
+    params.require(:wallpaper_client).permit(
+      :name, :section, :url, :platform, :deprecated, :match_text, :link_name, :icon_name, :device_type
+    )
+  end
+
   def load_emoji_links
     @emoji_link_decorations = EmojiLinkDecoration.order(:link_id)
+  end
+
+  def load_user_icons
+    @user_icons = UserIcon.includes(:user).joins(:user).merge(User.active).order('users.username')
+  end
+
+  def load_wallpaper_clients
+    @wallpaper_clients = WallpaperClient.ordered
+  end
+
+  def load_invites
+    @invite_codes = InviteCode.includes(:generated_by, :redeemed_by)
+                              .order(Arel.sql('redeemed_at IS NOT NULL ASC'), created_at: :desc)
+  end
+
+  def move_wallpaper_client(direction)
+    wallpaper_client = WallpaperClient.find(params[:id])
+    wallpaper_client.public_send(direction)
+    redirect_to mod_tools_wallpaper_clients_path(anchor: helpers.dom_id(wallpaper_client))
   end
 
   def account_lifecycle_return_path(user = nil)

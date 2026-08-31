@@ -1,0 +1,56 @@
+<div data-turbo-prefetch="false" class="task-tools">
+  <div class="left">
+    <%= link_to 'Cancel', mod_tools_index_path %>
+  </div>
+</div>
+
+<h2>
+  <ion-icon role="presentation" name="person-circle" class="big"></ion-icon>
+  User Icons
+  <small><%= pluralize(@user_icons.count, 'custom icon') %></small>
+</h2>
+
+<p>Use an <%= link_to 'Ionicon name', 'https://ionic.io/ionicons', target: '_blank', rel: 'noopener' %>, such as <code>logo-octocat</code> or <code>train-outline</code>.</p>
+
+<%= form_with model: @user_icon, url: mod_tools_user_icons_path do |form| %>
+  <% if @user_icon.errors.any? %>
+    <p><strong><%= @user_icon.errors.full_messages.to_sentence %></strong></p>
+  <% end %>
+  <div class="form__row">
+    <%= form.label :username %>
+    <%= form.text_field :username, required: true %>
+  </div>
+  <div class="form__row">
+    <%= form.label :icon_name, 'Ionicon name' %>
+    <%= form.text_field :icon_name, required: true, placeholder: 'person-circle' %>
+  </div>
+  <%= form.submit 'Add' %>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Icon</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @user_icons.each do |user_icon| %>
+      <% edit_form_id = dom_id(user_icon, :edit) %>
+      <tr id="<%= dom_id(user_icon) %>">
+        <td><%= link_to user_icon.user.username, user_path(user_icon.user.username), target: '_blank' %></td>
+        <td>
+          <ion-icon role="presentation" name="<%= user_icon.icon_name %>" class="big"></ion-icon>
+          <%= form_with model: user_icon, url: mod_tools_user_icon_path(user_icon), method: :patch, html: { id: edit_form_id } do |form| %>
+            <%= form.text_field :icon_name, required: true, aria: { label: "Icon for #{user_icon.user.username}" } %>
+          <% end %>
+        </td>
+        <td>
+          <%= button_tag 'Save', type: 'submit', form: edit_form_id %>
+          <%= button_to 'Remove', mod_tools_user_icon_path(user_icon), method: :delete, class: 'danger-button', form: { data: { turbo_confirm: "Remove the custom icon from #{user_icon.user.username}?" } } %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

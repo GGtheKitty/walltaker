@@ -48,6 +48,7 @@
   <h3>Raiding</h3>
   <%= button_to "Quarantine account(s)", mod_tools_quarantine_index_path, method: :get %>
   <%= button_to "Recent Events", mod_tools_events_index_path, method: :get %>
+  <%= button_to "Invites", mod_tools_invites_path, method: :get, class: 'secondary' %>
 </section>
 
 <section>
@@ -63,6 +64,8 @@
         }
       ) %>
   <%= button_to 'Emoji Links', mod_tools_emoji_links_path, method: :get, class: 'secondary' %>
+  <%= button_to 'User Icons', mod_tools_user_icons_path, method: :get, class: 'secondary' %>
+  <%= button_to 'Clients', mod_tools_wallpaper_clients_path, method: :get, class: 'secondary' %>
 </section>
 
 <section>

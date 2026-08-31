@@ -20,6 +20,7 @@ class User < ApplicationRecord
   has_many :messages, through: :message_threads
   has_many :reports, as: :reportable
   has_many :profiles, inverse_of: :user
+  has_one :user_icon, dependent: :destroy
   has_many :friendships, ->(user) { unscope(:where).where(receiver_id: user.id).or(where(sender_id: user.id)) }
   has_many :held_leashes, ->(user) { where(master: user) }, through: :friendships, source: :leashes
   has_many :obeying_leashes, ->(user) { where(pet: user) }, through: :friendships, source: :leashes
