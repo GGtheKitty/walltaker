@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_31_231000) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_01_223000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -568,7 +568,13 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_31_231000) do
     t.boolean "pending", default: false
     t.boolean "logged_in", default: false
     t.string "current_page"
+    t.bigint "controller_user_id", null: false
+    t.integer "duration_hours", default: 24, null: false
+    t.string "token", null: false
+    t.index ["controller_user_id"], name: "index_surrenders_on_controller_user_id"
     t.index ["friendship_id"], name: "index_surrenders_on_friendship_id"
+    t.index ["token"], name: "index_surrenders_on_token", unique: true
+    t.index ["user_id", "controller_user_id"], name: "index_surrenders_on_user_id_and_controller_user_id", unique: true
     t.index ["user_id"], name: "index_surrenders_on_user_id"
   end
 
@@ -703,6 +709,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_31_231000) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "surrenders", "friendships"
   add_foreign_key "surrenders", "users"
+  add_foreign_key "surrenders", "users", column: "controller_user_id"
   add_foreign_key "survey_response_answers", "form_elements"
   add_foreign_key "survey_response_answers", "survey_responses"
   add_foreign_key "survey_responses", "surveys"
