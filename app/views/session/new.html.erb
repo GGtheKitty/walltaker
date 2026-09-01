@@ -21,8 +21,8 @@
 
 <%= form_with method: :post, url: session_index_path do %>
   <div class="field">
-    <%= label_tag :email %><br />
-    <%= text_field_tag :email, params[:email] %>
+    <%= label_tag :email, 'Email or username' %><br />
+    <%= text_field_tag :email, params[:email], autocomplete: 'username' %>
   </div>
   <div class="field">
     <%= label_tag :password %><br />

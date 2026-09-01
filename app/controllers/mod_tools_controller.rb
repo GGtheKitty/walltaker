@@ -266,7 +266,7 @@ class ModToolsController < ApplicationController
       user = User.find(safe_params['id'])
 
       if user
-        user.update(safe_params)
+        user.update_bypassing_username_change_cooldown(safe_params)
         return render turbo_stream: turbo_stream.replace("mod_tools_edit_user_form", partial: 'mod_tools/edit_user_form', locals: { user: })
       end
     rescue

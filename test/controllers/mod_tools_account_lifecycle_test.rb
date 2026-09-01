@@ -206,6 +206,23 @@ class ModToolsAccountLifecycleTest < ActionDispatch::IntegrationTest
     assert_select ".mod_tool__result--success", text: /#{user.username}/
   end
 
+  test "moderator can rename a user during the username cooldown" do
+    user = create_user(username: "CooldownRename", email: "mod-rename@example.com")
+    user.update_column(:username_changed_at, 1.day.ago)
+
+    post mod_tools_users_update_path, params: {
+      user: {
+        id: user.id,
+        username: "ModeratorRenamed",
+        email: user.email
+      }
+    }
+
+    assert_response :success
+    assert_equal "ModeratorRenamed", user.reload.username
+    assert_in_delta Time.current, user.username_changed_at, 1.second
+  end
+
   test "deleted account queue lists every deleted account and provides actions" do
     first_user = create_user(username: "FirstDeleted", email: "first-deleted@example.com")
     second_user = create_user(username: "SecondDeleted", email: "second-deleted@example.com")

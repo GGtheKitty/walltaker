@@ -143,6 +143,14 @@ class User < ApplicationRecord
     username_changed_at.nil? || username_changed_at <= at - USERNAME_CHANGE_COOLDOWN
   end
 
+  def update_bypassing_username_change_cooldown(attributes)
+    previous_bypass = @bypass_username_change_cooldown
+    @bypass_username_change_cooldown = true
+    update(attributes)
+  ensure
+    @bypass_username_change_cooldown = previous_bypass
+  end
+
   def next_username_change_at
     username_changed_at + USERNAME_CHANGE_COOLDOWN if username_changed_at
   end
@@ -307,6 +315,7 @@ class User < ApplicationRecord
 
   def username_change_cooldown_has_elapsed
     return unless will_save_change_to_username?
+    return if @bypass_username_change_cooldown
     return if can_change_username?
 
     errors.add(:username, 'can only be changed once a week')

@@ -8,7 +8,8 @@ class SessionController < ApplicationController
       return
     end
 
-    user = User.active.where("lower(email) = ?",login_params[:email]&.downcase).first
+    login_identifier = login_params[:email].to_s.strip.downcase
+    user = User.active.where("lower(email) = :identifier OR lower(username) = :identifier", identifier: login_identifier).first
     if !user.nil?
       if user.evil_account? && SiteConfig.invite_only?
         @error = 'The evil account is unavailable while invite-only mode is enabled.'
@@ -27,14 +28,14 @@ class SessionController < ApplicationController
           track :regular, :logged_in
           redirect_to url_for(controller: :dashboard, action: :index), notice: 'Logged in!'
         else
-          @error = 'Wrong email or password.'
-          track :nefarious, :failed_to_log_in, email: login_params[:email]
+          @error = 'Wrong email, username, or password.'
+          track :nefarious, :failed_to_log_in, identifier: login_params[:email]
           render 'new', status: :unprocessable_entity
         end
       end
     else
-      @error = 'Wrong email or password.'
-      track :nefarious, :failed_to_log_in, email: login_params[:email]
+      @error = 'Wrong email, username, or password.'
+      track :nefarious, :failed_to_log_in, identifier: login_params[:email]
       render 'new', status: :unprocessable_entity
     end
   end
