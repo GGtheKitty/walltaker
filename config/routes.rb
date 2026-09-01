@@ -131,6 +131,9 @@ Rails.application.routes.draw do
   end
 
   resources :surrenders do
+    collection do
+      post 'return_to_controller', as: :return_to_controller
+    end
     member do
       post 'assume', as: :assume
     end

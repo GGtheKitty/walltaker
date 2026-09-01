@@ -73,6 +73,23 @@ class SurrendersController < ApplicationController
     log_in_as(@surrender.user, @surrender)
   end
 
+  def return_to_controller
+    surrender = current_surrender_session
+    return redirect_to root_path, alert: 'Not allowed.' unless surrender
+
+    controller = surrender.controller
+    surrender.update!(logged_in: false, current_page: nil)
+
+    session[:user_id] = controller.id
+    cookies.delete :permanent_session_id
+    cookies.delete :surrender_id
+    @current_user = controller
+    ahoy.authenticate(controller)
+    track :regular, :returned_from_surrender
+
+    redirect_to root_path, notice: "Returned to #{controller.username}."
+  end
+
   private
 
   def set_friendship_options

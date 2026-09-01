@@ -41,6 +41,49 @@ class SurrendersControllerTest < ActionDispatch::IntegrationTest
     assert_not_empty surrender.token
   end
 
+  test "controller can return to their account from a surrender session" do
+    user = create_user(username: "SurrenderReturnUser", email: "surrender-return-user@example.com")
+    controller = create_user(username: "SurrenderReturnController", email: "surrender-return-controller@example.com")
+    surrender = create_surrender(user:, controller:)
+    log_in(controller)
+
+    post assume_surrender_path(surrender)
+    follow_redirect!
+
+    assert_select '.user-tools .username', text: user.username
+    assert_select "a.return-from-surrender[href='#{return_to_controller_surrenders_path}']",
+                  text: "Return to #{controller.username}"
+
+    post return_to_controller_surrenders_path
+
+    assert_redirected_to root_path
+    assert_not surrender.reload.logged_in?
+    assert_nil surrender.current_page
+
+    follow_redirect!
+    assert_select '.user-tools .username', text: controller.username
+    assert_select 'a.return-from-surrender', count: 0
+  end
+
+  test "return link and action are unavailable outside the active controller session" do
+    user = create_user(username: "SurrenderNoReturnUser", email: "surrender-no-return-user@example.com")
+    controller = create_user(username: "SurrenderNoReturnController", email: "surrender-no-return-controller@example.com")
+    surrender = create_surrender(user:, controller:)
+    log_in(controller)
+
+    get root_path
+    assert_select 'a.return-from-surrender', count: 0
+
+    post return_to_controller_surrenders_path
+    assert_redirected_to root_path
+    assert_equal 'Not allowed.', flash[:alert]
+
+    log_in(user)
+    get surrender_path(surrender)
+    assert_select '.user-tools .username', text: user.username
+    assert_select 'a.return-from-surrender', count: 0
+  end
+
   private
 
   def log_in(user)
@@ -61,6 +104,17 @@ class SurrendersControllerTest < ActionDispatch::IntegrationTest
       sender: user,
       receiver: friend,
       confirmed: true
+    )
+  end
+
+  def create_surrender(user:, controller:)
+    friendship = create_friendship(user, controller)
+    Surrender.create!(
+      user:,
+      controller_user: controller,
+      friendship:,
+      accepted_consequences: true,
+      expires_at: 1.day.from_now
     )
   end
 end

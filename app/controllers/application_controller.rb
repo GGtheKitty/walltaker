@@ -134,13 +134,23 @@ class ApplicationController < ActionController::Base
   end
 
   def surrender_controller
-    return nil unless helpers.is_surrender_controller_session?
-    begin
-      Surrender.find(cookies.signed[:surrender_id])&.controller
-    rescue
-      nil
-    end
+    current_surrender_session&.controller
   end
+
+  helper_method :surrender_controller
+
+  def current_surrender_session
+    return nil unless helpers.is_surrender_controller_session?
+
+    surrender = Surrender.find_by(id: cookies.signed[:surrender_id])
+    return nil unless surrender&.active?
+    return nil unless surrender.logged_in?
+    return nil unless surrender.user_id == current_user&.id
+
+    surrender
+  end
+
+  helper_method :current_surrender_session
 
   # @param [User] user
   # @param [Surrender] surrender
