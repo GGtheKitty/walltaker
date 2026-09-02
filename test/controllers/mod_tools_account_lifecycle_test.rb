@@ -245,6 +245,20 @@ class ModToolsAccountLifecycleTest < ActionDispatch::IntegrationTest
     assert_redirected_to mod_tools_users_deleted_path
   end
 
+  test "quarantine actions only redirect to local return paths" do
+    user = create_user(username: "QuarantineTarget", email: "quarantine-target@example.com")
+    fallback_path = mod_tools_quarantine_index_path(anchor: dom_id(user))
+
+    post mod_tools_quarantine_update_path(user), params: { return_to: "https://attacker.example/phishing" }
+    assert_redirected_to fallback_path
+
+    post mod_tools_quarantine_update_path(user), params: { return_to: mod_tools_reports_path }
+    assert_redirected_to mod_tools_reports_path
+
+    post mod_tools_quarantine_ipban_path(user), params: { return_to: "//attacker.example/phishing" }
+    assert_redirected_to fallback_path
+  end
+
   test "moderator can permanently purge a deleted account" do
     user = create_user(username: "PurgeMe", email: "purge-me@example.com")
     profile = user.profiles.create!(content: "Purge this profile")
