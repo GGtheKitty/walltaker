@@ -38,7 +38,7 @@ class User < ApplicationRecord
   validates_uniqueness_of :email, :case_sensitive => false
   validates :password, confirmation: true
   validates :username, presence: true, format: { with: /\A[a-zA-Z0-9]+\Z/ }
-  validate :evil_account_credentials_are_immutable, on: :update
+  validate :system_account_credentials_are_immutable, on: :update
   validate :username_change_cooldown_has_elapsed, on: :update
 
   before_update :record_username_change, if: :will_save_change_to_username?
@@ -65,13 +65,17 @@ class User < ApplicationRecord
     username == 'evil' || username_in_database == 'evil'
   end
 
+  def system_account?
+    evil_account? || (has_attribute?(:system_account) && self[:system_account])
+  end
+
   def deleted?
     deleted_at.present?
   end
 
   def soft_delete!
     with_lock do
-      raise ActiveRecord::RecordNotDestroyed, 'The evil account cannot be deleted.' if evil_account?
+      raise ActiveRecord::RecordNotDestroyed, 'System accounts cannot be deleted.' if system_account?
       return true if deleted?
 
       original_username = username
@@ -99,7 +103,7 @@ class User < ApplicationRecord
 
   def purge!
     raise ActiveRecord::RecordNotDestroyed, 'Only deleted accounts can be purged.' unless deleted?
-    raise ActiveRecord::RecordNotDestroyed, 'The evil account cannot be purged.' if evil_account?
+    raise ActiveRecord::RecordNotDestroyed, 'System accounts cannot be purged.' if system_account?
 
     transaction do
       user_id = id
@@ -306,11 +310,13 @@ class User < ApplicationRecord
 
   private
 
-  def evil_account_credentials_are_immutable
-    return unless username_in_database == 'evil'
+  def system_account_credentials_are_immutable
+    flagged_system_account = has_attribute?(:system_account) && system_account_in_database
+    return unless flagged_system_account || evil_account?
 
-    errors.add(:username, 'cannot be changed for the evil account') if will_save_change_to_username?
-    errors.add(:password, 'cannot be changed for the evil account') if will_save_change_to_password_digest?
+    errors.add(:username, 'cannot be changed for a system account') if will_save_change_to_username?
+    errors.add(:password, 'cannot be changed for a system account') if will_save_change_to_password_digest?
+    errors.add(:system_account, 'cannot be disabled') if will_save_change_to_system_account?
   end
 
   def username_change_cooldown_has_elapsed

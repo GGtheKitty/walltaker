@@ -21,7 +21,7 @@ class SettingsController < ApplicationController
   def destroy
     @user = settings_user
 
-    return redirect_to settings_path, alert: 'The evil account cannot be deleted.' if @user.evil_account?
+    return redirect_to settings_path, alert: 'System accounts cannot be deleted.' if @user.system_account?
     unless @user.authenticate(account_deletion_params[:password].to_s)
       return redirect_to settings_path, alert: 'Current password is incorrect.'
     end
@@ -52,7 +52,7 @@ class SettingsController < ApplicationController
 
   def update_username
     @user.with_lock do
-      return redirect_to settings_path, alert: "The evil account's username cannot be changed." if @user.evil_account?
+      return redirect_to settings_path, alert: "System account usernames cannot be changed." if @user.system_account?
       unless @user.can_change_username?
         return redirect_to settings_path, alert: 'Username can only be changed once a week.'
       end
@@ -76,7 +76,7 @@ class SettingsController < ApplicationController
   end
 
   def update_password
-    return redirect_to settings_path, alert: "The evil account's password cannot be changed." if @user.evil_account?
+    return redirect_to settings_path, alert: "System account passwords cannot be changed." if @user.system_account?
 
     unless @user.authenticate(user_params[:current_password].to_s)
       return redirect_to settings_path, alert: "Current password is incorrect."

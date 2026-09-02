@@ -20,30 +20,33 @@ apply_bot_profile = ->(user) do
   user.update!(profile:)
 end
 
+system_account_attributes = -> {
+  {
+    system_account: true,
+    password_digest: BCrypt::Password.create(SecureRandom.base64(48))
+  }
+}
+
 Apple = User.create({
                       email: 'a@a.com',
                       username: 'apple',
-                      password: 'simplify1!',
                       details: '',
-                    })
+                    }.merge(system_account_attributes.call))
 Banana = User.create({
                        email: 'b@b.com',
                        username: 'banana',
-                       password: 'simplify1!',
                        details: '',
-                     })
+                     }.merge(system_account_attributes.call))
 Cherry = User.create({
                        email: 'c@c.com',
                        username: 'cherry',
-                       password: 'simplify1!',
                        details: '',
-                     })
+                     }.merge(system_account_attributes.call))
 Evil = User.create({
                      email: 'e@e.com',
                      username: 'evil',
-                     password: 'simplify1!',
                      details: '',
-                   })
+                   }.merge(system_account_attributes.call))
 Friendship.create({
                     sender_id: Apple.id,
                     receiver_id: Banana.id,
@@ -52,12 +55,10 @@ Friendship.create({
 
 pornbot = User.new({
                      username: 'PornBot',
-                     password: 'youcantloginaspornbotdoofus',
-                     password_confirmation: 'youcantloginaspornbotdoofus',
                      email: 'fake@email.com',
                      details: bot_profiles.fetch('PornBot'),
                      admin: true
-                   })
+                   }.merge(system_account_attributes.call))
 
 puts "Made admin user PornBot" if pornbot.valid?
 puts "DID NOT make admin user PornBot. #{pornbot.errors.map {|error| error.full_message }.join(', ')}" unless pornbot.valid?
@@ -68,12 +69,10 @@ apply_bot_profile.call(pornbot) if pornbot.persisted?
 
 ki = User.new({
                 username: 'PornLizardKi',
-                password: 'youcantloginaspornbotdoofus',
-                password_confirmation: 'youcantloginaspornbotdoofus',
                 email: 'ki@invalidemail.com',
                 details: bot_profiles.fetch('PornLizardKi'),
                 admin: false
-              })
+              }.merge(system_account_attributes.call))
 
 puts "Made Ki" if ki.valid?
 puts "DID NOT make Ki. #{ki.errors.map {|error| error.full_message }.join(', ')}" unless ki.valid?
@@ -85,12 +84,10 @@ apply_bot_profile.call(ki) if ki.persisted?
 
 warren = User.new({
                     username: 'PornLizardWarren',
-                    password: 'youcantloginaspornbotdoofus',
-                    password_confirmation: 'youcantloginaspornbotdoofus',
                     email: 'warren@invalidemail.com',
                     details: bot_profiles.fetch('PornLizardWarren'),
                     admin: false
-                  })
+                  }.merge(system_account_attributes.call))
 
 puts "Made warren" if warren.valid?
 puts "DID NOT make warren. #{warren.errors.map {|error| error.full_message }.join(', ')}" unless warren.valid?
@@ -102,12 +99,10 @@ apply_bot_profile.call(warren) if warren.persisted?
 
 taylor = User.new({
                     username: 'PornLizardTaylor',
-                    password: 'youcantloginaspornbotdoofus',
-                    password_confirmation: 'youcantloginaspornbotdoofus',
                     email: 'taylor@invalidemail.com',
                     details: bot_profiles.fetch('PornLizardTaylor'),
                     admin: false
-                  })
+                  }.merge(system_account_attributes.call))
 
 puts "Made taylor" if taylor.valid?
 puts "DID NOT make taylor. #{taylor.errors.map {|error| error.full_message }.join(', ')}" unless taylor.valid?

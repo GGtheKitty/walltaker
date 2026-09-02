@@ -32,8 +32,8 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "does not show username or password settings for the evil account" do
-    user = create_user(username: "evil", email: "evil@example.com")
+  test "does not show username or password settings for a system account" do
+    user = create_user(username: "SettingsSystem", email: "settings-system@example.com", system_account: true)
 
     log_in(user)
     get settings_url
@@ -95,15 +95,15 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
-  test "does not delete the evil account through a crafted request" do
-    user = create_user(username: "evil", email: "evil-delete@example.com")
+  test "does not delete a system account through a crafted request" do
+    user = create_user(username: "DeleteSystem", email: "delete-system@example.com", system_account: true)
 
     log_in(user)
     delete settings_url, params: { account: { password: "password" } }
 
     assert_redirected_to settings_path
     assert_not user.reload.deleted?
-    assert_equal "The evil account cannot be deleted.", flash[:alert]
+    assert_equal "System accounts cannot be deleted.", flash[:alert]
   end
 
   test "surrender controller sees their own settings instead of the surrendered user's settings" do
@@ -208,15 +208,15 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "takenuser is not available.", flash[:alert]
   end
 
-  test "does not change the evil account username" do
-    user = create_user(username: "evil", email: "evil-rename@example.com")
+  test "does not change a system account username" do
+    user = create_user(username: "RenameSystem", email: "rename-system@example.com", system_account: true)
 
     log_in(user)
     post settings_url, params: { settings_action: "username", user: { username: "NotEvil" } }
 
     assert_redirected_to settings_path
-    assert_equal "evil", user.reload.username
-    assert_equal "The evil account's username cannot be changed.", flash[:alert]
+    assert_equal "RenameSystem", user.reload.username
+    assert_equal "System account usernames cannot be changed.", flash[:alert]
   end
 
   test "surrender controller changes their own username instead of the surrendered user's username" do
@@ -271,8 +271,8 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Current password is incorrect.", flash[:alert]
   end
 
-  test "does not change the evil account password" do
-    user = create_user(username: "evil", email: "evil-password@example.com")
+  test "does not change a system account password" do
+    user = create_user(username: "PasswordSystem", email: "password-system@example.com", system_account: true)
 
     log_in(user)
     post settings_url, params: {
@@ -286,7 +286,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to settings_path
     assert user.reload.authenticate("password")
-    assert_equal "The evil account's password cannot be changed.", flash[:alert]
+    assert_equal "System account passwords cannot be changed.", flash[:alert]
   end
 
   test "does not change password to a blank password" do
@@ -311,17 +311,30 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
   private
 
   def log_in(user)
-    post session_index_path, params: { email: user.email, password: "password" }
+    if user.system_account?
+      admin = User.create!(
+        username: "SettingsAdmin#{user.id}",
+        email: "settings-admin-#{user.id}@example.com",
+        admin: true,
+        password: "password",
+        password_confirmation: "password"
+      )
+      post session_index_path, params: { email: admin.email, password: "password" }
+      get mod_tools_users_assume_path(user)
+    else
+      post session_index_path, params: { email: user.email, password: "password" }
+    end
   end
 
-  def create_user(username:, email:, colour_preference: :auto, username_changed_at: nil)
+  def create_user(username:, email:, colour_preference: :auto, username_changed_at: nil, system_account: false)
     User.create!(
       username:,
       email:,
       password: "password",
       password_confirmation: "password",
       colour_preference:,
-      username_changed_at:
+      username_changed_at:,
+      system_account:
     )
   end
 

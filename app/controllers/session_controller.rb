@@ -11,13 +11,9 @@ class SessionController < ApplicationController
     login_identifier = login_params[:email].to_s.strip.downcase
     user = User.active.where("lower(email) = :identifier OR lower(username) = :identifier", identifier: login_identifier).first
     if !user.nil?
-      if user.evil_account? && SiteConfig.invite_only?
-        @error = 'The evil account is unavailable while invite-only mode is enabled.'
-        track :nefarious, :tried_to_log_in_as_evil_during_invite_only
-        render 'new', status: :unprocessable_entity
-      elsif user.username == 'PornBot'
-        @error = 'You don\'t look like a robot... Your IP address has been flagged.'
-        track :nefarious, :tried_to_log_in_as_porn_bot
+      if user.system_account?
+        @error = 'Wrong email, username, or password.'
+        track :nefarious, :tried_to_log_in_as_system_account, username: user.username
         render 'new', status: :unprocessable_entity
       else
         if user.authenticate(login_params[:password])

@@ -274,13 +274,28 @@ class ModToolsAccountLifecycleTest < ActionDispatch::IntegrationTest
     assert_not Profile.unscoped.exists?(profile.id)
   end
 
+  test "moderator can assume a system account" do
+    system_user = create_user(
+      username: "ModeratorOnlyRobot",
+      email: "moderator-only-robot@example.com",
+      system_account: true
+    )
+
+    get mod_tools_users_assume_path(system_user)
+
+    assert_redirected_to root_path
+    follow_redirect!
+    assert_select ".user-tools .username", text: system_user.username
+  end
+
   private
 
-  def create_user(username:, email:, admin: false)
+  def create_user(username:, email:, admin: false, system_account: false)
     User.create!(
       username:,
       email:,
       admin:,
+      system_account:,
       password: "password",
       password_confirmation: "password"
     )

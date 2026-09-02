@@ -43,4 +43,38 @@ class SessionControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_select ".error_messages", text: "Wrong email, username, or password."
   end
+
+  test "system accounts cannot use credential login" do
+    system_user = User.create!(
+      username: "SystemRobot",
+      email: "system-robot@example.com",
+      password: "known-password",
+      password_confirmation: "known-password",
+      system_account: true
+    )
+
+    post session_index_path, params: { email: system_user.email, password: "known-password" }
+
+    assert_response :unprocessable_entity
+    assert_select ".error_messages", text: "Wrong email, username, or password."
+    get root_path
+    assert_select ".user-tools .username", text: system_user.username, count: 0
+  end
+
+  test "evil button can still log into the evil system account" do
+    evil = User.find_by(username: "evil")
+    evil ||= User.create!(
+      username: "evil",
+      email: "evil-login-button@example.com",
+      password: "unknown-password",
+      password_confirmation: "unknown-password",
+      system_account: true
+    )
+
+    get be_evil_path
+
+    assert_redirected_to root_path
+    follow_redirect!
+    assert_select ".user-tools .username", text: evil.username
+  end
 end

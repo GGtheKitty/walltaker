@@ -9,8 +9,7 @@ class EnsurePornBotProfile < ActiveRecord::Migration[7.2]
       admin: true
     )
     if pornbot.new_record?
-      pornbot.password = 'youcantloginaspornbotdoofus'
-      pornbot.password_confirmation = 'youcantloginaspornbotdoofus'
+      pornbot.password_digest = BCrypt::Password.create(SecureRandom.base64(48))
     end
     pornbot.save!
 

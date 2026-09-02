@@ -9,24 +9,28 @@ class UserTest < ActiveSupport::TestCase
     assert_not user.valid?
   end
 
-  test 'evil account username and password are immutable' do
+  test 'system account username, password, and status are immutable' do
     user = User.create!(
-      username: 'evil',
-      email: 'evil-model@example.com',
+      username: 'SystemModelAccount',
+      email: 'system-model@example.com',
       password: 'password',
-      password_confirmation: 'password'
+      password_confirmation: 'password',
+      system_account: true
     )
 
     user.assign_attributes(
       username: 'NotEvil',
       password: 'new-password',
-      password_confirmation: 'new-password'
+      password_confirmation: 'new-password',
+      system_account: false
     )
 
     assert_not user.save
-    assert_includes user.errors[:username], 'cannot be changed for the evil account'
-    assert_includes user.errors[:password], 'cannot be changed for the evil account'
-    assert_equal 'evil', user.reload.username
+    assert_includes user.errors[:username], 'cannot be changed for a system account'
+    assert_includes user.errors[:password], 'cannot be changed for a system account'
+    assert_includes user.errors[:system_account], 'cannot be disabled'
+    assert_equal 'SystemModelAccount', user.reload.username
+    assert user.system_account?
     assert user.authenticate('password')
   end
 
