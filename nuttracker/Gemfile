@@ -4,6 +4,10 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 # Specify your gem's dependencies in nuttracker.gemspec.
 gemspec
 
+# Keep the engine's standalone development and test bundle on the same Rails
+# release series as the host application and above known vulnerable versions.
+gem "rails", "~> 7.2.3", ">= 7.2.3.1"
+
 gem "sqlite3"
 
 gem "sprockets-rails"

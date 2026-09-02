@@ -2,7 +2,7 @@ PATH
   remote: nuttracker
   specs:
     nuttracker (0.1.0)
-      rails (>= 7.0.2.2)
+      rails (>= 7.1.5.2)
 
 GEM
   remote: https://rubygems.org/
