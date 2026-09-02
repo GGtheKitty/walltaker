@@ -166,7 +166,7 @@ GEM
     marcel (1.0.4)
     matrix (0.4.2)
     mini_mime (1.1.5)
-    mini_portile2 (2.8.7)
+    mini_portile2 (2.8.9)
     minitest (5.24.1)
     msgpack (1.7.2)
     multi_json (1.15.0)
@@ -180,12 +180,12 @@ GEM
     net-smtp (0.5.0)
       net-protocol
     nio4r (2.7.3)
-    nokogiri (1.16.7)
+    nokogiri (1.19.4)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
-    nokogiri (1.16.7-arm64-darwin)
+    nokogiri (1.19.4-arm64-darwin)
       racc (~> 1.4)
-    nokogiri (1.16.7-x86_64-linux)
+    nokogiri (1.19.4-x86_64-linux-gnu)
       racc (~> 1.4)
     pagy (8.6.3)
     parser (3.3.4.2)
@@ -343,6 +343,7 @@ DEPENDENCIES
   inline_svg
   jbuilder
   lograge
+  nokogiri (~> 1.19, >= 1.19.4)
   nuttracker!
   pagy (~> 8.6)
   pg
