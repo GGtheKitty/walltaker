@@ -204,42 +204,6 @@ class LinksController < ApplicationController
     redirect_to link_path(@link), alert: 'Not authorized'
   end
 
-  def fork
-    source_link = Link.find(params['id'])
-
-    if source_link.friends_only
-      friendship = Friendship.find_friendship(current_user, source_link.user)
-      unless friendship.present?
-        track :error, :failed_to_create_new_link_fork, source: params['id']
-        render :new, status: :unprocessable_entity
-        return
-      end
-    end
-
-    if source_link
-      @link = source_link.dup
-      @link.user_id = current_user.id
-      @link.custom_url = nil
-      @link.created_at = Time.now
-      @link.updated_at = Time.now
-      @link.last_ping = nil
-      @link.last_ping_user_agent = nil
-      @link.response_type = nil
-      @link.response_text = nil
-      @link.live_client_started_at = nil
-      @link.forked_from = source_link
-      result = @link.save
-    end
-
-    if result
-      track :regular, :link_fork, source: params['id'], clone: @link.id
-      redirect_to link_url(@link), notice: 'Link was successfully forked.'
-    else
-      track :error, :failed_to_create_new_link_fork, errors: @link.errors, source: params['id']
-      render :new, status: :unprocessable_entity
-    end
-  end
-
   def embed
     @link_shown = true
     @details_shown = true

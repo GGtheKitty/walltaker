@@ -117,7 +117,6 @@ Rails.application.routes.draw do
     member do
       get :walltaker, to: 'links#export'
       post 'abilities/:ability', to: 'links#toggle_ability', as: 'toggle_link_ability'
-      post 'fork', to: 'links#fork', as: 'fork_link'
       get 'embed'
       get 'show_similar', as: 'show_similar'
     end
