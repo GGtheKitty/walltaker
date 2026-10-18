@@ -176,8 +176,10 @@ int main() {
 
 <p>
   The server sends this payload immediately after subscribing and every time client-visible link state changes. Treat
-  <code>post_url</code> as the current wallpaper URL. Users can enable videos and GIFs on some links, so clients should
-  handle file types they cannot display.
+  <code>post_url</code> as the current wallpaper URL. If that request is rejected by the e621 CDN, clients can retry
+  with <code>post_url_backup</code>, a Walltaker-hosted URL that supplies the CDN's required request headers. The backup
+  is <code>null</code> for media that is not hosted on e621. Users can enable videos and GIFs on some links, so clients
+  should handle file types they cannot display.
 </p>
 
 <div class="accent-block">
@@ -193,6 +195,7 @@ int main() {
   "terms": "I'm trying out something new, break this please! :)",
   "blacklist": "feet blood",
   "post_url": "https://static1.e621.net/data/5d/87/5d87428c4839b0dc7d585b87a25af61a.png",
+  "post_url_backup": "<%= walltaker_url('/e621-media?token=SIGNED_TOKEN') %>",
   "post_thumbnail_url": "https://static1.e621.net/data/preview/5d/87/5d87428c4839b0dc7d585b87a25af61a.jpg",
   "post_description": "",
   "created_at": "2022-03-08T01:01:50.142Z",
@@ -352,7 +355,8 @@ int main() {
 <p>
   Replace polling <code>GET /api/links/[id].json</code> with one long-lived <code>LinkChannel</code> subscription.
   The WebSocket message payload intentionally matches the link JSON shape, so most wallpaper update code can keep using
-  <code>post_url</code>, <code>post_thumbnail_url</code>, <code>set_by</code>, and <code>updated_at</code>.
+  <code>post_url</code>, <code>post_url_backup</code>, <code>post_thumbnail_url</code>, <code>set_by</code>, and
+  <code>updated_at</code>.
 </p>
 
 <table>

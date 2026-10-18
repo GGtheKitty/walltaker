@@ -31,6 +31,7 @@ Rails.application.routes.draw do
   get 'help/faq', to: 'help#faq', as: 'faq'
   get 'help/client_guide', to: 'help#client_guide', as: 'client_guide'
   get 'help/deprecated_client_guide', to: 'help#deprecated_client_guide', as: 'deprecated_client_guide'
+  match 'e621-media', to: 'e621_media#show', via: %i[get head], as: 'e621_media'
   get 'leaderboard', to: 'leaderboard#index', as: 'leaderboard'
   get 'notifications/:id', to: 'notification#show', as: 'notification'
   delete 'notifications', to: 'notification#delete_all', as: 'clear_notifications'

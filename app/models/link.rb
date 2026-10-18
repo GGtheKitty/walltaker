@@ -91,6 +91,7 @@ class Link < ApplicationRecord
       terms: terms,
       blacklist: blacklist,
       post_url: post_url,
+      post_url_backup: post_url_backup,
       post_thumbnail_url: post_thumbnail_url,
       post_description: post_description,
       created_at: created_at,
@@ -114,6 +115,10 @@ class Link < ApplicationRecord
 
   def e621_post_md5
     post_url&.match(%r{/([0-9a-f]{32})\.(png|jpe?g|bmp|webm|mp4|gif|webp)(?:\?|$)}i)&.[](1)
+  end
+
+  def post_url_backup
+    E621MediaProxy.fallback_url(post_url)
   end
 
   after_update_commit do
