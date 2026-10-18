@@ -3,13 +3,14 @@ services:
     image: postgres:14
     restart: unless-stopped
     volumes:
-      - ./.docker/volumes/walltaker_database2:/var/lib/postgresql/data
-    ports:
-      - ${DB_HOST_PORT}:${DB_PORT}
+      - ./.docker/volumes/walltaker_database3:/var/lib/postgresql/data
+      - ./scripts/postgres-init-app-role.sh:/docker-entrypoint-initdb.d/10-create-app-role.sh:ro
     environment:
-      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_USER=${DB_ADMIN_USER}
       - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_PASSWORD=${DB_ADMIN_PASSWORD}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
       interval: 30s
@@ -26,9 +27,7 @@ services:
       #- REDIS_ARGS=--requirepass your_password_here --appendonly yes
       #- REDIS_ARGS=save 60 1000 --requirepass your_password_here --appendonly yes
     volumes:
-      - redis-data:/data
-    ports:
-      - ${CACHE_HOST_PORT}:${CACHE_PORT}
+      - redis-data-v2:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 1m30s
@@ -39,8 +38,7 @@ services:
       - backend
 
 volumes:
-  postgres-data:
-  redis-data:
+  redis-data-v2:
 
 networks:
   backend:

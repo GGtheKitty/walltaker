@@ -42,6 +42,7 @@
   <h3>Account issues</h3>
   <%= button_to "They forgot their password", mod_tools_passwords_index_path, method: :get %>
   <%= button_to "Edit a user", mod_tools_users_index_path, method: :get, class: 'secondary' %>
+  <%= button_to "Profile Domains (#{ProfileDomain.pending.count} pending)", mod_tools_profile_domains_path, method: :get, class: 'secondary' %>
 </section>
 
 <section>

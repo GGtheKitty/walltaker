@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= content_for?(:html_title) ? yield(:html_title) : "Walltaker" %></title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1">
+  <meta name="rating" content="adult">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <link rel="stylesheet" href="/simple.min.css">
+  <link rel="stylesheet" href="/base.css?x=<%= ENV['COMMIT_HASH'] %>">
+  <link rel="stylesheet" href="/user-profile.css?x=<%= ENV['COMMIT_HASH'] %>&v=markdown-toolbar-4">
+  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  <%= javascript_importmap_tags %>
+
+  <style>
+    html,
+    body {
+      display: block;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .profile-shell__document {
+      border: 0;
+      display: block;
+      height: 100%;
+      width: 100%;
+    }
+
+    .profile-shell__report {
+      align-items: center;
+      bottom: max(0.75rem, env(safe-area-inset-bottom));
+      display: flex;
+      left: max(0.75rem, env(safe-area-inset-left));
+      position: fixed;
+      z-index: 2147483647;
+    }
+
+    .profile-shell__report turbo-frame {
+      display: block;
+    }
+
+    .profile-shell__report > a,
+    .profile-shell__report > turbo-frame > div > button {
+      border: 2px solid #000 !important;
+    }
+  </style>
+</head>
+<body>
+  <%= yield %>
+</body>
+</html>

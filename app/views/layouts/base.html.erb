@@ -4,6 +4,7 @@
 <html class="<%= current_user ? "force-#{current_user.colour_preference}" : "" %> <%= "current-mascot-" + mascot %> <%= pervert ? "currently-perverted" : "" %> ">
 <head>
   <title><%= content_for?(:html_title) ? yield(:html_title) : "Walltaker" %></title>
+  <%= tag.base target: '_top' if @profile_document %>
   <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1">
   <meta name="rating" content="adult"/>
   <meta name="walltaker-base-url" content="<%= walltaker_base_url %>"/>
@@ -14,7 +15,7 @@
   <link rel="stylesheet" href="/base.css?x=<%= ENV['COMMIT_HASH'] %>"/>
   <link rel="stylesheet" href="/link.css?x=<%= ENV['COMMIT_HASH'] %>"/>
   <link rel="stylesheet" href="/dashboard.css?x=<%= ENV['COMMIT_HASH'] %>"/>
-  <link rel="stylesheet" href="/user-profile.css?x=<%= ENV['COMMIT_HASH'] %>"/>
+  <link rel="stylesheet" href="/user-profile.css?x=<%= ENV['COMMIT_HASH'] %>&v=markdown-toolbar-4"/>
   <link rel="stylesheet" href="/member-editor.css?x=<%= ENV['COMMIT_HASH'] %>"/>
   <link rel="stylesheet" href="/messages.css?x=<%= ENV['COMMIT_HASH'] %>"/>
   <link rel="stylesheet" href="/news-room.css?x=<%= ENV['COMMIT_HASH'] %>"/>
@@ -37,7 +38,7 @@
   <script src="https://ga.jspm.io/npm:@github/relative-time-element@4.4.2/dist/index.js" type="module" async></script>
 </head>
 
-<body>
+<body <%= tag.attributes(data: { turbo: false }) if @profile_document %>>
 <div data-controller="age">
   <dialog class="modal" data-age-target="modal">
     <h4>This is an adult website</h4>
@@ -63,5 +64,12 @@
         dateFormat: 'Z'
     });
 </script>
+<% if @profile_document %>
+  <script>
+      document.querySelectorAll('a[href^="#"]').forEach((link) => {
+          link.target = '_self'
+      })
+  </script>
+<% end %>
 </body>
 </html>

@@ -22,7 +22,7 @@ services:
     volumes:
       - ./:/ror
     ports:
-      - "${RAILS_HOST_PORT}:3000"
+      - "127.0.0.1:${RAILS_HOST_PORT}:3000"
     environment:
       <<: [*database, *redis, *walltaker]
       ENV: PROD

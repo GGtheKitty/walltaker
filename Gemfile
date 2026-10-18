@@ -31,6 +31,7 @@ gem "jbuilder"
 
 # Use Redis adapter to run Action Cable in production
 gem "redis"
+gem "connection_pool", "< 3"
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
@@ -95,3 +96,4 @@ gem "barnes"
 gem "lograge"
 gem 'scout_apm'
 gem "solid_queue"
+gem "commonmarker", "~> 2.10"

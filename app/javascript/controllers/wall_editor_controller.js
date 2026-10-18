@@ -85,6 +85,8 @@ export default class WallEditorController extends Controller {
     }
 
     save() {
+        if (!window.confirm('Are you sure you want to save? This will overwrite your current profile.')) return
+
         const value = `${this.editorTarget.value}<!-- EDITORSPLIT --><style>${this.csseditorTarget.value}</style>`
         const csrfToken = document.querySelector("[name='csrf-token']").content
 

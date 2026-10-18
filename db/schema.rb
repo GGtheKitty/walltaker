@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_02_220000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_18_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -393,6 +393,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_02_220000) do
     t.index ["user_id"], name: "index_past_links_on_user_id"
   end
 
+  create_table "profile_domains", force: :cascade do |t|
+    t.string "domain", null: false
+    t.integer "status", default: 0, null: false
+    t.bigint "seen_count", default: 0, null: false
+    t.datetime "first_seen_at", null: false
+    t.datetime "last_seen_at", null: false
+    t.bigint "reviewed_by_id"
+    t.datetime "reviewed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["domain"], name: "index_profile_domains_on_domain", unique: true
+    t.index ["reviewed_by_id"], name: "index_profile_domains_on_reviewed_by_id"
+    t.index ["status", "last_seen_at"], name: "index_profile_domains_on_status_and_last_seen_at"
+  end
+
   create_table "profiles", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "name"
@@ -697,6 +712,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_02_220000) do
   add_foreign_key "past_links", "links", on_delete: :nullify
   add_foreign_key "past_links", "users"
   add_foreign_key "past_links", "users", column: "set_by_id"
+  add_foreign_key "profile_domains", "users", column: "reviewed_by_id", on_delete: :nullify
   add_foreign_key "profiles", "profiles", column: "origin_id"
   add_foreign_key "profiles", "users"
   add_foreign_key "reports", "users", column: "reporter_id"

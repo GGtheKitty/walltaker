@@ -11,8 +11,24 @@ class UsersController < ApplicationController
   end
 
   def show
+    @user = User.active.find_by(username: params[:username])
+    raise ActionController::RoutingError.new('Missing user or the username was typed incorrectly.') unless @user
+
+    @is_current_user = current_user && current_user.id == @user.id
+    @report = Report.new(reporter: current_user, reportable: @user) if current_user && !@is_current_user
+    render 'users/profile_shell', layout: 'profile_shell'
+  end
+
+  def profile_document
+    unless request.headers['Sec-Fetch-Dest'] == 'iframe'
+      return redirect_to user_path(params[:username])
+    end
+
     set_user_vars
     set_nut_tracker_vars
+    @profile_document = true
+    response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+    render 'users/show'
   end
 
   def sets
@@ -40,23 +56,30 @@ class UsersController < ApplicationController
     @user = User.active.find(params[:id])
     return redirect_to user_path(@user.username), { alert: 'Not Authorized.' } if current_user.id != @user.id
 
+    details = user_params[:details]
+    details = ProfileMarkdown.dump(details) unless @user.advanced?
+    domain_filter = ProfileDomainFilter.filter_and_record(details)
+    details = domain_filter.content
+
     if @user.profile
-      @user.profile.content = user_params[:details]
+      @user.profile.content = details
       @user.profile.save
     else
-      new_profile = Profile.create({ user: @user, name: nil, content: user_params[:details] })
+      new_profile = Profile.create({ user: @user, name: nil, content: details })
       @user.profile = new_profile
       @user.save
     end
 
-    @user.profile.content = user_params[:details]
+    @user.profile.content = details
     if @user.save
       track :regular, :updated_details
 
       if @user.current_surrender
         Notification.create user: @user, notification_type: :surrender_event, link: user_path(@user.username), text: "#{@user.current_surrender.controller.username} changed a profile setting."
       end
-      redirect_to user_path(@user.username), { notice: 'Successfully updated user.' }
+      notice = 'Successfully updated user.'
+      notice += " Links to blocked #{'domain'.pluralize(domain_filter.blocked_domains.length)} were removed." if domain_filter.blocked_domains.any?
+      redirect_to user_path(@user.username), { notice: }
     else
       track :error, :updating_details_went_wrong
       redirect_to user_path(@user.username), { alert: 'Something went wrong' }
@@ -142,12 +165,24 @@ class UsersController < ApplicationController
   end
 
   def toggle_details_mode
-    current_user.advanced = !current_user.advanced
-    if current_user.save
+    switching_to_html = !current_user.advanced?
+
+    User.transaction do
+      if switching_to_html && current_user.profile && ProfileMarkdown.markdown?(current_user.details)
+        html = helpers.sanitize(ProfileMarkdown.to_html(current_user.details), scrubber: WallScrubber.new)
+        current_user.profile.update!(content: html)
+      end
+
+      current_user.update!(advanced: switching_to_html)
+    end
+
+    if current_user.persisted?
       redirect_to edit_user_path(current_user.username)
     else
       redirect_to root_path, alert: 'Something went wrong'
     end
+  rescue ActiveRecord::RecordInvalid
+    redirect_to root_path, alert: 'Something went wrong'
   end
 
   def details

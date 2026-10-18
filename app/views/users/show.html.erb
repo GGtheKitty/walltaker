@@ -19,7 +19,7 @@
     </div>
     <% if (!current_user || !@has_friendship) && (!@is_current_user || !current_user) %>
       <div class="right">
-        <% if current_user %>
+        <% if current_user && !@profile_document %>
           <%= turbo_frame_tag :report_button, src: new_polymorphic_path([@user, Report]) %>
         <% end %>
         <%= link_to profiles_user_path(@user), class: 'no-underline' do %>
@@ -35,7 +35,7 @@
 
     <% if (current_user && @has_friendship) && !@is_current_user %>
       <div class="right">
-        <% if current_user %>
+        <% if current_user && !@profile_document %>
           <%= turbo_frame_tag :report_button, src: new_polymorphic_path([@user, Report]) %>
         <% end %>
         <%= link_to profiles_user_path(@user), class: 'no-underline' do %>

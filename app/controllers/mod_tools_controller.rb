@@ -47,6 +47,36 @@ class ModToolsController < ApplicationController
     @user_icon = UserIcon.new
   end
 
+  def profile_domains
+    @pending_profile_domains_pagy, @pending_profile_domains = pagy(
+      ProfileDomain.pending.order(last_seen_at: :desc),
+      items: 25,
+      page_param: :pending_page
+    )
+    @approved_profile_domains_pagy, @approved_profile_domains = pagy(
+      ProfileDomain.approved.includes(:reviewed_by).order(:domain),
+      items: 25,
+      page_param: :approved_page
+    )
+    @blocked_profile_domains_pagy, @blocked_profile_domains = pagy(
+      ProfileDomain.blocked.includes(:reviewed_by).order(:domain),
+      items: 25,
+      page_param: :blocked_page
+    )
+  end
+
+  def update_profile_domain
+    profile_domain = ProfileDomain.find(params[:id])
+    status = params.require(:profile_domain).permit(:status)[:status]
+    return redirect_to mod_tools_profile_domains_path, alert: 'Invalid domain status.' unless %w[approved blocked].include?(status)
+
+    profile_domain.update!(status:, reviewed_by: current_user, reviewed_at: Time.current)
+    ProfileDomainFilter.scrub_saved_profiles! if profile_domain.blocked?
+    track :regular, :mod_update_profile_domain, by: current_user.username, domain: profile_domain.domain, status: status
+
+    redirect_to mod_tools_profile_domains_path, notice: "#{profile_domain.domain} is now #{status}."
+  end
+
   def wallpaper_clients
     load_wallpaper_clients
     @wallpaper_client = WallpaperClient.new(section: 'clients', device_type: 'desktop')
