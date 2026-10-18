@@ -1,6 +1,8 @@
 class HelpController < ApplicationController
   def index
+    @wallpaper_clients = WallpaperClient.in_section('clients')
   end
+
   def faq
   end
 

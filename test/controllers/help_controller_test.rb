@@ -12,6 +12,23 @@ class HelpControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index uses the homepage client list" do
+    active_client = WallpaperClient.create!(
+      name: 'Current Help Client', section: 'clients', url: 'https://example.com/current', platform: 'CurrentOS'
+    )
+    deprecated_client = WallpaperClient.create!(
+      name: 'Old Help Client', section: 'clients', url: 'https://example.com/old', platform: 'OldOS', deprecated: true
+    )
+
+    get help_path
+
+    assert_response :success
+    assert_select '.wallpaper-clients tbody tr', count: 2
+    assert_select ".wallpaper-clients a[href='#{active_client.url}']:not(.subdued)", text: active_client.name
+    assert_select ".wallpaper-clients a.subdued[href='#{deprecated_client.url}']", text: deprecated_client.name
+    assert_select '.wallpaper-clients strong', text: '(Deprecated)', count: 1
+  end
+
   test "client guide pins external syntax highlighting assets" do
     get client_guide_path
 

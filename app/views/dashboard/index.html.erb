@@ -139,25 +139,7 @@
 <%= inline_svg_tag "wt.svg", class: "explainer_graphic", aria: true, title: "A flow chart, showing links pushing updates to devices running walltaker clients.", width: '100%' %>
 
 <h2 id="companion-apps">Clients</h2>
-<table>
-  <thead>
-  <tr>
-    <th>Client</th>
-    <th>Platform</th>
-  </tr>
-  </thead>
-  <tbody>
-  <% @wallpaper_clients.each do |client| %>
-    <tr>
-      <td>
-        <%= link_to client.name, client.url, target: '_blank', rel: 'noopener', class: ('subdued' if client.deprecated?) %>
-        <strong><%= '(Deprecated)' if client.deprecated? %></strong>
-      </td>
-      <td><%= client.platform %></td>
-    </tr>
-  <% end %>
-  </tbody>
-</table>
+<%= render 'shared/wallpaper_clients', clients: @wallpaper_clients %>
 Please try using clients that are not deprecated. For devs, follow our client guide for updating deprecated clients.
 
 <h2 id="extra-apps">Companion/Explorer Apps</h2>
