@@ -4,18 +4,19 @@
   <title><%= content_for?(:html_title) ? yield(:html_title) : "Walltaker" %></title>
   <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1">
   <meta name="rating" content="adult">
+  <meta name="turbo-visit-control" content="reload">
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
 
   <link rel="stylesheet" href="/simple.min.css">
   <link rel="stylesheet" href="/base.css?x=<%= ENV['COMMIT_HASH'] %>">
-  <link rel="stylesheet" href="/user-profile.css?x=<%= ENV['COMMIT_HASH'] %>&v=markdown-toolbar-4">
+  <link rel="stylesheet" href="/user-profile.css?x=<%= ENV['COMMIT_HASH'].presence || File.mtime(Rails.root.join('public/user-profile.css')).to_i %>">
   <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
   <%= javascript_importmap_tags %>
 
   <style>
-    html,
-    body {
+    html:has(> body.profile-shell),
+    body.profile-shell {
       display: block;
       height: 100%;
       margin: 0;
@@ -49,7 +50,7 @@
     }
   </style>
 </head>
-<body>
+<body class="profile-shell">
   <%= yield %>
 </body>
 </html>

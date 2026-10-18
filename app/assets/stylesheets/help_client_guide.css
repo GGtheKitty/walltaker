@@ -1,8 +1,64 @@
-.client-guide-examples pre {
-  max-height: 32rem;
-  overflow: auto;
+.client-guide {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-.client-guide-examples code {
-  min-width: max-content;
+.client-guide .accent-block,
+.client-guide .tab,
+.client-guide pre {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.client-guide-examples {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  grid-template-areas: 'labels' 'content';
+}
+
+.client-guide-examples .tabs__labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.client-guide-examples .tabs__labels button + button {
+  margin-left: 0;
+}
+
+.client-guide-examples .tab {
+  padding: 1rem 0 0;
+}
+
+.client-guide pre {
+  max-height: 32rem;
+  overflow: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+.client-guide pre code.hljs {
+  padding: 1rem;
+  overflow: visible;
+}
+
+.client-guide-examples pre {
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 600px) {
+  .client-guide .accent-block {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  .client-guide .mascot {
+    float: none;
+    display: block;
+    margin: 0 auto 1rem;
+    max-width: 100%;
+    height: auto;
+  }
 }

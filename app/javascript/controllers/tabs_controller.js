@@ -6,11 +6,17 @@ export default class TabsController extends Controller {
     currentTab = 0
 
     connect () {
+        // Turbo snapshots retain generated markup, but not its event listeners.
+        this.element.querySelector(':scope > .tabs__labels')?.remove();
+        const restoredTab = this.tabTargets.findIndex(tab => tab.dataset.open === 'true');
+        if (restoredTab >= 0) this.currentTab = restoredTab;
+
         const tabLabels = document.createElement('div');
         tabLabels.className = 'tabs__labels';
 
         this.tabTargets.forEach((tab, index) => {
             const tabLabel = document.createElement('button');
+            tabLabel.type = 'button';
             tabLabel.innerText = tab.dataset.title;
             tabLabel.dataset.tabsTarget = 'label';
             tabLabel.addEventListener('click', () => this.open(index))

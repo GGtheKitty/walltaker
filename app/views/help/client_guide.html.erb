@@ -1,3 +1,22 @@
+<% content_for :main_class, 'client-guide' %>
+<% link_example = {
+  success: true,
+  id: 1,
+  expires: '2026-12-31T00:00:00.000Z',
+  username: 'gray',
+  terms: "I'm trying out something new, break this please! :)",
+  blacklist: 'feet blood',
+  post_url: 'https://static1.e621.net/data/5d/87/5d87428c4839b0dc7d585b87a25af61a.png',
+  post_url_backup: walltaker_url('/e621-media?token=SIGNED_TOKEN'),
+  post_thumbnail_url: 'https://static1.e621.net/data/preview/5d/87/5d87428c4839b0dc7d585b87a25af61a.jpg',
+  post_description: '',
+  created_at: '2022-03-08T01:01:50.142Z',
+  updated_at: '2026-10-18T12:00:00.000Z',
+  set_by: 'apple',
+  response_type: 'horny',
+  response_text: 'mmph nice',
+  online: true
+} %>
 <% content_for :stylesheets do %>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css" integrity="sha384-88Jvj9Q2LiBDwL7w3yciRTcH5q2zzvMFYIm4xX9/evqxJsxA33Xk9XYKcvUlPITo" crossorigin="anonymous">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha384-F/bZzf7p3Joyp5psL90p/p89AZJsndkSoGwRpXcZhleCWhd8SnRuoYo4d0yirjJp" crossorigin="anonymous"></script>
@@ -13,7 +32,7 @@
 </h2>
 
 <p>
-  <%= image_tag 'mascot/WarrenAPIExtrodinaire.png', alt: "Warren making a client with great difficulty", width: 240, style: "float: right" %>
+  <%= image_tag 'mascot/WarrenAPIExtrodinaire.png', alt: "Warren making a client with great difficulty", width: 240, class: 'mascot float-right' %>
   You can make your own Walltaker client! A user should be able to supply any link ID, that you can then use to open a websocket to that instance. The server sends the current wallpaper when the
   subscription opens, then sends a new wallpaper whenever the link changes.
 </p>
@@ -34,8 +53,8 @@
 <h5><code>Connect To A Link</code></h5>
 
 <p>
-  Open a websocket connection to Walltaker at <code><%= walltaker_url('/cable') %></code>, then subscribe to
-  <code>LinkChannel</code>. This creates the connection for the website and client to talk to each other. The subscription needs a users link ID in the form of <code>link_id</code>. This can handle both numeric and custom link IDs.
+  Open a WebSocket connection to Walltaker at <code><%= walltaker_url('/cable').sub(/^http/, 'ws') %></code>, then subscribe to
+  <code>LinkChannel</code>. Supply the user's link ID as <code>link_id</code> (or <code>id</code>). Both numeric and custom link IDs are accepted.
 </p>
 
 <p>
@@ -49,7 +68,11 @@
   </div>
   <div class="tabs client-guide-examples" data-controller="tabs">
     <div class="tab" data-tabs-target="tab" data-title="JavaScript">
-      <pre><code class="language-javascript">const consumer = ActionCable.createConsumer("<%= walltaker_url('/cable') %>");
+      <pre><code class="language-javascript">const consumer = ActionCable.createConsumer(
+  "<%= walltaker_url('/cable').sub(/^http/, 'ws') %>"
+);
+
+let currentPostUrl = null;
 
 const subscription = consumer.subscriptions.create(
   {
@@ -59,7 +82,9 @@ const subscription = consumer.subscriptions.create(
   },
   {
     received(link) {
-      if (!link.success) return;
+      if (!link.success || !link.post_url) return;
+      if (link.post_url === currentPostUrl) return;
+      currentPostUrl = link.post_url;
       setWallpaper(link.post_url);
     }
   }
@@ -77,6 +102,7 @@ def set_wallpaper(url):
 
 
 async def main():
+    current_post_url = None
     identifier = json.dumps({
         "channel": "LinkChannel",
         "link_id": 1,
@@ -96,7 +122,8 @@ async def main():
                 continue
 
             post_url = link.get("post_url")
-            if post_url:
+            if post_url and post_url != current_post_url:
+                current_post_url = post_url
                 set_wallpaper(post_url)
 
 
@@ -117,6 +144,7 @@ void set_wallpaper(const std::string& url) {
 
 int main() {
   ix::WebSocket socket;
+  std::string current_post_url;
   socket.setUrl("<%= walltaker_url('/cable').sub(/^http/, 'ws') %>");
 
   const auto identifier = json{
@@ -141,9 +169,12 @@ int main() {
 
     auto link = envelope["message"];
     if (!link.value("success", false)) return;
-    if (!link.value("post_url", "").empty()) {
-      set_wallpaper(link["post_url"]);
-    }
+    if (!link.contains("post_url") || !link["post_url"].is_string()) return;
+
+    const auto post_url = link["post_url"].get&lt;std::string&gt;();
+    if (post_url.empty() || post_url == current_post_url) return;
+    current_post_url = post_url;
+    set_wallpaper(post_url);
   });
 
   socket.start();
@@ -153,6 +184,12 @@ int main() {
     </div>
   </div>
 </div>
+
+<p>
+  The JavaScript example uses the Action Cable client. Python and C++ connect directly and read the payload from the
+  Action Cable envelope's <code>message</code> field; ignore control frames such as welcomes, pings, and subscription confirmations.
+  The <code>setWallpaper</code>/<code>set_wallpaper</code> function is where your client downloads and applies the wallpaper.
+</p>
 
 <p>
   Native clients may also identify themselves with WebSocket handshake headers such as <code>User-Agent</code>,
@@ -178,8 +215,9 @@ int main() {
   The server sends this payload immediately after subscribing and every time client-visible link state changes. Treat
   <code>post_url</code> as the current wallpaper URL. If that request is rejected by the e621 CDN, clients can retry
   with <code>post_url_backup</code>, a Walltaker-hosted URL that supplies the CDN's required request headers. The backup
-  is <code>null</code> for media that is not hosted on e621. Users can enable videos and GIFs on some links, so clients
-  should handle file types they cannot display.
+  is <code>null</code> when the primary URL is not a supported e621 media URL. The token below is a placeholder;
+  use the complete backup URL received from the server. Users can enable videos and GIFs on some links, so clients
+  should handle file types they cannot display. <code>post_url</code> can also be <code>null</code> if no wallpaper is set.
 </p>
 
 <div class="accent-block">
@@ -187,25 +225,15 @@ int main() {
     <ion-icon role="presentation" name="arrow-down-circle"></ion-icon>
     Message
   </div>
-  <pre><code class="language-json">{
-  "success": true,
-  "id": 1,
-  "expires": "2026-03-05T00:00:00.000Z",
-  "username": "gray",
-  "terms": "I'm trying out something new, break this please! :)",
-  "blacklist": "feet blood",
-  "post_url": "https://static1.e621.net/data/5d/87/5d87428c4839b0dc7d585b87a25af61a.png",
-  "post_url_backup": "<%= walltaker_url('/e621-media?token=SIGNED_TOKEN') %>",
-  "post_thumbnail_url": "https://static1.e621.net/data/preview/5d/87/5d87428c4839b0dc7d585b87a25af61a.jpg",
-  "post_description": "",
-  "created_at": "2022-03-08T01:01:50.142Z",
-  "updated_at": "2022-03-13T21:39:01.828Z",
-  "set_by": "name",
-  "response_type": "horny",
-  "response_text": "HUFF wow",
-  "online": true
-}</code></pre>
+  <pre><code class="language-json" data-example="link-update"><%= JSON.pretty_generate(link_example) %></code></pre>
 </div>
+
+<p>
+  Link updates always include the fields above. <code>set_by</code> is a username or <code>null</code>;
+  <code>response_type</code> and <code>response_text</code> may be <code>null</code> before a reaction is sent.
+  <code>post_description</code> is the full description in WebSocket updates. Presence and reaction changes also trigger
+  updates, so download the wallpaper only when <code>post_url</code> changes.
+</p>
 
 <p>
   If the link does not exist, the channel sends an error payload and does not stream link updates.
@@ -224,9 +252,9 @@ int main() {
 
 <hr>
 
-<h5><code>POST https://devenv.playctrl.me/api/links/[id]/response.json</code></h5>
+<h5><code>POST <%= walltaker_url('/api/links/[id]/response.json') %></code></h5>
 <p>Set a response for a given link. There are 4 kinds of responses.</p>
-<p>🔑 Requires user's API Key.</p>
+<p>🔑 Requires the link owner's API key. Use the numeric <code>id</code> from the link payload in this endpoint.</p>
 
 <table>
   <thead>
@@ -261,44 +289,38 @@ int main() {
   </tbody>
 </table>
 
-<p>⚠️ The websocket will immediately send the previous wallpaper data to the client after sending a "<code>disgust</code>" response.</p>
+<p>⚠️ A <code>disgust</code> response rolls the wallpaper back to the previous image and sends the changed state over the WebSocket.
+  If no previous image exists, <code>post_url</code> and <code>post_thumbnail_url</code> become <code>null</code>.</p>
 
 <div class="accent-block">
   <div class="accent-block__charm">
-    <ion-icon role="img" name="arrow-up-circle" class="md hydrated" aria-label="arrow up circle"><template shadowrootmode="open"><div class="icon-inner"><svg xmlns="http://www.w3.org/2000/svg" class="ionicon s-ion-icon" viewBox="0 0 512 512"><title>Arrow Up Circle</title><path d="M256 48C141.13 48 48 141.13 48 256s93.13 208 208 208 208-93.13 208-208S370.87 48 256 48zm91.36 212.65a16 16 0 01-22.63.09L272 208.42V342a16 16 0 01-32 0V208.42l-52.73 52.32A16 16 0 11164.73 238l80-79.39a16 16 0 0122.54 0l80 79.39a16 16 0 01.09 22.65z"></path></svg></div></template></ion-icon>
+    <ion-icon role="presentation" name="arrow-up-circle"></ion-icon>
     Request
   </div>
-  <pre><code class="language-http hljs" data-highlighted="yes"><span class="hljs-keyword">POST</span> <span class="hljs-string">https://devenv.playctrl.me/api/links/[id]/response.json</span> <span class="hljs-meta">HTTP/1.1</span>
-<span class="hljs-attribute">Content-Type</span><span class="hljs-punctuation">: </span>application/json;
+  <pre><code class="language-http">POST <%= walltaker_url('/api/links/1/response.json') %> HTTP/1.1
+Content-Type: application/json
+
 {
   "api_key": "23unFe3i",
   "type": "horny",
   "text": "mmph nice"
-}
-</code></pre>
+}</code></pre>
 </div>
+
+<p>
+  A successful request returns HTTP <code>200</code> and the link JSON below. Unlike a WebSocket link update, this response
+  has no <code>success</code> field. <code>set_by</code> is omitted when no setter is recorded, and
+  <code>post_description</code> is omitted when blank or truncated to 100 characters when present.
+  An invalid API key returns <code>403</code>, an invalid reaction type returns <code>400</code>, and a missing link returns
+  <code>404</code>; these errors contain a <code>message</code> field.
+</p>
 
 <div class="accent-block">
   <div class="accent-block__charm">
-    <ion-icon role="img" name="arrow-down-circle" class="md hydrated" aria-label="arrow down circle"><template shadowrootmode="open"><div class="icon-inner"><svg xmlns="http://www.w3.org/2000/svg" class="ionicon s-ion-icon" viewBox="0 0 512 512"><title>Arrow Down Circle</title><path d="M256 464c114.87 0 208-93.13 208-208S370.87 48 256 48 48 141.13 48 256s93.13 208 208 208zm-91.36-212.65a16 16 0 0122.63-.09L240 303.58V170a16 16 0 0132 0v133.58l52.73-52.32A16 16 0 11347.27 274l-80 79.39a16 16 0 01-22.54 0l-80-79.39a16 16 0 01-.09-22.65z"></path></svg></div></template></ion-icon>
+    <ion-icon role="presentation" name="arrow-down-circle"></ion-icon>
     Response
   </div>
-  <pre><code class="language-json hljs" data-highlighted="yes"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"expires"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2025-03-05T00:00:00.000Z"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"username"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"gray"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"terms"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"I'm trying out something new, break this please! :)"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"blacklist"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"feet blood"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"post_url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"https://static1.e621.net/data/5d/87/5d87428c4839b0dc7d585b87a25af61a.png"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"post_thumbnail_url"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"https://static1.e621.net/data/preview/5d/87/5d87428c4839b0dc7d585b87a25af61a.jpg"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"post_description"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">""</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"created_at"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2022-03-08T01:01:50.142Z"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"updated_at"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"2022-03-13T21:39:01.828Z"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"set_by"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"name"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"response_type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"horny"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"response_text"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"HUFF wow"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"online"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span>
-<span class="hljs-punctuation">}</span></code></pre>
+  <pre><code class="language-json" data-example="reaction-response"><%= JSON.pretty_generate(link_example.except(:success, :post_description)) %></code></pre>
 </div>
 
 <hr>
@@ -306,10 +328,13 @@ int main() {
 <h5><code>Watch User Status</code></h5>
 <p>Use this on the existing link websocket to get details about a user, such as if they're online, a friend, or the
   currently authenticated user for a given session. This replaces
-  <code>GET https://devenv.playctrl.me/api/users/[username].json?api_key=xxxxxxxx</code>.</p>
+  <code>GET <%= walltaker_url('/api/users/[username].json?api_key=xxxxxxxx') %></code>.</p>
 <p>🔓/🔐 API key required for some, but not all data.</p>
 
-<p>ℹ️ To ensure this query is processed quickly, <code>set_by</code> has been excluded from the links array.</p>
+<p>ℹ️ The <code>links</code> array contains public, unexpired (or never-expiring) links. Each entry excludes
+  <code>success</code> and <code>set_by</code>; <code>post_description</code> is omitted when blank and truncated to 100 characters when present.
+  <code>friend</code> and <code>self</code> are included only when an API key or browser session authenticates the viewer.
+  The legacy field <code>master</code> contains the owner's username, or <code>false</code> if no owner is set.</p>
 
 <div class="accent-block">
   <div class="accent-block__charm">
@@ -326,26 +351,30 @@ int main() {
 
 <div class="accent-block">
   <div class="accent-block__charm">
-    <ion-icon role="img" name="arrow-down-circle" class="md hydrated" aria-label="arrow down circle"><template shadowrootmode="open"><div class="icon-inner"><svg xmlns="http://www.w3.org/2000/svg" class="ionicon s-ion-icon" viewBox="0 0 512 512"><title>Arrow Down Circle</title><path d="M256 464c114.87 0 208-93.13 208-208S370.87 48 256 48 48 141.13 48 256s93.13 208 208 208zm-91.36-212.65a16 16 0 0122.63-.09L240 303.58V170a16 16 0 0132 0v133.58l52.73-52.32A16 16 0 11347.27 274l-80 79.39a16 16 0 01-22.54 0l-80-79.39a16 16 0 01-.09-22.65z"></path></svg></div></template></ion-icon>
+    <ion-icon role="presentation" name="arrow-down-circle"></ion-icon>
     Response
   </div>
-  <pre><code class="language-json hljs" data-highlighted="yes">
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">"type"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"user"</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"success"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"watching"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">"user"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">"username"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"apple"</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">"id"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">24</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">"set_count"</span><span class="hljs-punctuation">:</span> <span class="hljs-number">540</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">"online"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">"links"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>... see link response ...<span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">"authenticated"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">"friend"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">"self"</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
-</code></pre>
+  <pre><code class="language-json" data-example="user-status"><%= JSON.pretty_generate({
+    type: 'user',
+    success: true,
+    watching: true,
+    user: {
+      username: 'apple',
+      id: 24,
+      set_count: 540,
+      is_reporter: false,
+      is_cutie: false,
+      is_supporter: false,
+      online: true,
+      authenticated: true,
+      links: [link_example.except(:success, :set_by, :post_description).merge(username: 'apple')],
+      flair: '',
+      master: false,
+      pets: [],
+      friend: true,
+      self: false
+    }
+  }) %></code></pre>
 </div>
 
 <hr>
@@ -373,7 +402,7 @@ int main() {
   </tr>
   <tr>
     <td>Compare cached <code>post_url</code> or <code>updated_at</code></td>
-    <td>Apply each successful WebSocket payload as the current link state</td>
+    <td>Read each successful link payload; download media only when <code>post_url</code> changes</td>
   </tr>
   <tr>
     <td>Send client identity through HTTP headers</td>

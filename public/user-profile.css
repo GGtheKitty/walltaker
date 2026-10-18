@@ -42,6 +42,18 @@ h2 > span > .text-charm__medal:hover {
 
 .details__container {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+}
+
+.details__container > * {
+    min-width: 0;
+}
+
+.details__container pre {
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: auto;
 }
 
 .details__container textarea {
@@ -170,6 +182,7 @@ h2 > span > .text-charm__medal:hover {
 .details__container blockquote {
     margin: 1rem 1rem;
     font-style: normal;
+    overflow-wrap: anywhere;
 }
 
 .details__container blockquote > h1,

@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="/base.css?x=<%= ENV['COMMIT_HASH'].presence || File.mtime(Rails.root.join('public/base.css')).to_i %>"/>
   <link rel="stylesheet" href="/link.css?x=<%= ENV['COMMIT_HASH'] %>"/>
   <link rel="stylesheet" href="/dashboard.css?x=<%= ENV['COMMIT_HASH'] %>"/>
-  <link rel="stylesheet" href="/user-profile.css?x=<%= ENV['COMMIT_HASH'] %>&v=markdown-toolbar-4"/>
+  <link rel="stylesheet" href="/user-profile.css?x=<%= ENV['COMMIT_HASH'].presence || File.mtime(Rails.root.join('public/user-profile.css')).to_i %>"/>
   <link rel="stylesheet" href="/member-editor.css?x=<%= ENV['COMMIT_HASH'] %>"/>
   <link rel="stylesheet" href="/messages.css?x=<%= ENV['COMMIT_HASH'] %>"/>
   <link rel="stylesheet" href="/news-room.css?x=<%= ENV['COMMIT_HASH'] %>"/>
