@@ -1,7 +1,7 @@
 <% content_for :stylesheets do %>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/http.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css" integrity="sha384-88Jvj9Q2LiBDwL7w3yciRTcH5q2zzvMFYIm4xX9/evqxJsxA33Xk9XYKcvUlPITo" crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha384-F/bZzf7p3Joyp5psL90p/p89AZJsndkSoGwRpXcZhleCWhd8SnRuoYo4d0yirjJp" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/http.min.js" integrity="sha384-wt2eEhJoUmjz8wmTq0k9WvI19Pumi9/h7B87i0wc7QMYwnCJ0dcuyfcYo/ui1M6t" crossorigin="anonymous"></script>
 <% end %>
 
 <h2>
@@ -52,7 +52,7 @@
 <hr>
 
 <h5><code>POST https://devenv.playctrl.me/api/links/[id]/response.json</code></h5>
-<p>Set a response for a given link. There are 3 kinds of responses.</p>
+<p>Set a response for a given link. There are 4 kinds of responses.</p>
 <p>🔑 Requires user's API Key.</p>
 
 <table>
@@ -77,6 +77,11 @@
   <tr>
     <td><code>"came"</code></td>
     <td>Came</td>
+    <td>User who set wallpaper gets notification, response <code>text</code> displayed on link in webapp</td>
+  </tr>
+  <tr>
+    <td><code>"ok"</code></td>
+    <td>Thanks</td>
     <td>User who set wallpaper gets notification, response <code>text</code> displayed on link in webapp</td>
   </tr>
 

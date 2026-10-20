@@ -42,6 +42,18 @@ h2 > span > .text-charm__medal:hover {
 
 .details__container {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+}
+
+.details__container > * {
+    min-width: 0;
+}
+
+.details__container pre {
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: auto;
 }
 
 .details__container textarea {
@@ -50,9 +62,127 @@ h2 > span > .text-charm__medal:hover {
     margin-top: 1rem;
 }
 
+.markdown-editor__surface {
+    background: var(--accent-bg);
+    border: 1px solid var(--border);
+    border-radius: 0.35rem;
+    margin-top: 1rem;
+    overflow: hidden;
+}
+
+.markdown-editor__toolbar {
+    align-items: center;
+    background: #ffb300;
+    display: flex;
+    gap: 0;
+    min-height: 2.8rem;
+    overflow-x: auto;
+    padding: 0;
+}
+
+.markdown-editor__toolbar button,
+.markdown-editor__color-control {
+    align-items: center;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    border-right: 1px solid #d99700 !important;
+    box-sizing: border-box;
+    color: #212121 !important;
+    display: inline-flex;
+    flex: 0 0 2.75rem;
+    font-size: 1.05rem;
+    height: 2.8rem;
+    justify-content: center;
+    margin: 0 !important;
+    min-width: 2.75rem;
+    padding: 0 !important;
+    width: 2.75rem;
+}
+
+.markdown-editor__toolbar button:hover,
+.markdown-editor__toolbar button:focus,
+.markdown-editor__color-control:hover,
+.markdown-editor__color-control:focus-within {
+    background: #ffc43d !important;
+    color: #212121 !important;
+    filter: none !important;
+}
+
+.markdown-editor__toolbar button > * {
+    color: inherit !important;
+}
+
+.markdown-editor__toolbar button ion-icon {
+    font-size: 1.2rem;
+    pointer-events: none;
+}
+
+.markdown-editor__color-control {
+    cursor: pointer;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.markdown-editor__color-control ion-icon {
+    font-size: 1rem;
+    pointer-events: none;
+}
+
+.markdown-editor__color-control input[type="color"] {
+    border: 1px solid #212121;
+    border-radius: 1px;
+    cursor: pointer;
+    height: 0.35rem;
+    margin: 0;
+    padding: 0;
+    width: 1.25rem;
+}
+
+.markdown-editor__color-control input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.markdown-editor__color-control input[type="color"]::-webkit-color-swatch {
+    border: 0;
+}
+
+.markdown-editor__underline {
+    text-decoration: underline;
+}
+
+.markdown-editor__divider {
+    background: #d99700;
+    height: 2.8rem;
+    margin: 0;
+    width: 1px;
+}
+
+.details__container .markdown-editor__surface textarea {
+    background: var(--bg);
+    border: 0;
+    border-radius: 0;
+    color: var(--text);
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.5;
+    margin: 0;
+    min-height: 18rem;
+    resize: vertical;
+}
+
+.markdown-editor__footer {
+    color: var(--text-light);
+    display: flex;
+    font-size: 0.8rem;
+    justify-content: space-between;
+    padding: 0.3rem 0.5rem;
+}
+
 .details__container blockquote {
     margin: 1rem 1rem;
     font-style: normal;
+    overflow-wrap: anywhere;
 }
 
 .details__container blockquote > h1,
@@ -187,6 +317,51 @@ form.orgasms .form__row {
     margin: 0;
 }
 
+.settings__username-note {
+    display: block;
+    text-align: center;
+    width: 100%;
+}
+
+.settings__field-grid {
+    align-items: center;
+    display: grid;
+    column-gap: 0.75rem;
+    grid-template-columns: max-content minmax(0, 1fr);
+    row-gap: 1rem;
+    width: 100%;
+}
+
+.settings__field-grid .form__row {
+    display: contents;
+}
+
+.settings__field-grid label {
+    white-space: nowrap;
+}
+
+.settings__field-grid input {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+}
+
+@media screen and (max-width: 400px) {
+    .settings__field-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings__field-grid .form__row {
+        align-items: stretch;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .settings__field-grid label {
+        white-space: normal;
+    }
+}
+
 .form__row {
     display: flex;
     gap: 0.5rem;
@@ -273,6 +448,7 @@ form.orgasms .form__row {
             top: 0;
             transform: translateX(-50%);
             z-index: 99;
+            pointer-events: none;
             content: "";
             display: block;
             width: 120px;

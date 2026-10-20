@@ -51,6 +51,8 @@ makefile
 Procfile
 /README.md
 /*.md
+/*.dump
+/docker-compose*.yml
 
 /.idea
 /test

@@ -4,7 +4,9 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 ruby "~> 3.3.4"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 7.2"
+gem "rails", "~> 7.2.3", ">= 7.2.3.2"
+gem "nokogiri", "~> 1.19", ">= 1.19.4"
+gem "rack-session", "~> 2.1", ">= 2.1.2"
 
 # The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
 gem "sprockets-rails"
@@ -29,6 +31,7 @@ gem "jbuilder"
 
 # Use Redis adapter to run Action Cable in production
 gem "redis"
+gem "connection_pool", "< 3"
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
@@ -93,3 +96,4 @@ gem "barnes"
 gem "lograge"
 gem 'scout_apm'
 gem "solid_queue"
+gem "commonmarker", "~> 2.10"

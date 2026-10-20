@@ -56,12 +56,6 @@
         </a>
       <% end %>
 
-      <% unless current_user.nil? %>
-        <%= button_to fork_link_link_path, method: :post do %>
-          <ion-icon role="presentation" name="git-branch"></ion-icon>
-          Fork
-        <% end %>
-      <% end %>
     </div>
   </div>
 <% end %>
@@ -209,7 +203,7 @@
       Leash in use
     </div>
     <%= @link.user.username.capitalize %> is leashed to
-    Master <%= link_to @link.user.master.username.capitalize, user_path(@link.user.master.username) %>, who opted to make this link
+    Owner <%= link_to @link.user.master.username.capitalize, user_path(@link.user.master.username) %>, who opted to make this link
     pack property.
     <% if @link.user.flair.present? %>
       <blockquote>
@@ -235,7 +229,7 @@
           <% else %>
             <ion-icon name="eye"></ion-icon>
           <% end %>
-          <%= is_master_only ? 'Master Only' : 'Public' %>
+          <%= is_master_only ? 'Owner Only' : 'Public' %>
         </strong>
         <p>
           <% if is_master_only %>

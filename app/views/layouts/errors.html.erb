@@ -43,10 +43,7 @@
         <a class="username" href="<%= user_path current_user.username %>">
           <%= current_user.username %>
         </a>
-        <a href="<%= url_for :action => :browse, :controller => :links %>">
-          <ion-icon role="presentation" name="sparkles"></ion-icon>
-          Browse
-        </a>
+        <%= render 'layouts/browse_link' %>
         <%= link_to 'Links', links_path %>
         <%= link_to 'Friends', friendships_path, class: has_requests? ? 'pinged' : '' %>
         <%= link_to 'Logout', logout_path %>
@@ -57,10 +54,7 @@
           <% end %>
         </div>
       <% else %>
-        <a href="<%= url_for :action => :browse, :controller => :links %>">
-          <ion-icon role="presentation" name="sparkles"></ion-icon>
-          Browse
-        </a>
+        <%= render 'layouts/browse_link' %>
         <%= link_to 'Sign Up', signup_path %>
         <%= link_to 'Login', login_path %>
       <% end %>

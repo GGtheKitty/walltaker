@@ -62,6 +62,7 @@ class LizardRoundJob < ApplicationJob
           result = link.update(
             HashWithIndifferentAccess.new(
               {
+                e621_post_id: results[0]['id'],
                 post_url: results[0]['file']['url'],
                 post_thumbnail_url: results[0]['sample']['url'] || results[0]['preview']['url'],
                 post_description: results[0]['description'],

@@ -2,10 +2,12 @@
 
 one:
   user: one
+  year: 2024
   failed_on: 2024-10-27 12:12:53
   past_link: one
 
 two:
   user: two
+  year: 2024
   failed_on: 2024-10-27 12:12:53
   past_link: two

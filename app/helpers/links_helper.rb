@@ -1,42 +1,14 @@
 module LinksHelper
   def link_id_for_decoration(link_id)
-    return '🐕' if link_id == 1
-    return '🐇' if link_id == 69
-    return '🏳️‍🌈' if link_id == 346
-    return '🥎' if link_id == 348
-    return '⚙️' if link_id == 581
-    return '🐈' if link_id == 658 || link_id == 656
-    return '🐺' if link_id == 666 || link_id == 343
-    return '🦊' if link_id == 1964
-    return '🐶' if link_id == 7900
-    return '🦴' if link_id == 7914
-    return '🐈‍⬛' if link_id == 11002 || link_id == 11011 || link_id == 12069 || link_id == 12594 || link_id == 16191
-    return '🪢' if link_id == 12916 || link_id == 12951 || link_id == 13535 || link_id == 13577 || link_id == 15194
-    return '🪟' if link_id == 15673
-    link_id
+    @emoji_link_decorations ||= EmojiLinkDecoration.emoji_map
+    @emoji_link_decorations.fetch(link_id.to_i, link_id)
   end
 
-  def link_agent_to_icon(link_agent)
-    return :unknown if link_agent.nil?
-    return :desktop if link_agent.include? 'Walltaker Go Client/'
-    return :android if link_agent.include? 'walltaker-android-client/'
-    return :joihow if link_agent.include? 'joihow'
-    return :wallpaper_engine if link_agent.include? 'Wallpaper-Engine-Client'
-    return :automate if link_agent.include? 'walltaker-android-automate'
-    return :arson_automate if link_agent.include? 'arson-walltaker-automate'
-    return :ioswidget if link_agent.include? 'widgetExtension'
-    return :swift if link_agent.include? 'CFNetwork/'
-    return :android_changer if link_agent.include? 'Walltaker-Changer/'
-    return :windows_checker if link_agent.include? 'Walltaker-Checker/'
-    return :gg_widget if link_agent.include? 'GGWidget/'
-    return :jberliner if link_agent.include? 'JBerliner'
-    return :chewtoy if link_agent.include? 'WalltakerEngine-chewtoy/'
-    return :kemkem_userscript if link_agent.include? 'Walltaker for Walltaker (kemkem)'
-    return :xenofluff if link_agent.include? 'Walltaker_eXPerience'
-    return :pawslut if link_agent.include? 'PawSlut'
-    return :collin if link_agent.include? 'umbrella Collin\'s Walltaker Setter Thing'
-    return :pawbies if link_agent.include? 'WTPopOutViewer'
-    :unknown
+  def client_for_user_agent(user_agent)
+    return if user_agent.blank?
+
+    @recognized_wallpaper_clients ||= WallpaperClient.recognized.to_a
+    @recognized_wallpaper_clients.find { |client| user_agent.include?(client.match_text) }
   end
 
   def lizard_to_description(lizard_name, is_perverted)

@@ -1,8 +1,8 @@
 class SurrendersController < ApplicationController
   before_action :authorize, except: %i[show destroy]
   before_action :authorize_for_surrendered_accounts, only: %i[show destroy]
-  before_action :set_friendship_options, only: %i[new edit]
-  before_action :set_surrender, only: %i[show edit destroy assume]
+  before_action :set_friendship_options, only: %i[new]
+  before_action :set_surrender, only: %i[show destroy assume]
   before_action :protect_own_surrender, only: %i[show destroy]
 
   def index
@@ -23,6 +23,8 @@ class SurrendersController < ApplicationController
       surrender = current_user.create_current_surrender(
         expires_at: expires_at,
         friendship: friendship,
+        controller_user: friendship.other_user(current_user),
+        duration_hours: duration_hours,
         accepted_consequences: surrender_params[:accepted_consequences],
         pending: surrender_params[:pending]
       )
@@ -69,6 +71,23 @@ class SurrendersController < ApplicationController
     @surrender.save
 
     log_in_as(@surrender.user, @surrender)
+  end
+
+  def return_to_controller
+    surrender = current_surrender_session
+    return redirect_to root_path, alert: 'Not allowed.' unless surrender
+
+    controller = surrender.controller
+    surrender.update!(logged_in: false, current_page: nil)
+
+    session[:user_id] = controller.id
+    cookies.delete :permanent_session_id
+    cookies.delete :surrender_id
+    @current_user = controller
+    ahoy.authenticate(controller)
+    track :regular, :returned_from_surrender
+
+    redirect_to root_path, notice: "Returned to #{controller.username}."
   end
 
   private

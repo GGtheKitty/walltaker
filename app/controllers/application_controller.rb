@@ -11,6 +11,7 @@ class ApplicationController < ActionController::Base
   helper_method :get_search_base
   helper_method :get_post
 
+  before_action :disallow_evil_during_invite_only
   before_action :broadcast_flash_message
 
   def e621_module
@@ -30,6 +31,15 @@ class ApplicationController < ActionController::Base
   end
 
   private
+
+  def disallow_evil_during_invite_only
+    return unless SiteConfig.invite_only? && current_user&.evil_account?
+
+    session[:user_id] = nil
+    cookies.delete :permanent_session_id
+    @current_user = nil
+    redirect_to login_path, alert: 'The evil account is unavailable while invite-only mode is enabled.'
+  end
 
   # @param [Symbol<:regular, :nefarious, :visit>] level
   # @param [Symbol, String] id
@@ -52,8 +62,8 @@ class ApplicationController < ActionController::Base
   end
 
   def current_user
-    @current_user ||= User.find(cookies.signed[:permanent_session_id]) if cookies.signed[:permanent_session_id]
-    @current_user ||= User.find(session[:user_id]) if session[:user_id]
+    @current_user ||= User.active.find_by(id: cookies.signed[:permanent_session_id]) if cookies.signed[:permanent_session_id]
+    @current_user ||= User.active.find_by(id: session[:user_id]) if session[:user_id]
 
     @current_user
   end
@@ -100,10 +110,10 @@ class ApplicationController < ActionController::Base
     Comment.create user_id: link.user.id, link_id: link.id, content: comment_text
     Comment.create user_id: link.user.id, link_id: link.id, content: link.response_text unless link.response_type.nil?
 
-    # If a came reaction, log an orgasm
+    # If a came reaction, log an orgasm.
     Nuttracker::Orgasm.create rating: 3, is_ruined: false, user: link.user, caused_by: link.set_by if link.response_type == 'came'
 
-    if SiteConfig.nut_tracker_enabled? && link.response_type == 'came' && link.user.current_nut_pledge.present?
+    if SiteConfig.nnn_enabled? && link.response_type == 'came' && link.user.current_nut_pledge.present?
       link.user.current_nut_pledge.past_link = link.past_links.last
       link.user.current_nut_pledge.save
     end
@@ -115,6 +125,7 @@ class ApplicationController < ActionController::Base
 
       last_past_link = PastLink.where(link_id: link.id).where.not(post_url: link.post_url).order('created_at').last
 
+      link.e621_post_id = last_past_link ? last_past_link.e621_post_id : nil
       link.post_url = last_past_link ? last_past_link.post_url : nil
       link.post_thumbnail_url = last_past_link ? last_past_link.post_thumbnail_url : nil
     end
@@ -123,13 +134,23 @@ class ApplicationController < ActionController::Base
   end
 
   def surrender_controller
-    return nil unless helpers.is_surrender_controller_session?
-    begin
-      Surrender.find(cookies.signed[:surrender_id])&.controller
-    rescue
-      nil
-    end
+    current_surrender_session&.controller
   end
+
+  helper_method :surrender_controller
+
+  def current_surrender_session
+    return nil unless helpers.is_surrender_controller_session?
+
+    surrender = Surrender.find_by(id: cookies.signed[:surrender_id])
+    return nil unless surrender&.active?
+    return nil unless surrender.logged_in?
+    return nil unless surrender.user_id == current_user&.id
+
+    surrender
+  end
+
+  helper_method :current_surrender_session
 
   # @param [User] user
   # @param [Surrender] surrender

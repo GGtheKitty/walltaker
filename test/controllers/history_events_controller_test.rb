@@ -1,7 +1,7 @@
 require "test_helper"
 
 class HistoryEventsControllerTest < ActionDispatch::IntegrationTest
-    test "should show history events without an ahoy visit" do
+  test "should show history events without an ahoy visit" do
     user = User.create!(
       email: "history-user@example.com",
       username: "HistoryUser",

@@ -28,5 +28,11 @@
     <%= f.label :password_confirmation %><br/>
     <%= f.password_field :password_confirmation %>
   </div>
+  <% if @invite_only %>
+    <div class="field">
+      <%= label_tag :invite_code, 'Invite code' %><br/>
+      <%= text_field_tag :invite_code, params[:invite_code], required: true, autocomplete: 'one-time-code' %>
+    </div>
+  <% end %>
   <%= f.submit 'Sign up' %>
 <% end %>

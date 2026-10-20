@@ -3,7 +3,7 @@ class KinkController < ApplicationController
   before_action :authorize, only: %i[update remove toggle_star]
 
   def users_kinks
-    @user = User.find_by_username(params['user_id'])
+    @user = User.active.find_by_username(params['user_id'])
     @kinks = @user.kinks if @user.present?
     @kinks = [] unless @user.present?
 

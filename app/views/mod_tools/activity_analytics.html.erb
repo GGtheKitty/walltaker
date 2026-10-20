@@ -1,0 +1,45 @@
+<div data-turbo-prefetch="false" class="task-tools">
+  <div class="left">
+    <%= link_to 'Cancel', mod_tools_index_path %>
+  </div>
+  <div class="right">
+    <%= link_to 'System', mod_tools_system_analytics_path %>
+  </div>
+</div>
+
+<h2>
+  <ion-icon role="presentation" name="pulse" class="big"></ion-icon>
+  Activity
+</h2>
+
+<h3>Right Now</h3>
+<table>
+  <tbody>
+    <tr><th>Online users</th><td><%= number_with_delimiter(@activity[:online_users]) %></td></tr>
+    <tr><th>Online links</th><td><%= number_with_delimiter(@activity[:online_links]) %></td></tr>
+    <tr><th>Users viewing links</th><td><%= number_with_delimiter(@activity[:users_viewing_links]) %></td></tr>
+    <tr><th>Links with wallpapers</th><td><%= number_with_delimiter(@activity[:links_with_wallpapers]) %></td></tr>
+    <tr><th>Open reports</th><td><%= number_with_delimiter(@activity[:open_reports]) %></td></tr>
+  </tbody>
+</table>
+
+<h3>Wallpaper Updates</h3>
+<table>
+  <tbody>
+    <tr><th>Last hour</th><td><%= number_with_delimiter(@activity[:wallpapers_last_hour]) %></td></tr>
+    <tr><th>Last 24 hours</th><td><%= number_with_delimiter(@activity[:wallpapers_last_day]) %></td></tr>
+    <tr><th>Last 7 days</th><td><%= number_with_delimiter(@activity[:wallpapers_last_week]) %></td></tr>
+    <tr><th>All time</th><td><%= number_with_delimiter(@activity[:wallpapers_total]) %></td></tr>
+  </tbody>
+</table>
+
+<%= line_chart @wallpapers_by_hour, colors: ['#30AA65'], legend: false, height: '240px' %>
+
+<h3>Last 24 Hours</h3>
+<table>
+  <tbody>
+    <tr><th>Visits</th><td><%= number_with_delimiter(@activity[:visits_last_day]) %></td></tr>
+    <tr><th>New users</th><td><%= number_with_delimiter(@activity[:new_users_last_day]) %></td></tr>
+    <tr><th>Orgasms logged</th><td><%= number_with_delimiter(@activity[:orgasms_last_day]) %></td></tr>
+  </tbody>
+</table>

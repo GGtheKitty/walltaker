@@ -19,7 +19,7 @@
     </div>
     <% if (!current_user || !@has_friendship) && (!@is_current_user || !current_user) %>
       <div class="right">
-        <% if current_user %>
+        <% if current_user && !@profile_document %>
           <%= turbo_frame_tag :report_button, src: new_polymorphic_path([@user, Report]) %>
         <% end %>
         <%= link_to profiles_user_path(@user), class: 'no-underline' do %>
@@ -35,7 +35,7 @@
 
     <% if (current_user && @has_friendship) && !@is_current_user %>
       <div class="right">
-        <% if current_user %>
+        <% if current_user && !@profile_document %>
           <%= turbo_frame_tag :report_button, src: new_polymorphic_path([@user, Report]) %>
         <% end %>
         <%= link_to profiles_user_path(@user), class: 'no-underline' do %>
@@ -60,18 +60,13 @@
         <% end %>
       </div>
       <%= button_to "New link", new_link_path, method: :get %>
-      </div>
     <% end %>
     </div>
     <h2 class="one-line <%= @total_orgasms_by_day.present? ? 'with-chart' : '' %>">
       <% if current_user&.admin? && @user.flagged == true %>
         <ion-icon role="presentation" name="warning-outline" class="big"></ion-icon>
-      <% elsif @user.username == 'gios' %>
-        <ion-icon role="presentation" name="logo-octocat" class="big"></ion-icon>
-      <% elsif @user.username == 'gray' %>
-        <ion-icon role="presentation" name="train-outline" class="big"></ion-icon>
       <% else %>
-        <ion-icon role="presentation" name="person" class="big"></ion-icon>
+        <ion-icon role="presentation" name="<%= @user.user_icon&.icon_name || 'person' %>" class="big"></ion-icon>
       <% end %>
       <span data-controller="user-reference" data-user-reference-hide-online-value><%= @user.username %></span>
       <% if @any_links_online %>
@@ -134,7 +129,7 @@
       <% end %>
     </h2>
 
-    <%= turbo_frame_tag :pledge, src: user_nut_pledge_path(@user.username) if SiteConfig.nut_tracker_enabled? && @user.current_nut_pledge.present? %>
+    <%= turbo_frame_tag :pledge, src: user_nut_pledge_path(@user.username) if SiteConfig.nnn_enabled? && @user.current_nut_pledge.present? %>
 
     <% unless @is_editing %>
       <%= render 'users/details', { user: @user, is_current_user: @is_current_user } %><%= render partial: 'users/past_links', locals: { past_links: @past_links } %>

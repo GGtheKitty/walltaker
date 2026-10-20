@@ -10,9 +10,7 @@
           <% if @nut_pledge.id == 253 %>
             with first anal orgasm
           <% end %>
-          <% if @nut_pledge.past_link.present? %>
-            <div class="preview"><%= image_tag @nut_pledge.past_link.post_url %></div>
-          <% end %>
+          <%= render 'nut_pledges/failure_preview', past_link: @nut_pledge.past_link, css_class: 'preview' %>
         </div>
       </div>
     <% else %>

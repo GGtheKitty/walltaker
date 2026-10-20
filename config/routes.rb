@@ -31,6 +31,7 @@ Rails.application.routes.draw do
   get 'help/faq', to: 'help#faq', as: 'faq'
   get 'help/client_guide', to: 'help#client_guide', as: 'client_guide'
   get 'help/deprecated_client_guide', to: 'help#deprecated_client_guide', as: 'deprecated_client_guide'
+  match 'e621-media', to: 'e621_media#show', via: %i[get head], as: 'e621_media'
   get 'leaderboard', to: 'leaderboard#index', as: 'leaderboard'
   get 'notifications/:id', to: 'notification#show', as: 'notification'
   delete 'notifications', to: 'notification#delete_all', as: 'clear_notifications'
@@ -50,6 +51,7 @@ Rails.application.routes.draw do
   get 'logout', to: 'session#destroy', as: 'logout'
   get 'browse', to: 'links#browse'
   get 'users/:username', to: 'users#show'
+  get 'users/:username/profile-document', to: 'users#profile_document', as: 'user_profile_document'
   get 'users/:username/edit', to: 'users#edit'
   get 'users/:username/history', to: 'past_links#index', as: 'past_links'
   get 'users/:username/sets', to: 'users#sets', as: 'user_sets'
@@ -116,7 +118,6 @@ Rails.application.routes.draw do
     member do
       get :walltaker, to: 'links#export'
       post 'abilities/:ability', to: 'links#toggle_ability', as: 'toggle_link_ability'
-      post 'fork', to: 'links#fork', as: 'fork_link'
       get 'embed'
       get 'show_similar', as: 'show_similar'
     end
@@ -131,6 +132,9 @@ Rails.application.routes.draw do
   end
 
   resources :surrenders do
+    collection do
+      post 'return_to_controller', as: :return_to_controller
+    end
     member do
       post 'assume', as: :assume
     end
@@ -138,12 +142,35 @@ Rails.application.routes.draw do
 
   get '/settings', to: 'settings#index', as: 'settings'
   post '/settings', to: 'settings#save'
+  delete '/settings', to: 'settings#destroy'
 
   mount Blazer::Engine, at: "blazer"
 
   scope path: :mod_tools, as: 'mod_tools' do
     get '/', to: 'mod_tools#index', as: 'index'
-    post 'global_toggles/nut_tracker', to: 'mod_tools#toggle_nut_tracker', as: 'toggle_nut_tracker'
+    post 'global_toggles/nnn', to: 'mod_tools#toggle_nnn', as: 'toggle_nnn'
+    get 'invites', to: 'mod_tools#invites', as: 'invites'
+    post 'invites', to: 'mod_tools#create_invite'
+    post 'invites/toggle', to: 'mod_tools#toggle_invite_only', as: 'toggle_invite_only'
+    delete 'invites/:id', to: 'mod_tools#destroy_invite', as: 'invite'
+    get 'emoji_links', to: 'mod_tools#emoji_links', as: 'emoji_links'
+    post 'emoji_links', to: 'mod_tools#create_emoji_link'
+    patch 'emoji_links/:id', to: 'mod_tools#update_emoji_link', as: 'emoji_link'
+    delete 'emoji_links/:id', to: 'mod_tools#destroy_emoji_link'
+    get 'user_icons', to: 'mod_tools#user_icons', as: 'user_icons'
+    post 'user_icons', to: 'mod_tools#create_user_icon'
+    patch 'user_icons/:id', to: 'mod_tools#update_user_icon', as: 'user_icon'
+    delete 'user_icons/:id', to: 'mod_tools#destroy_user_icon'
+    get 'profile_domains', to: 'mod_tools#profile_domains', as: 'profile_domains'
+    patch 'profile_domains/:id', to: 'mod_tools#update_profile_domain', as: 'profile_domain'
+    get 'clients', to: 'mod_tools#wallpaper_clients', as: 'wallpaper_clients'
+    post 'clients', to: 'mod_tools#create_wallpaper_client'
+    patch 'clients/:id', to: 'mod_tools#update_wallpaper_client', as: 'wallpaper_client'
+    delete 'clients/:id', to: 'mod_tools#destroy_wallpaper_client'
+    post 'clients/:id/move_up', to: 'mod_tools#move_wallpaper_client_up', as: 'wallpaper_client_move_up'
+    post 'clients/:id/move_down', to: 'mod_tools#move_wallpaper_client_down', as: 'wallpaper_client_move_down'
+    get 'analytics/system', to: 'mod_tools#system_analytics', as: 'system_analytics'
+    get 'analytics/activity', to: 'mod_tools#activity_analytics', as: 'activity_analytics'
 
     resources :reports, except: %i[new create]
 
@@ -154,8 +181,11 @@ Rails.application.routes.draw do
 
     scope path: :users, as: 'users' do
       get '/', to: 'mod_tools#show_user', as: 'index'
+      get '/deleted', to: 'mod_tools#deleted_users', as: 'deleted'
       get '/assume/:user', to: 'mod_tools#assume_user', as: 'assume'
       post 'update', to: 'mod_tools#update_user', as: 'update'
+      post ':user/restore', to: 'mod_tools#restore_user', as: 'restore'
+      delete ':user/purge', to: 'mod_tools#purge_user', as: 'purge'
     end
 
     scope path: :quarantine, as: 'quarantine' do

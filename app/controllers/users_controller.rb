@@ -1,18 +1,38 @@
 class UsersController < ApplicationController
+  PASSWORD_RESET_NOTICE = 'If an account exists for that email, a password reset email has been sent.'
+  PASSWORD_RESET_COOLDOWN = 10.minutes
+
   after_action :track_visit, only: %i[new show edit]
   before_action :authorize, only: %i[update toggle_details_mode]
 
   def new
     @user = User.new
+    @invite_only = SiteConfig.invite_only?
   end
 
   def show
+    @user = User.active.find_by(username: params[:username])
+    raise ActionController::RoutingError.new('Missing user or the username was typed incorrectly.') unless @user
+
+    @is_current_user = current_user && current_user.id == @user.id
+    @report = Report.new(reporter: current_user, reportable: @user) if current_user && !@is_current_user
+    render 'users/profile_shell', layout: 'profile_shell'
+  end
+
+  def profile_document
+    unless request.headers['Sec-Fetch-Dest'] == 'iframe'
+      return redirect_to user_path(params[:username])
+    end
+
     set_user_vars
     set_nut_tracker_vars
+    @profile_document = true
+    response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+    render 'users/show'
   end
 
   def sets
-    @user = User.find_by(username: params[:username])
+    @user = User.active.find_by(username: params[:username])
     @past_links = PastLink.where(set_by_id: @user.id).order(id: :desc).limit(50)
   end
 
@@ -28,31 +48,38 @@ class UsersController < ApplicationController
   def set_nut_tracker_vars
     @total_orgasms_by_day = @user.orgasms.where('created_at > ?', 1.weeks.ago.midnight).group_by_day(:created_at, range: 1.weeks.ago.midnight..Time.now).count
     @total_orgasms = @user.orgasms.where('created_at > ?', 1.weeks.ago.midnight).count
-    @total_orgasms_caused = @user.caused_orgasms.where('caused_by_user_id <> user_id').count
-    @total_orgasms_caused = Nuttracker::Orgasm.count
+    @total_orgasms_caused = @user.caused_orgasms.where('caused_by_user_id <> user_id').count unless @user.username == 'gray'
+    @total_orgasms_caused = Nuttracker::Orgasm.count if @user.username == 'gray'
   end
 
   def update
-    @user = User.find(params[:id])
+    @user = User.active.find(params[:id])
     return redirect_to user_path(@user.username), { alert: 'Not Authorized.' } if current_user.id != @user.id
 
+    details = user_params[:details]
+    details = ProfileMarkdown.dump(details) unless @user.advanced?
+    domain_filter = ProfileDomainFilter.filter_and_record(details)
+    details = domain_filter.content
+
     if @user.profile
-      @user.profile.content = user_params[:details]
+      @user.profile.content = details
       @user.profile.save
     else
-      new_profile = Profile.create({ user: @user, name: nil, content: user_params[:details] })
+      new_profile = Profile.create({ user: @user, name: nil, content: details })
       @user.profile = new_profile
       @user.save
     end
 
-    @user.profile.content = user_params[:details]
+    @user.profile.content = details
     if @user.save
       track :regular, :updated_details
 
       if @user.current_surrender
         Notification.create user: @user, notification_type: :surrender_event, link: user_path(@user.username), text: "#{@user.current_surrender.controller.username} changed a profile setting."
       end
-      redirect_to user_path(@user.username), { notice: 'Successfully updated user.' }
+      notice = 'Successfully updated user.'
+      notice += " Links to blocked #{'domain'.pluralize(domain_filter.blocked_domains.length)} were removed." if domain_filter.blocked_domains.any?
+      redirect_to user_path(@user.username), { notice: }
     else
       track :error, :updating_details_went_wrong
       redirect_to user_path(@user.username), { alert: 'Something went wrong' }
@@ -64,8 +91,11 @@ class UsersController < ApplicationController
       return
     end
 
+    @invite_only = SiteConfig.invite_only?
     @user = User.new(user_params)
-    if @user.save
+    user_created = @invite_only ? create_user_with_invite : @user.save
+
+    if user_created
       session[:user_id] = @user.id
       track :regular, :signed_up_and_first_log_in
       ahoy.authenticate(@user)
@@ -81,18 +111,27 @@ class UsersController < ApplicationController
   end
 
   def password_reset
+    email = params[:email].to_s.strip.downcase
+    user = User.active.where("lower(email) = ?", email).first
+
+    unless user
+      track :nefarious, :password_reset_unknown_email, tried_email: email
+      return redirect_to login_path, notice: PASSWORD_RESET_NOTICE
+    end
+
+    if user.password_reset_sent_at && user.password_reset_sent_at > PASSWORD_RESET_COOLDOWN.ago
+      track :regular, :password_reset_throttled, user: user.username, tried_email: email
+      return redirect_to login_path, notice: PASSWORD_RESET_NOTICE
+    end
+
     begin
-      user = User.where("lower(email) = ?", params[:email]&.downcase).first
-
-      unless user
-        throw :nefarious
-      end
-
       PasswordResetMailer.reset_password(user).deliver
-      redirect_to login_path, notice: 'A password reset email has been sent to that user'
+      user.update_column(:password_reset_sent_at, Time.current)
+      track :regular, :password_reset_email_sent, user: user.username
+      redirect_to login_path, notice: PASSWORD_RESET_NOTICE
     rescue
-      track :nefarious, :failed_to_reset_password, tried_email: params['email'], exception: $!
-      redirect_to forgor_path, alert: 'User was not found with that email'
+      track :error, :failed_to_deliver_password_reset, tried_email: email, exception: $!
+      redirect_to forgor_path, alert: 'Password reset email could not be sent'
     end
   end
 
@@ -101,7 +140,7 @@ class UsersController < ApplicationController
   end
 
   def commit_apply_new_password
-    user = User.find_by(password_reset_token: params['password_reset_token'])
+    user = User.active.find_by(password_reset_token: params['password_reset_token'])
 
     if user && params['password'] && params['password_confirmation'] && (params['password'] == params['password_confirmation'])
       user.password = params['password']
@@ -118,7 +157,7 @@ class UsersController < ApplicationController
   end
 
   def new_api_key
-    @user = User.find_by(username: params[:username])
+    @user = User.active.find_by(username: params[:username])
     if (@user.id == current_user.id)
       @user.assign_new_api_key
     end
@@ -126,22 +165,54 @@ class UsersController < ApplicationController
   end
 
   def toggle_details_mode
-    current_user.advanced = !current_user.advanced
-    if current_user.save
+    switching_to_html = !current_user.advanced?
+
+    User.transaction do
+      if switching_to_html && current_user.profile && ProfileMarkdown.markdown?(current_user.details)
+        html = helpers.sanitize(ProfileMarkdown.to_html(current_user.details), scrubber: WallScrubber.new)
+        current_user.profile.update!(content: html)
+      end
+
+      current_user.update!(advanced: switching_to_html)
+    end
+
+    if current_user.persisted?
       redirect_to edit_user_path(current_user.username)
     else
       redirect_to root_path, alert: 'Something went wrong'
     end
+  rescue ActiveRecord::RecordInvalid
+    redirect_to root_path, alert: 'Something went wrong'
   end
 
   def details
-    @user = User.find(params[:id])
+    @user = User.active.find(params[:id])
   end
 
   private
 
+  def create_user_with_invite
+    submitted_code = params[:invite_code].to_s.strip.upcase
+    created = false
+
+    User.transaction do
+      invite = InviteCode.available.lock.find_by(code: submitted_code)
+      unless invite
+        @user.errors.add(:base, 'Invite code is invalid or has already been used.')
+        raise ActiveRecord::Rollback
+      end
+
+      raise ActiveRecord::Rollback unless @user.save
+
+      invite.redeem!(@user)
+      created = true
+    end
+
+    created
+  end
+
   def set_user_vars
-    @user = User.find_by(username: params[:username])
+    @user = User.active.find_by(username: params[:username])
     if @user.present?
       @is_current_user = current_user && current_user.id == @user.id
       @has_friendship = Friendship.find_friendship(current_user, @user).exists? if current_user

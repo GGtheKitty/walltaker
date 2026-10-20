@@ -28,19 +28,19 @@ services:
         required: false
     build: .
     restart: unless-stopped
-    command: > 
+    command: >
       bash -lc '
         ruby -rsocket -e "
-          loop { 
-            begin; 
-            TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; 
-            break; 
-            rescue; 
-            sleep 1; 
-            end 
-        }" && 
-        bundle exec rails assets:precompile && 
-        bundle exec rails db:prepare && 
+          loop {
+            begin;
+            TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close;
+            break;
+            rescue;
+            sleep 1;
+            end
+        }" &&
+        bundle exec rails assets:precompile &&
+        bundle exec rails db:prepare &&
         bundle exec rails server -b 0.0.0.0
       '
     volumes:
@@ -71,17 +71,17 @@ services:
     restart: unless-stopped
     command: >
       bash -lc '
-        ruby -rsocket -e "loop { 
-          begin; 
-          TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; 
-          break; 
-          rescue; 
-          sleep 1; 
-          end 
+        ruby -rsocket -e "loop {
+          begin;
+          TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close;
+          break;
+          rescue;
+          sleep 1;
+          end
         }" &&
-        while true; 
-        do bundle exec rake walltaker:porn_bot_round; 
-        sleep "$${PORNBOT_INTERVAL_SECONDS:-600}"; 
+        while true;
+        do bundle exec rake walltaker:porn_bot_round;
+        sleep "$${PORNBOT_INTERVAL_SECONDS:-600}";
         done
       '
     volumes:
@@ -94,11 +94,11 @@ services:
       <<: [*database, *redis, *walltaker]
       PORNBOT_INTERVAL_SECONDS: ${PORNBOT_INTERVAL_SECONDS:-600}
     networks:
-    - walltaker
+      - walltaker
 
 networks:
   walltaker:
     internal: true
-    external: true    
+    external: true
   proxy:
     external: true

@@ -83,6 +83,38 @@ class LinkTest < ActiveSupport::TestCase
     assert payload.key?(:online)
   end
 
+  test 'api payload includes a Walltaker backup for valid e621 media' do
+    link = links(:one)
+    link.post_url = 'https://static1.e621.net/data/ab/cd/0123456789abcdef0123456789abcdef.webp'
+
+    backup_url = URI.parse(link.api_payload[:post_url_backup])
+
+    assert_equal SiteConfig.host, backup_url.host
+    assert_equal '/e621-media', backup_url.path
+    assert_equal URI.parse(link.post_url), E621MediaProxy.resolve(Rack::Utils.parse_query(backup_url.query)['token'])
+  end
+
+  test 'api payload omits a backup for non-e621 media' do
+    link = links(:one)
+    link.post_url = 'https://example.com/not-e621.jpg'
+
+    assert_nil link.api_payload[:post_url_backup]
+  end
+
+  test 'e621_post_md5 supports webp source urls' do
+    link = links(:one)
+    link.post_url = 'https://static1.e621.net/data/ab/cd/0123456789abcdef0123456789abcdef.webp'
+
+    assert_equal '0123456789abcdef0123456789abcdef', link.e621_post_md5
+  end
+
+  test 'e621_post_md5 returns nil for unsupported source urls' do
+    link = links(:one)
+    link.post_url = 'https://example.com/not-e621'
+
+    assert_nil link.e621_post_md5
+  end
+
   test 'metadata edits broadcast the full current client payload' do
     link = links(:one)
     setter = users(:two)

@@ -44,12 +44,12 @@
       No public profile styles are available yet.
     </p>
   <% elsif current_user != @user %>
-  <p>
-    <%= @user.username %> has no profile styles available. They may have removed an old profile style, or set it to private. <%= link_to "You can always send them a message to ask.", resolve_message_thread_index_path(@user) %>
-  </p>
-    <% else %>
+    <p>
+      <%= @user.username %> has no profile styles available. They may have removed an old profile style, or set it to private. <%= link_to "You can always send them a message to ask.", resolve_message_thread_index_path(@user) %>
+    </p>
+  <% else %>
     <p>
       You have no public styles. You can set some of your profile styles to public on <%= link_to "the profile edit page.", edit_user_path(@user.username) %> Afterwards, they will appear here, and be installable by others.
     </p>
-    <% end %>
+  <% end %>
 <% end %>

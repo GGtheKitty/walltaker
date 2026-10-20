@@ -1,29 +1,8 @@
 <% target = "link_details_#{link.id}" %>
 <% e621_md5 = link.e621_post_md5 %>
 <% e621_url = "https://e621.net/posts?md5=#{CGI.escape(e621_md5)}" if e621_md5 %>
-<% client = link_agent_to_icon link.last_ping_user_agent %>
-<% devices = {
-  desktop: :desktop,
-  android: :mobile,
-  joihow: :desktop,
-  automate: :mobile,
-  arson_automate: :mobile,
-  wallpaper_engine: :desktop,
-  ioswidget: :mobile,
-  swift: :desktop,
-  android_changer: :mobile,
-  windows_checker: :desktop,
-  gg_widget: :mobile,
-  jberliner: :desktop,
-  chewtoy: :desktop,
-  kemkem_userscript: :desktop,
-  xenofluff: :desktop,
-  pawslut: :desktop,
-  collin: :desktop,
-  pawbies: :desktop,
-  unknown: :desktop
-} %>
-<% device = devices[client] %>
+<% client = client_for_user_agent link.last_ping_user_agent %>
+<% device = client&.device_type&.to_sym || :desktop %>
 
 <%= turbo_frame_tag target do %>
 

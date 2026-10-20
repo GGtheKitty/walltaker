@@ -1,6 +1,7 @@
 class Link < ApplicationRecord
   include PgSearch::Model
   belongs_to :user
+  default_scope { joins(:user).merge(User.active) }
   belongs_to :set_by, foreign_key: :set_by_id, class_name: 'User', optional: true
   belongs_to :forked_from, foreign_key: :forked_from_id, class_name: 'Link', inverse_of: :forks, optional: true
   has_many :forks, foreign_key: :forked_from_id, class_name: 'Link', inverse_of: :forked_from, dependent: :nullify
@@ -90,6 +91,7 @@ class Link < ApplicationRecord
       terms: terms,
       blacklist: blacklist,
       post_url: post_url,
+      post_url_backup: post_url_backup,
       post_thumbnail_url: post_thumbnail_url,
       post_description: post_description,
       created_at: created_at,
@@ -113,6 +115,10 @@ class Link < ApplicationRecord
 
   def e621_post_md5
     post_url&.match(%r{/([0-9a-f]{32})\.(png|jpe?g|bmp|webm|mp4|gif|webp)(?:\?|$)}i)&.[](1)
+  end
+
+  def post_url_backup
+    E621MediaProxy.fallback_url(post_url)
   end
 
   after_update_commit do

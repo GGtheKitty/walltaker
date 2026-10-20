@@ -1,6 +1,6 @@
 class ApiController < ApplicationController
   after_action :log_presence, only: %i[show_link show_link_widget]
-  skip_before_action :verify_authenticity_token, only: :set_link_response
+  prepend_before_action :authenticate_link_response_request, only: :set_link_response
   before_action :authorize_for_surrendered_accounts, only: %i[update_mascot update_perviness]
 
   def update_mascot
@@ -60,18 +60,11 @@ class ApiController < ApplicationController
   # POST /api/links/:id/response.json
   def set_link_response
     params.permit(:type, :text)
-    @link = Link.find(params[:id])
-    @set_by = User.find(@link.set_by_id) if @link.set_by_id
-    valid = !@link.user.api_key.nil? && @link.user.api_key == params[:api_key]
-
-    unless valid
-      return render json: { message: 'Bad API key. Get an API key from your profile page on #{SiteConfig.host}' }, status: 403
-    end
 
     begin
       @link.response_type = params[:type].nil? ? "horny" : params[:type]
     rescue
-      return render json: { message: 'type must be "horny", "disgust", or "came"' }, status: 400
+      return render json: { message: 'type must be "horny", "disgust", "came", or "ok"' }, status: 400
     end
 
     @link.response_text = params[:text].nil? ? "" : params[:text]
@@ -93,12 +86,12 @@ class ApiController < ApplicationController
   # GET /api/users/:username.json
   def show_user
     if params['api_key'].present?
-      current_user_or_api_user = User.find_by(api_key: params['api_key'])
+      current_user_or_api_user = User.active.find_by(api_key: params['api_key'])
     else
       current_user_or_api_user = current_user.present? ? current_user : nil
     end
 
-    @user = User.find_by(username: params[:username])
+    @user = User.active.find_by(username: params[:username])
     @user_api_payload = @user.api_payload(current_user_or_api_user)
 
     expires_in 5.seconds
@@ -108,6 +101,28 @@ class ApiController < ApplicationController
   end
 
   private
+
+  # API keys are explicit, non-cookie credentials, so a valid key also proves
+  # that this request was not forged using an authenticated browser session.
+  def verified_request?
+    @link_response_api_key_authenticated || super
+  end
+
+  def authenticate_link_response_request
+    @link = Link.includes(:user, :set_by).find_by(id: params[:id])
+    return render json: { message: 'This link does not exist.' }, status: :not_found unless @link
+
+    @set_by = @link.set_by
+    supplied_key = params[:api_key].to_s
+    expected_key = @link.user.api_key.to_s
+    keys_present = supplied_key.present? && expected_key.present?
+    @link_response_api_key_authenticated = keys_present &&
+                                           ActiveSupport::SecurityUtils.secure_compare(supplied_key, expected_key)
+
+    return if @link_response_api_key_authenticated
+
+    render json: { message: "Bad API key. Get an API key from your profile page on #{SiteConfig.host}" }, status: :forbidden
+  end
 
   def log_presence
     log_link_presence(@link)

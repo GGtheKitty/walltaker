@@ -9,12 +9,9 @@
 <h2>
   <ion-icon role="presentation" name="nuclear" class="big"></ion-icon>
   Edit Any User
-  <small>Gray trusts you. Remember our PII rules.</small>
+  <small>Remember our PII rules.</small>
 </h2>
 
 <%= render 'mod_tools/pick_user_form', user: %>
 
-
-
-
-
+<p><%= link_to 'Deleted Account Queue', mod_tools_users_deleted_path %></p>

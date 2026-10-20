@@ -1,11 +1,10 @@
 require "test_helper"
 
 class ApplicationCable::ConnectionTest < ActionCable::Connection::TestCase
-  # test "connects with cookies" do
-  #   cookies.signed[:user_id] = 42
-  #
-  #   connect
-  #
-  #   assert_equal connection.user_id, "42"
-  # end
+  test "connects anonymously when the permanent session references a missing user" do
+    cookies.signed[:permanent_session_id] = User.maximum(:id).to_i + 1
+
+    assert_nothing_raised { connect }
+    assert_nil connection.current_user
+  end
 end

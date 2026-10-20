@@ -1,0 +1,54 @@
+<div data-turbo-prefetch="false" class="task-tools">
+  <div class="left">
+    <%= link_to 'Cancel', mod_tools_index_path %>
+  </div>
+</div>
+
+<h2>
+  <ion-icon role="presentation" name="happy" class="big"></ion-icon>
+  Emoji Links
+  <small><%= pluralize(@emoji_link_decorations.count, 'decorated link') %></small>
+</h2>
+
+<%= form_with model: @emoji_link_decoration, url: mod_tools_emoji_links_path do |form| %>
+  <% if @emoji_link_decoration.errors.any? %>
+    <p><strong><%= @emoji_link_decoration.errors.full_messages.to_sentence %></strong></p>
+  <% end %>
+  <div class="form__row">
+    <%= form.label :link_id, 'Link ID' %>
+    <%= form.number_field :link_id, min: 1, required: true %>
+  </div>
+  <div class="form__row">
+    <%= form.label :emoji %>
+    <%= form.text_field :emoji, required: true, size: 4 %>
+  </div>
+  <%= form.submit 'Add' %>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>Link</th>
+      <th>Emoji</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @emoji_link_decorations.each do |decoration| %>
+      <% edit_form_id = dom_id(decoration, :edit) %>
+      <tr id="<%= dom_id(decoration) %>">
+        <td><%= link_to "Link ##{decoration.link_id}", link_path(decoration.link_id), target: '_blank' %></td>
+        <td>
+          <%= form_with model: decoration, url: mod_tools_emoji_link_path(decoration), method: :patch, html: { id: edit_form_id } do |form| %>
+            <%= form.hidden_field :link_id %>
+            <%= form.text_field :emoji, required: true, size: 4, aria: { label: "Emoji for link #{decoration.link_id}" } %>
+          <% end %>
+        </td>
+        <td>
+          <%= button_tag 'Save', type: 'submit', form: edit_form_id %>
+          <%= button_to 'Remove', mod_tools_emoji_link_path(decoration), method: :delete, class: 'danger-button', form: { data: { turbo_confirm: "Remove the emoji from link ##{decoration.link_id}?" } } %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

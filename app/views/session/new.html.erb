@@ -1,13 +1,15 @@
 <% content_for(:html_title) { "Login to Walltaker" } %>
 
-<div data-turbo-prefetch="false" class="task-tools">
-  <div class="right">
-    <%= link_to be_evil_path, class: 'no-underline' do %>
-      <ion-icon name="nuclear"></ion-icon>
-      Do something evil
-    <% end %>
+<% unless SiteConfig.invite_only? %>
+  <div data-turbo-prefetch="false" class="task-tools">
+    <div class="right">
+      <%= link_to be_evil_path, class: 'no-underline' do %>
+        <ion-icon name="nuclear"></ion-icon>
+        Do something evil
+      <% end %>
+    </div>
   </div>
-</div>
+<% end %>
 
 <h2><ion-icon role="presentation" name="person"></ion-icon> Log In</h2>
 
@@ -19,8 +21,8 @@
 
 <%= form_with method: :post, url: session_index_path do %>
   <div class="field">
-    <%= label_tag :email %><br />
-    <%= text_field_tag :email, params[:email] %>
+    <%= label_tag :email, 'Email or username' %><br />
+    <%= text_field_tag :email, params[:email], autocomplete: 'username' %>
   </div>
   <div class="field">
     <%= label_tag :password %><br />

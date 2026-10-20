@@ -9,11 +9,25 @@ class PastLink < ApplicationRecord
     new({
           link:,
           user: link.user,
+          e621_post_id: link.e621_post_id,
           post_url: link.post_url,
           post_thumbnail_url: link.post_thumbnail_url,
           set_by_id: link.set_by_id,
           tags: tag_string
-        })
+    })
+  end
+
+  def preview_image_url
+    return post_thumbnail_url.presence if post_url&.match?(/\.(?:mp4|webm)(?:\?|$)/i)
+
+    post_url
+  end
+
+  def e621_page_url
+    return "https://e621.net/posts/#{e621_post_id}" if e621_post_id.present?
+
+    md5 = post_url&.match(%r{/([0-9a-f]{32})\.(?:png|jpe?g|bmp|webm|mp4|gif|webp)(?:\?|$)}i)&.[](1)
+    "https://e621.net/posts?md5=#{md5}" if md5.present?
   end
 
   after_commit do

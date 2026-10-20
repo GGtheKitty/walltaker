@@ -13,3 +13,17 @@
  *= require_tree .
  *= require_self
  */
+
+header .user-tools .user-tools__browse {
+    position: relative;
+    white-space: nowrap;
+}
+
+header .user-tools .return-from-surrender {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    left: 0;
+    font-size: inherit;
+    line-height: inherit;
+    z-index: 1;
+}

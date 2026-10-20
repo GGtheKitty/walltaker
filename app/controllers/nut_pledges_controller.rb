@@ -1,5 +1,5 @@
 class NutPledgesController < ApplicationController
-  before_action :require_nut_tracker_enabled
+  before_action :require_nnn_enabled
   before_action :authorize, except: [:show, :history]
   before_action :set_user
   before_action :must_be_current_user, except: [:show, :history]
@@ -43,12 +43,12 @@ class NutPledgesController < ApplicationController
 
   private
 
-  def require_nut_tracker_enabled
-    redirect_to root_path, alert: "Nut Tracker is not currently enabled." unless SiteConfig.nut_tracker_enabled?
+  def require_nnn_enabled
+    redirect_to root_path, alert: "NNN is not currently enabled." unless SiteConfig.nnn_enabled?
   end
 
   def set_user
-    @user = User.find_by_username(params[:user_id])
+    @user = User.active.find_by_username(params[:user_id])
     @is_current_user = current_user && @user.id == current_user.id
   end
 

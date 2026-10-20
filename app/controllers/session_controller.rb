@@ -8,11 +8,12 @@ class SessionController < ApplicationController
       return
     end
 
-    user = User.where("lower(email) = ?",login_params[:email]&.downcase).first
+    login_identifier = login_params[:email].to_s.strip.downcase
+    user = User.active.where("lower(email) = :identifier OR lower(username) = :identifier", identifier: login_identifier).first
     if !user.nil?
-      if user.username == 'PornBot'
-        @error = 'You don\'t look like a robot... Your IP address has been flagged.'
-        track :nefarious, :tried_to_log_in_as_porn_bot
+      if user.system_account?
+        @error = 'Wrong email, username, or password.'
+        track :nefarious, :tried_to_log_in_as_system_account, username: user.username
         render 'new', status: :unprocessable_entity
       else
         if user.authenticate(login_params[:password])
@@ -23,14 +24,14 @@ class SessionController < ApplicationController
           track :regular, :logged_in
           redirect_to url_for(controller: :dashboard, action: :index), notice: 'Logged in!'
         else
-          @error = 'Wrong email or password.'
-          track :nefarious, :failed_to_log_in, email: login_params[:email]
+          @error = 'Wrong email, username, or password.'
+          track :nefarious, :failed_to_log_in, identifier: login_params[:email]
           render 'new', status: :unprocessable_entity
         end
       end
     else
-      @error = 'Wrong email or password.'
-      track :nefarious, :failed_to_log_in, email: login_params[:email]
+      @error = 'Wrong email, username, or password.'
+      track :nefarious, :failed_to_log_in, identifier: login_params[:email]
       render 'new', status: :unprocessable_entity
     end
   end
@@ -53,6 +54,10 @@ class SessionController < ApplicationController
   end
 
   def be_evil
+    if SiteConfig.invite_only?
+      return redirect_to login_path, alert: 'The evil account is unavailable while invite-only mode is enabled.'
+    end
+
     evil_user = User.find_by_username('evil')
     if evil_user
       cookies.signed[:surrender_id] = nil

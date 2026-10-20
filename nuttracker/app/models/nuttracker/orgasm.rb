@@ -7,7 +7,7 @@ module Nuttracker
     validates :rating, presence: true
 
     after_create_commit do
-      if SiteConfig.nut_tracker_enabled? && user.current_nut_pledge.present? && !user.current_nut_pledge.failed?
+      if SiteConfig.nnn_enabled? && user.current_nut_pledge.present? && !user.current_nut_pledge.failed?
         user.current_nut_pledge.failed_on = Time.now
         user.current_nut_pledge.save
       end

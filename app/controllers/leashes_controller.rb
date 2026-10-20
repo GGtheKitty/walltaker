@@ -4,7 +4,7 @@ class LeashesController < ApplicationController
 
   # GET /leashes or /leashes.json
   def index
-    @user = User.find_by_username(params[:user_id])
+    @user = User.active.find_by_username(params[:user_id])
     @master = @user.master
     @held_leashes = @user.held_leashes.joins(:pet)
   end

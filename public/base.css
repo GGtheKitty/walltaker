@@ -1361,6 +1361,11 @@ footer small a {
     color: var(--border);
 }
 
+a.subdued:link,
+a.subdued:visited {
+    color: var(--text-light);
+}
+
 .center {
     text-align: center;
 }
@@ -2068,4 +2073,3 @@ main.full-width {
         background: var(--accent-bg);
     }
 }
-

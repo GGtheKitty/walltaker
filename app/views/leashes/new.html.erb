@@ -11,7 +11,7 @@
     <div class="master-row" data-controller="master">
       <dialog class="modal" data-master-target="modal">
         <h4>Confirm Owner Selection</h4>
-        <p>Are you sure you want <strong><%= friend.username %></strong> as your owner? This CANNOT be undone by you. If you choose the wrong user... that's on you.</p>
+        <p>Are you sure <strong><%= friend.username %></strong> is your owner? This CANNOT be undone by you. If you choose the wrong user... that's on you.</p>
         <div class="modal__buttons">
           <%= button_tag class: 'no-underline primary', data: { 'master-target': 'cancel', action: 'click->master#cancel' } do %>
             <ion-icon role="presentation" name="close"></ion-icon>

@@ -17,8 +17,8 @@ module MessageThreadHelper
       else
         response = Excon.get(
           "https://e621.net/posts/#{post_id.to_i}.json",
-          headers: { 
-            'User-Agent': SiteConfig.e621_user_agent 
+          headers: {
+            'User-Agent': SiteConfig.e621_user_agent
           }
         )
         if response.status != 200

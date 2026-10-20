@@ -1,0 +1,19 @@
+<table class="wallpaper-clients">
+  <thead>
+  <tr>
+    <th>Client</th>
+    <th>Platform</th>
+  </tr>
+  </thead>
+  <tbody>
+  <% clients.each do |client| %>
+    <tr>
+      <td>
+        <%= link_to client.name, client.url, target: '_blank', rel: 'noopener', class: ('subdued' if client.deprecated?) %>
+        <strong><%= '(Deprecated)' if client.deprecated? %></strong>
+      </td>
+      <td><%= client.platform %></td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>

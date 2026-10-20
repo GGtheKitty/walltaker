@@ -1,6 +1,10 @@
 class Surrender < ApplicationRecord
   belongs_to :user, inverse_of: :current_surrender, required: true
+  belongs_to :controller_user, class_name: 'User', required: true
   belongs_to :friendship, required: true
+
+  before_validation :assign_token, on: :create
+  before_validation :assign_controller_user, on: :create
 
   validates :user, uniqueness: { scope: :friendship }
   validates :accepted_consequences, acceptance: true
@@ -15,7 +19,7 @@ class Surrender < ApplicationRecord
   after_destroy_commit -> { broadcast_replace target: :surrender_status, partial: 'layouts/surrender', locals: { surrender: self } }
 
   def controller
-    friendship.other_user(user)
+    controller_user || friendship.other_user(user)
   end
 
   def active?
@@ -30,5 +34,13 @@ class Surrender < ApplicationRecord
 
   def friendship_is_confirmed
     errors.add :friendship, 'must be accepted.' if !friendship.confirmed?
+  end
+
+  def assign_controller_user
+    self.controller_user ||= friendship&.other_user(user)
+  end
+
+  def assign_token
+    self.token ||= SecureRandom.uuid
   end
 end

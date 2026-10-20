@@ -1,0 +1,11 @@
+<% if past_link&.preview_image_url.present? %>
+  <div class="<%= css_class %>">
+    <% if past_link.e621_page_url.present? %>
+      <%= link_to past_link.e621_page_url, target: '_blank', rel: 'noopener noreferrer' do %>
+        <%= image_tag past_link.preview_image_url %>
+      <% end %>
+    <% else %>
+      <%= image_tag past_link.preview_image_url %>
+    <% end %>
+  </div>
+<% end %>

@@ -6,7 +6,7 @@ export default class extends Controller {
     }
 
     connect() {
-        const current_username_el = document.querySelector('.user-tools > .username')
+        const current_username_el = document.querySelector('.user-tools .username')
         if (current_username_el) {
             const current_username = current_username_el.innerText
             const is_self = this.fromValue === current_username

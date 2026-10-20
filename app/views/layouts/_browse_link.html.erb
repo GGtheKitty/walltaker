@@ -1,0 +1,10 @@
+<span class="user-tools__browse">
+  <a href="<%= url_for action: :browse, controller: :links %>">
+    <ion-icon role="presentation" name="sparkles"></ion-icon>
+    Browse
+  </a>
+  <% if (controller = surrender_controller) %>
+    <%= link_to "Return to #{controller.username}", return_to_controller_surrenders_path,
+                class: 'return-from-surrender', data: { turbo_method: :post } %>
+  <% end %>
+</span>

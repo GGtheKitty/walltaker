@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= content_for?(:html_title) ? yield(:html_title) : "Walltaker" %></title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1">
+  <meta name="rating" content="adult">
+  <meta name="turbo-visit-control" content="reload">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <link rel="stylesheet" href="/simple.min.css">
+  <link rel="stylesheet" href="/base.css?x=<%= ENV['COMMIT_HASH'] %>">
+  <link rel="stylesheet" href="/user-profile.css?x=<%= ENV['COMMIT_HASH'].presence || File.mtime(Rails.root.join('public/user-profile.css')).to_i %>">
+  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  <%= javascript_importmap_tags %>
+
+  <style>
+    html:has(> body.profile-shell),
+    body.profile-shell {
+      display: block;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .profile-shell__document {
+      border: 0;
+      display: block;
+      height: 100%;
+      width: 100%;
+    }
+
+    .profile-shell__report {
+      align-items: center;
+      display: flex;
+      max-width: calc(100vw - 1.5rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+      position: fixed;
+      right: max(0.75rem, env(safe-area-inset-right));
+      top: var(--profile-report-top, calc(8.5rem + env(safe-area-inset-top)));
+      z-index: 2147483647;
+    }
+
+    .profile-shell__report turbo-frame {
+      display: block;
+    }
+
+    .profile-shell__report > a,
+    .profile-shell__report > turbo-frame > div > button {
+      border: 2px solid #000 !important;
+      min-height: 44px;
+      white-space: nowrap;
+    }
+
+    @media screen and (max-width: 600px) {
+      .profile-shell__report {
+        max-width: calc(100vw - 1rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+        right: max(0.5rem, env(safe-area-inset-right));
+      }
+    }
+  </style>
+</head>
+<body class="profile-shell"
+      data-controller="profile-shell"
+      data-action="resize@window->profile-shell#syncReportPosition">
+  <%= yield %>
+</body>
+</html>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_07_121000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_18_163000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -198,6 +198,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_07_121000) do
     t.index ["job_id"], name: "index_crono_jobs_on_job_id", unique: true
   end
 
+  create_table "emoji_link_decorations", force: :cascade do |t|
+    t.bigint "link_id", null: false
+    t.string "emoji", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["link_id"], name: "index_emoji_link_decorations_on_link_id", unique: true
+  end
+
   create_table "form_elements", force: :cascade do |t|
     t.string "label", null: false
     t.integer "kind", null: false
@@ -233,6 +241,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_07_121000) do
     t.index ["link_id"], name: "index_history_events_on_link_id"
     t.index ["surrender_controller_id"], name: "index_history_events_on_surrender_controller_id"
     t.index ["user_id"], name: "index_history_events_on_user_id"
+  end
+
+  create_table "invite_codes", force: :cascade do |t|
+    t.string "code", null: false
+    t.bigint "generated_by_id"
+    t.bigint "redeemed_by_id"
+    t.datetime "redeemed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_invite_codes_on_code", unique: true
+    t.index ["generated_by_id"], name: "index_invite_codes_on_generated_by_id"
+    t.index ["redeemed_by_id"], name: "index_invite_codes_on_redeemed_by_id"
   end
 
   create_table "kink_havers", force: :cascade do |t|
@@ -295,6 +315,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_07_121000) do
     t.string "custom_url"
     t.bigint "forked_from_id"
     t.string "wizard_page"
+    t.bigint "e621_post_id"
+    t.index ["e621_post_id"], name: "index_links_on_e621_post_id"
     t.index ["forked_from_id"], name: "index_links_on_forked_from_id"
     t.index ["user_id"], name: "index_links_on_user_id"
   end
@@ -364,9 +386,26 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_07_121000) do
     t.bigint "set_by_id"
     t.bigint "ahoy_visit_id"
     t.text "tags", default: "", null: false
+    t.bigint "e621_post_id"
+    t.index ["e621_post_id"], name: "index_past_links_on_e621_post_id"
     t.index ["link_id"], name: "index_past_links_on_link_id"
     t.index ["set_by_id"], name: "index_past_links_on_set_by_id"
     t.index ["user_id"], name: "index_past_links_on_user_id"
+  end
+
+  create_table "profile_domains", force: :cascade do |t|
+    t.string "domain", null: false
+    t.integer "status", default: 0, null: false
+    t.bigint "seen_count", default: 0, null: false
+    t.datetime "first_seen_at", null: false
+    t.datetime "last_seen_at", null: false
+    t.bigint "reviewed_by_id"
+    t.datetime "reviewed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["domain"], name: "index_profile_domains_on_domain", unique: true
+    t.index ["reviewed_by_id"], name: "index_profile_domains_on_reviewed_by_id"
+    t.index ["status", "last_seen_at"], name: "index_profile_domains_on_status_and_last_seen_at"
   end
 
   create_table "profiles", force: :cascade do |t|
@@ -544,7 +583,13 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_07_121000) do
     t.boolean "pending", default: false
     t.boolean "logged_in", default: false
     t.string "current_page"
+    t.bigint "controller_user_id", null: false
+    t.integer "duration_hours", default: 24, null: false
+    t.string "token", null: false
+    t.index ["controller_user_id"], name: "index_surrenders_on_controller_user_id"
     t.index ["friendship_id"], name: "index_surrenders_on_friendship_id"
+    t.index ["token"], name: "index_surrenders_on_token", unique: true
+    t.index ["user_id", "controller_user_id"], name: "index_surrenders_on_user_id_and_controller_user_id", unique: true
     t.index ["user_id"], name: "index_surrenders_on_user_id"
   end
 
@@ -578,6 +623,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_07_121000) do
     t.index ["user_id"], name: "index_surveys_on_user_id"
   end
 
+  create_table "user_icons", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "icon_name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_user_icons_on_user_id", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email"
     t.string "username"
@@ -600,11 +653,33 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_07_121000) do
     t.boolean "is_reporter", default: false
     t.boolean "is_cutie", default: false
     t.boolean "is_supporter", default: false
+    t.datetime "password_reset_sent_at"
+    t.datetime "username_changed_at"
+    t.datetime "deleted_at"
+    t.string "deleted_username"
+    t.boolean "system_account", default: false, null: false
+    t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["email"], name: "unique_emails", unique: true
     t.index ["profile_id"], name: "index_users_on_profile_id"
     t.index ["set_count"], name: "index_users_on_set_count", order: :desc
     t.index ["username"], name: "unique_usernames", unique: true
     t.index ["viewing_link_id"], name: "index_users_on_viewing_link_id"
+  end
+
+  create_table "wallpaper_clients", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "section", default: "hidden", null: false
+    t.string "url"
+    t.string "platform"
+    t.boolean "deprecated", default: false, null: false
+    t.string "match_text"
+    t.string "link_name"
+    t.string "icon_name"
+    t.string "device_type"
+    t.integer "position", default: 0, null: false
+    t.integer "match_position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
@@ -619,6 +694,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_07_121000) do
   add_foreign_key "history_events", "links"
   add_foreign_key "history_events", "users"
   add_foreign_key "history_events", "users", column: "surrender_controller_id"
+  add_foreign_key "invite_codes", "users", column: "generated_by_id", on_delete: :nullify
+  add_foreign_key "invite_codes", "users", column: "redeemed_by_id", on_delete: :nullify
   add_foreign_key "kink_havers", "kinks"
   add_foreign_key "kink_havers", "users"
   add_foreign_key "leashes", "friendships"
@@ -635,6 +712,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_07_121000) do
   add_foreign_key "past_links", "links", on_delete: :nullify
   add_foreign_key "past_links", "users"
   add_foreign_key "past_links", "users", column: "set_by_id"
+  add_foreign_key "profile_domains", "users", column: "reviewed_by_id", on_delete: :nullify
   add_foreign_key "profiles", "profiles", column: "origin_id"
   add_foreign_key "profiles", "users"
   add_foreign_key "reports", "users", column: "reporter_id"
@@ -648,11 +726,13 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_07_121000) do
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "surrenders", "friendships"
   add_foreign_key "surrenders", "users"
+  add_foreign_key "surrenders", "users", column: "controller_user_id"
   add_foreign_key "survey_response_answers", "form_elements"
   add_foreign_key "survey_response_answers", "survey_responses"
   add_foreign_key "survey_responses", "surveys"
   add_foreign_key "survey_responses", "users"
   add_foreign_key "surveys", "users"
+  add_foreign_key "user_icons", "users"
   add_foreign_key "users", "links", column: "viewing_link_id"
   add_foreign_key "users", "profiles"
 end

@@ -2,6 +2,9 @@ class DashboardController < ApplicationController
   after_action :track_visit, only: %i[index]
 
   def index
+    @wallpaper_clients = WallpaperClient.in_section('clients')
+    @companion_apps = WallpaperClient.in_section('companion_apps')
+
     unless current_user.nil?
       @recent_scoop = Scoop.order(updated_at: :desc).first;
       @recent_posts = PastLink.joins(:user).order(id: :desc).take 6

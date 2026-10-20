@@ -18,10 +18,10 @@ RUN <<EOF
     ruby --version
     gem --version
     echo "== install bundler == "
-    gem install bundler
-    bundler --version
+    gem install bundler -v 2.4.13
+    bundle _2.4.13_ --version
     echo "== install gems == "
-    bundle install
+    bundle _2.4.13_ install --jobs 1
     echo "== precompile assets == "
     bundle exec rails app:assets:precompile
 EOF

@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  USERNAME_CHANGE_COOLDOWN = 1.week
+
   include ActiveModel::SecurePassword
   has_secure_password
   has_many :link, dependent: :destroy
@@ -18,6 +20,7 @@ class User < ApplicationRecord
   has_many :messages, through: :message_threads
   has_many :reports, as: :reportable
   has_many :profiles, inverse_of: :user
+  has_one :user_icon, dependent: :destroy
   has_many :friendships, ->(user) { unscope(:where).where(receiver_id: user.id).or(where(sender_id: user.id)) }
   has_many :held_leashes, ->(user) { where(master: user) }, through: :friendships, source: :leashes
   has_many :obeying_leashes, ->(user) { where(pet: user) }, through: :friendships, source: :leashes
@@ -35,8 +38,15 @@ class User < ApplicationRecord
   validates_uniqueness_of :email, :case_sensitive => false
   validates :password, confirmation: true
   validates :username, presence: true, format: { with: /\A[a-zA-Z0-9]+\Z/ }
+  validate :system_account_credentials_are_immutable, on: :update
+  validate :username_change_cooldown_has_elapsed, on: :update
+
+  before_update :record_username_change, if: :will_save_change_to_username?
 
   enum colour_preference: %i[auto light dark]
+
+  scope :active, -> { where(deleted_at: nil) }
+  scope :deleted, -> { where.not(deleted_at: nil) }
 
   scope :has_friendship_with, ->(other) {
     Friendship.find_friendship(other, self)
@@ -49,6 +59,104 @@ class User < ApplicationRecord
 
   def master
     masters.first || nil
+  end
+
+  def evil_account?
+    username == 'evil' || username_in_database == 'evil'
+  end
+
+  def system_account?
+    evil_account? || (has_attribute?(:system_account) && self[:system_account])
+  end
+
+  def deleted?
+    deleted_at.present?
+  end
+
+  def soft_delete!
+    with_lock do
+      raise ActiveRecord::RecordNotDestroyed, 'System accounts cannot be deleted.' if system_account?
+      return true if deleted?
+
+      original_username = username
+      tombstone_username = unique_deleted_username(original_username)
+      update_columns(
+        deleted_at: Time.current,
+        deleted_username: original_username,
+        username: tombstone_username
+      )
+      User.broadcast_api_update_for_username(original_username)
+      true
+    end
+  end
+
+  def restore_account!
+    with_lock do
+      return true unless deleted?
+
+      restored_username = deleted_username
+      restored_username = username if restored_username.blank? || username_exists?(restored_username)
+      update_columns(deleted_at: nil, username: restored_username)
+      true
+    end
+  end
+
+  def purge!
+    raise ActiveRecord::RecordNotDestroyed, 'Only deleted accounts can be purged.' unless deleted?
+    raise ActiveRecord::RecordNotDestroyed, 'System accounts cannot be purged.' if system_account?
+
+    transaction do
+      user_id = id
+      link_ids = Link.unscoped.where(user_id:).pluck(:id)
+      past_link_ids = PastLink.where(user_id:).pluck(:id)
+      profile_ids = Profile.unscoped.where(user_id:).pluck(:id)
+
+      BannedIp.where(banned_by_id: user_id).update_all(banned_by_id: nil)
+      HistoryEvent.where(surrender_controller_id: user_id).update_all(surrender_controller_id: nil)
+      Link.unscoped.where(set_by_id: user_id).update_all(set_by_id: nil)
+      Nuttracker::Orgasm.where(caused_by_user_id: user_id).update_all(caused_by_user_id: nil)
+      PastLink.where(set_by_id: user_id).update_all(set_by_id: nil)
+      User.where(profile_id: profile_ids).update_all(profile_id: nil)
+      NutPledge.where(past_link_id: past_link_ids).update_all(past_link_id: nil)
+      Scoop.where(link_id: link_ids).update_all(link_id: nil)
+
+      Surrender.where(controller_user_id: user_id).delete_all
+      Friendship.involving(self).find_each(&:destroy!)
+      Message.where(from_user_id: user_id).delete_all
+      MessageThreadParticipant.where(user_id: user_id).delete_all
+      Comment.where(user_id: user_id).delete_all
+      Report.where(reporter_id: user_id).or(Report.where(reportable_type: 'User', reportable_id: user_id)).delete_all
+      Report.where(reportable_type: 'Link', reportable_id: link_ids).delete_all
+      Notification.where(user_id: user_id).delete_all
+      KinkHaver.where(user_id: user_id).delete_all
+      NutPledge.where(user_id: user_id).delete_all
+      Nuttracker::Orgasm.where(user_id: user_id).delete_all
+      Scoop.where(user_id: user_id).delete_all
+      Ahoy::Event.where(user_id: user_id).update_all(user_id: nil)
+      Ahoy::Visit.where(user_id: user_id).update_all(user_id: nil)
+
+      Link.unscoped.where(id: link_ids).find_each(&:destroy!)
+      PastLink.where(id: past_link_ids).delete_all
+      Profile.unscoped.where(id: profile_ids).find_each(&:destroy!)
+      HistoryEvent.where(user_id: user_id).delete_all
+      destroy!
+    end
+  end
+
+  def can_change_username?(at: Time.current)
+    username_changed_at.nil? || username_changed_at <= at - USERNAME_CHANGE_COOLDOWN
+  end
+
+  def update_bypassing_username_change_cooldown(attributes)
+    previous_bypass = @bypass_username_change_cooldown
+    @bypass_username_change_cooldown = true
+    update(attributes)
+  ensure
+    @bypass_username_change_cooldown = previous_bypass
+  end
+
+  def next_username_change_at
+    username_changed_at + USERNAME_CHANGE_COOLDOWN if username_changed_at
   end
 
   def flair
@@ -198,5 +306,39 @@ class User < ApplicationRecord
         viewing_link_id
       ]
     ).any?
+  end
+
+  private
+
+  def system_account_credentials_are_immutable
+    flagged_system_account = has_attribute?(:system_account) && system_account_in_database
+    return unless flagged_system_account || evil_account?
+
+    errors.add(:username, 'cannot be changed for a system account') if will_save_change_to_username?
+    errors.add(:password, 'cannot be changed for a system account') if will_save_change_to_password_digest?
+    errors.add(:system_account, 'cannot be disabled') if will_save_change_to_system_account?
+  end
+
+  def username_change_cooldown_has_elapsed
+    return unless will_save_change_to_username?
+    return if @bypass_username_change_cooldown
+    return if can_change_username?
+
+    errors.add(:username, 'can only be changed once a week')
+  end
+
+  def record_username_change
+    self.username_changed_at = Time.current
+  end
+
+  def unique_deleted_username(original_username)
+    loop do
+      candidate = "#{original_username}#{SecureRandom.alphanumeric(10)}"
+      return candidate unless User.where('lower(username) = ?', candidate.downcase).exists?
+    end
+  end
+
+  def username_exists?(candidate)
+    User.where('lower(username) = ?', candidate.downcase).where.not(id: id).exists?
   end
 end
