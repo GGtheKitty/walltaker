@@ -23,7 +23,10 @@ end
 system_account_attributes = -> {
   {
     system_account: true,
-    password_digest: BCrypt::Password.create(SecureRandom.base64(48))
+    password_digest: BCrypt::Engine.hash_secret(
+      SecureRandom.base64(48),
+      BCrypt::Engine.generate_salt
+    )
   }
 }
 
