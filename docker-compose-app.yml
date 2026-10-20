@@ -13,40 +13,92 @@ x-walltaker-env: &walltaker
     WALLTAKER_BASE_URL: ${WALLTAKER_URL?error}
     WALLTAKER_MAIL_FROM: ${WALLTAKER_MAIL_FROM:-mailgun@${WALLTAKER_HOST}}
     E621_USER_AGENT: ${WALLTAKER_HOST} (forked from ailurus and run by ${E621_USER?error})
+    RAILS_ENV: ${RAILS_ENV:-production}
+    SECRET_KEY_BASE: ${SECRET_KEY_BASE}
 
 services:
   web:
+    env_file:
+      - .env.example
+      - path: ./.env
+        required: false
+      - path: ./walltaker.env
+        required: false
+      - path: ./web.env
+        required: false
     build: .
     restart: unless-stopped
-    command: bash -lc 'ruby -rsocket -e "loop { begin; TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; break; rescue; sleep 1; end }" && bundle exec rails assets:precompile && bundle exec rails db:prepare && bundle exec rails server -e production -b 0.0.0.0'
+    command: >
+      bash -lc '
+        ruby -rsocket -e "
+          loop {
+            begin;
+            TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close;
+            break;
+            rescue;
+            sleep 1;
+            end
+        }" &&
+        bundle exec rails assets:precompile &&
+        bundle exec rails db:prepare &&
+        bundle exec rails server -b 0.0.0.0
+      '
     volumes:
       - ./:/ror
     ports:
-      - "127.0.0.1:${RAILS_HOST_PORT}:3000"
+      - "${RAILS_HOST_PORT:-3000}:3000"
+    labels:
+      - org.opencontainers.image.source="${COMMIT_LINK:-}"
+      - org.opencontainers.image.revision="${COMMIT_HASH:-}"
+      - org.opencontainers.image.created="${BUILD_AT:-}"
     environment:
       <<: [*database, *redis, *walltaker]
-      ENV: PROD
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       RAILS_SERVE_STATIC_FILES: true
     networks:
-      - backend
-      - frontend
+      - walltaker
+      - proxy
 
   pornbot_scheduler:
+    env_file:
+      - .env.example
+      - path: ./.env
+        required: false
+      - path: ./walltaker.env
+        required: false
+      - path: ./scheduler.env
+        required: false
     build: .
     restart: unless-stopped
-    command: bash -lc 'ruby -rsocket -e "loop { begin; TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; break; rescue; sleep 1; end }" && while true; do bundle exec rake walltaker:porn_bot_round; sleep "$${PORNBOT_INTERVAL_SECONDS:-600}"; done'
+    command: >
+      bash -lc '
+        ruby -rsocket -e "loop {
+          begin;
+          TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close;
+          break;
+          rescue;
+          sleep 1;
+          end
+        }" &&
+        while true;
+        do bundle exec rake walltaker:porn_bot_round;
+        sleep "$${PORNBOT_INTERVAL_SECONDS:-600}";
+        done
+      '
     volumes:
       - ./:/ror
+    labels:
+      - org.opencontainers.image.source="${COMMIT_LINK:-}"
+      - org.opencontainers.image.revision="${COMMIT_HASH:-}"
+      - org.opencontainers.image.created="${BUILD_AT:-}"
     environment:
       <<: [*database, *redis, *walltaker]
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       PORNBOT_INTERVAL_SECONDS: ${PORNBOT_INTERVAL_SECONDS:-600}
-      RAILS_ENV: production
     networks:
-    - backend
+      - walltaker
 
 networks:
-  backend:
-  frontend:
-
+  walltaker:
+    internal: true
+    external: true
+  proxy:
+    external: true

@@ -30,7 +30,5 @@ module Walltaker
     Rails.application.config.hosts << ENV["WALLTAKER_HOST"] if ENV["WALLTAKER_HOST"].present?
     Rails.application.config.hosts << "joi.how"
     Rails.application.config.hosts << "walltaker.joi.how"
-    Rails.application.config.hosts << "10.244.14.67"
-    Rails.application.config.hosts << "walltaker-master-39nrv.ondigitalocean.app"
   end
 end

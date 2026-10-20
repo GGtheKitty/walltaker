@@ -1,25 +1,43 @@
 services:
   database:
+    shm_size: ${POSTGRES_SHM_SIZE:-256mb}
+    env_file:
+      - .env.example
+      - .env
+      - path: ./infra.env
+        required: false
+      - path: ./database.env
+        required: false
     image: postgres:14
     restart: unless-stopped
     volumes:
-      - ./.docker/volumes/walltaker_database3:/var/lib/postgresql/data
-      - ./scripts/postgres-init-app-role.sh:/docker-entrypoint-initdb.d/10-create-app-role.sh:ro
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+    ports:
+      - ${DB_HOST_PORT:-127.0.0.1:5432}:${DB_PORT:-5432}
     environment:
-      - POSTGRES_USER=${DB_ADMIN_USER}
+      - POSTGRES_USER=${DB_USER}
       - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_PASSWORD=${DB_ADMIN_PASSWORD}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
       interval: 30s
       timeout: 5s
       retries: 10
     networks:
-      - backend
+      - walltaker
+      - database-backup
+      - monitoring
 
   redis:
+    env_file:
+      - .env.example
+      - path: ./.env
+        required: false
+      - path: ./infra.env
+        required: false
+      - path: ./redis.env
+        required: false
     image: redis:7-alpine
     restart: unless-stopped
     environment:
@@ -27,7 +45,9 @@ services:
       #- REDIS_ARGS=--requirepass your_password_here --appendonly yes
       #- REDIS_ARGS=save 60 1000 --requirepass your_password_here --appendonly yes
     volumes:
-      - redis-data-v2:/data
+      - redis-data:/data
+    ports:
+      - ${CACHE_HOST_PORT:-127.0.0.1:6379}:${CACHE_PORT:-6379}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 1m30s
@@ -35,11 +55,20 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - backend
+      - walltaker
+      - monitoring
 
 volumes:
-  redis-data-v2:
+  postgres-data:
+  redis-data:
 
 networks:
-  backend:
-  frontend:
+  walltaker:
+    name: "walltaker"
+    internal: true
+  monitoring:
+    external: true
+  database-backup:
+    external: true
+
+#mkdir -p /var/lib/postgresql/data/backups/$(date +%F);pg_dump -U postgres Walltaker -F c | gzip > /var/lib/postgresql/data/backups/$(date +%F)/backup.dump

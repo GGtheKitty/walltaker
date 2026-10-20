@@ -4,7 +4,7 @@ namespace :walltaker do
 
     unless pornbot
       puts "PornBot is missing! The account could not be found, are migrations run correctly?"
-      return
+      next
     end
 
     puts "PornBot has awoken"
