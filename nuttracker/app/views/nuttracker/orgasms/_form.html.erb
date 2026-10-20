@@ -4,7 +4,9 @@
       <ion-icon role="presentation" name="eye-off"></ion-icon>
       Only you see this
     </div>
-    <%= form_with(model: orgasm, class: 'orgasms orgasms-log') do |form| %>
+    <%= form_with(model: orgasm,
+                  class: 'orgasms orgasms-log',
+                  data: { turbo: true, turbo_frame: 'orgasm_form' }) do |form| %>
       <h2>
         <ion-icon role="presentation" name="ice-cream" class="big"></ion-icon>
         Orgasm

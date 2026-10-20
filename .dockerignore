@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+walltaker.env
+
+log/*
+tmp/*
+storage/*
+
+*.dump
+docker-compose*.yml
+README.md
+test
