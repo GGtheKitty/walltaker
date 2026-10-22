@@ -1,10 +1,29 @@
 <% mascot = current_user&.mascot || 'ki' %>
 <% pervert = current_user&.pervert || false %>
+
+<% page_title = content_for?(:html_title) ? yield(:html_title) : "Walltaker" %>
+<% embed_title = content_for?(:og_title) ? yield(:og_title) : "(18+) " + page_title %>
+<% embed_description = content_for?(:og_description) ? yield(:og_description) : "Take control of your friends wallpapers" %>
+<% embed_img = content_for?(:og_image) ? yield(:og_image) : image_url('mascot/KiHead.png') %>
+<% theme_color = content_for?(:theme_color) ? yield(:theme_color) : "#ffb300" %>
+
 <!DOCTYPE html>
-<html class="<%= current_user ? "force-#{current_user.colour_preference}" : "" %> <%= "current-mascot-" + mascot %> <%= pervert ? "currently-perverted" : "" %> ">
+<html 
+  lang="<%= content_for?(:html_lang) ? yield(:html_lang) : 'en' %>
+  class="<%= current_user ? "force-#{current_user.colour_preference}" : "" %> <%= "current-mascot-" + mascot %> <%= pervert ? "currently-perverted" : "" %> "
+>
 <head>
-  <title><%= content_for?(:html_title) ? yield(:html_title) : "Walltaker" %></title>
+  <title><%= page_title %></title>
+  
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="<%= embed_title %>">
+  <meta property="og:description" content="<%= embed_description %>">
+  <meta property="og:url" content="<%= request.original_url %>">
+  <meta property="og:image" content="<%= image_url('mascot/KiHead.png') %>">
+  <meta name="theme-color" content="#ffb300">
+  
   <%= tag.base target: '_top' if @profile_document %>
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1">
   <meta name="rating" content="adult"/>
   <meta name="walltaker-base-url" content="<%= walltaker_base_url %>"/>
