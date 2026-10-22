@@ -9,7 +9,7 @@
 
 <!DOCTYPE html>
 <html 
-  lang="<%= content_for?(:html_lang) ? yield(:html_lang) : 'en' %>
+  lang="<%= content_for?(:html_lang) ? yield(:html_lang) : 'en' %>"
   class="<%= current_user ? "force-#{current_user.colour_preference}" : "" %> <%= "current-mascot-" + mascot %> <%= pervert ? "currently-perverted" : "" %> "
 >
 <head>
@@ -19,8 +19,8 @@
   <meta property="og:title" content="<%= embed_title %>">
   <meta property="og:description" content="<%= embed_description %>">
   <meta property="og:url" content="<%= request.original_url %>">
-  <meta property="og:image" content="<%= image_url('mascot/KiHead.png') %>">
-  <meta name="theme-color" content="#ffb300">
+  <meta property="og:image" content="<%= embed_img %>">
+  <meta name="theme-color" content="<%= theme_color %>">
   
   <%= tag.base target: '_top' if @profile_document %>
   <meta charset="utf-8">
