@@ -234,8 +234,21 @@ class User < ApplicationRecord
     username
   end
 
-  def api_payload(viewer = nil)
-    has_friendship = Rails.cache.fetch("v1/user-api/#{username}/#{viewer&.username || 'anon'}/has_friendship", expires: 1.hour) { Friendship.find_friendship(viewer, self).exists? } if viewer
+  API_AUDIENCES = %i[anonymous authenticated friend self].freeze
+
+  def api_audience(viewer)
+    return :anonymous unless viewer
+    return :self if viewer.id == id
+    return :friend if Friendship.find_friendship(viewer, self).exists?
+
+    :authenticated
+  end
+
+  def api_payload(viewer = nil, audience: nil)
+    audience ||= api_audience(viewer)
+    authenticated = audience != :anonymous
+    has_friendship = audience == :friend
+    self_view = audience == :self
     online_links_ids = Rails.cache.fetch("v1/user-api/#{username}/online-links/as-anon", expires: 7.minutes) { link.where(friends_only: false).and(link.where('expires > ?', Time.now).or(link.where(never_expires: true))).and(link.is_online).pluck(:id) } unless has_friendship
     online_links_ids = Rails.cache.fetch("v1/user-api/#{username}/online-links/as-friend", expires: 7.minutes) { link.where('expires > ?', Time.now).or(link.where(never_expires: true)).and(link.is_online).pluck(:id) } if has_friendship
     public_links = link.where(friends_only: false).and(link.where('expires > ?', Time.now).or(link.where(never_expires: true)))
@@ -248,16 +261,16 @@ class User < ApplicationRecord
       is_cutie: is_cutie,
       is_supporter: is_supporter,
       online: online_links_ids.length > 0,
-      authenticated: !!viewer,
+      authenticated: authenticated,
       links: public_links.map(&:api_payload_for_user),
       flair: flair || "",
       master: master&.username || false,
       pets: pets.map(&:username) || []
     }
 
-    if viewer
-      payload[:friend] = !!has_friendship
-      payload[:self] = id == viewer.id
+    if authenticated
+      payload[:friend] = has_friendship
+      payload[:self] = self_view
     end
 
     payload
@@ -266,19 +279,31 @@ class User < ApplicationRecord
   def self.broadcast_api_update(user)
     return unless user
 
-    broadcast_api_update_for_username(user.username)
+    broadcast_api_update_for_username(user.username, user)
   end
 
-  def self.broadcast_api_update_for_username(username)
+  def self.api_stream_name(username, audience)
+    "User::#{username}::#{audience}"
+  end
+
+  def self.broadcast_api_update_for_username(username, user = active.find_by(username: username))
     return unless username
 
-    ActionCable.server.broadcast("User::#{username}", { type: 'user.changed' })
+    API_AUDIENCES.each do |audience|
+      payload = if user
+                  { type: 'user', success: true, watching: true, user: user.api_payload(audience: audience) }
+                else
+                  { type: 'user', success: false, why: "User #{username} does not exist." }
+                end
+
+      ActionCable.server.broadcast(api_stream_name(username, audience), payload)
+    end
   end
 
   after_commit do
     if api_visible_fields_previously_changed?
       User.broadcast_api_update(self)
-      User.broadcast_api_update_for_username(username_before_last_save) if username_previously_changed?
+      User.broadcast_api_update_for_username(username_before_last_save, self) if username_previously_changed?
     end
 
     if viewing_link_id

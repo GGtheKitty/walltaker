@@ -9,6 +9,11 @@ x-walltaker-env: &walltaker
   WALLTAKER_BASE_URL: ${WALLTAKER_URL?error}
   E621_USER_AGENT: ${WALLTAKER_HOST} (forked from ailurus and run by ${E621_USER})
 
+x-anycable-env: &anycable
+  ANYCABLE_SECRET: ${SECRET_KEY_BASE}
+  ANYCABLE_REDIS_URL: redis://${CACHE_HOST}:${CACHE_PORT}/1
+  ANYCABLE_REDIS_CHANNEL: __anycable__
+
 services:
   database:
     image: postgres:14
@@ -45,6 +50,7 @@ services:
       - backend
 
   web:
+    image: walltaker-web:anycable
     build: .
     restart: unless-stopped
     mem_limit: 768m
@@ -69,6 +75,7 @@ services:
       - frontend
 
   pornbot_scheduler:
+    image: walltaker-web:anycable
     build: .
     restart: unless-stopped
     command: bash -lc 'ruby -rsocket -e "loop { begin; TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; break; rescue; sleep 1; end }" && while true; do bundle exec rake walltaker:porn_bot_round; sleep "$${PORNBOT_INTERVAL_SECONDS:-600}"; done'
@@ -82,6 +89,26 @@ services:
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       RAILS_ENV: production
       PORNBOT_INTERVAL_SECONDS: ${PORNBOT_INTERVAL_SECONDS:-600}
+    networks:
+      - backend
+
+  cable:
+    image: anycable/anycable-go:1.6-alpine
+    restart: unless-stopped
+    ports:
+      - "${ANYCABLE_HOST_PORT:-127.0.0.1:8080}:8080"
+    depends_on:
+      - web
+      - redis
+    environment:
+      <<: *anycable
+      ANYCABLE_HOST: 0.0.0.0
+      ANYCABLE_PORT: 8080
+      ANYCABLE_RPC_HOST: http://web:3000/_anycable
+      ANYCABLE_RPC_CONCURRENCY: 4
+      ANYCABLE_HEADERS: cookie,origin,user-agent,joihow,user_agent,wallpaper-engine-client
+      ANYCABLE_ALLOWED_ORIGINS: ${WALLTAKER_HOST},localhost
+      ANYCABLE_DISCONNECT_MODE: always
     networks:
       - backend
 

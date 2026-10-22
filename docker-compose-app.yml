@@ -16,8 +16,14 @@ x-walltaker-env: &walltaker
     RAILS_ENV: ${RAILS_ENV:-production}
     SECRET_KEY_BASE: ${SECRET_KEY_BASE}
 
+x-anycable-env: &anycable
+    ANYCABLE_SECRET: ${SECRET_KEY_BASE}
+    ANYCABLE_REDIS_URL: redis://${CACHE_HOST}:${CACHE_PORT}/1
+    ANYCABLE_REDIS_CHANNEL: __anycable__
+
 services:
   web:
+    image: walltaker-web:anycable
     env_file:
       - .env.example
       - path: ./.env
@@ -59,6 +65,7 @@ services:
       - proxy
 
   pornbot_scheduler:
+    image: walltaker-web:anycable
     env_file:
       - .env.example
       - path: ./.env
@@ -93,6 +100,25 @@ services:
     environment:
       <<: [*database, *redis, *walltaker]
       PORNBOT_INTERVAL_SECONDS: ${PORNBOT_INTERVAL_SECONDS:-600}
+    networks:
+      - walltaker
+
+  cable:
+    image: anycable/anycable-go:1.6-alpine
+    restart: unless-stopped
+    ports:
+      - "${ANYCABLE_HOST_PORT:-127.0.0.1:8080}:8080"
+    environment:
+      <<: *anycable
+      ANYCABLE_HOST: 0.0.0.0
+      ANYCABLE_PORT: 8080
+      ANYCABLE_RPC_HOST: http://web:3000/_anycable
+      ANYCABLE_RPC_CONCURRENCY: 4
+      ANYCABLE_HEADERS: cookie,origin,user-agent,joihow,user_agent,wallpaper-engine-client
+      ANYCABLE_ALLOWED_ORIGINS: ${WALLTAKER_HOST},localhost
+      ANYCABLE_DISCONNECT_MODE: always
+    depends_on:
+      - web
     networks:
       - walltaker
 

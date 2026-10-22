@@ -33,6 +33,9 @@ gem "jbuilder"
 gem "redis"
 gem "connection_pool", "< 3"
 
+# Run Action Cable channels through AnyCable using the Rails HTTP RPC endpoint.
+gem "anycable-rails-core", "~> 1.5", require: ["anycable-rails"]
+
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
 

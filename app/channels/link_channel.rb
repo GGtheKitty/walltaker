@@ -1,5 +1,5 @@
 class LinkChannel < ApplicationCable::Channel
-  periodically :refresh_presence, every: 30.seconds
+  state_attr_accessor :watched_link_id, :watched_user_stream
 
   def subscribed
     link_identifier = params[:id].presence || params[:link_id].presence
@@ -15,19 +15,15 @@ class LinkChannel < ApplicationCable::Channel
     end
 
     watch_link(link)
-    @watched_link_id = link.id
-    @watched_link_stream = stream_name(link)
-
-    stream_from @watched_link_stream
+    self.watched_link_id = link.id
+    stream_from stream_name(link)
     transmit link.reload.api_payload
   end
 
   def unsubscribed
     stop_watching_user
-    return unless @watched_link_id
-
-    stop_stream_from @watched_link_stream if @watched_link_stream
-    leave_link_id(@watched_link_id)
+    leave_link_id(watched_link_id) if watched_link_id
+    self.watched_link_id = nil
   end
 
   def check
@@ -63,13 +59,9 @@ class LinkChannel < ApplicationCable::Channel
     return transmit_user_error("User #{username} does not exist.") unless user
 
     stop_watching_user
-    @watched_user = user
-    @watched_user_viewer = viewer
-    @watched_user_stream = user_stream_name(user)
+    self.watched_user_stream = user_stream_name(user, viewer)
 
-    stream_from @watched_user_stream do |_message|
-      transmit_user_payload(@watched_user.reload, @watched_user_viewer)
-    end
+    stream_from watched_user_stream
 
     transmit_user_payload(user, viewer)
   end
@@ -85,8 +77,8 @@ class LinkChannel < ApplicationCable::Channel
     "Link::#{link.id}"
   end
 
-  def user_stream_name(user)
-    "User::#{user.username}"
+  def user_stream_name(user, viewer)
+    User.api_stream_name(user.username, user.api_audience(viewer))
   end
 
   def find_link(identifier)
@@ -98,25 +90,22 @@ class LinkChannel < ApplicationCable::Channel
   end
 
   def watch_link(link)
-    connection.watched_links[link.id] ||= SecureRandom.uuid
+    watched_links = connection.watched_links || {}
+    link_key = link.id.to_s
+    connection_id = watched_links[link_key] || SecureRandom.uuid
+    connection.watched_links = watched_links.merge(link_key => connection_id)
     was_offline = LinkPresence.offline?(link)
 
-    LinkPresence.join(link, connection.watched_links[link.id])
+    LinkPresence.join(link, connection_id)
     link.live_client_started_at = Time.now.utc if was_offline
     link.last_ping_user_agent = client_identity_from(params) || connection.client_identity
     link.save
   end
 
-  def refresh_presence
-    connection&.watched_links&.each_key { |link_id| LinkPresence.refresh_id(link_id) }
-  end
-
-  def leave_link(link)
-    leave_link_id(link.id)
-  end
-
   def leave_link_id(link_id)
-    connection_id = connection.watched_links.delete(link_id)
+    watched_links = connection.watched_links || {}
+    connection_id = watched_links.delete(link_id.to_s)
+    connection.watched_links = watched_links
     return unless connection_id && LinkPresence.leave_id(link_id, connection_id)
 
     link = Link.find_by(id: link_id)
@@ -159,11 +148,9 @@ class LinkChannel < ApplicationCable::Channel
   end
 
   def stop_watching_user
-    return unless @watched_user_stream
+    return unless watched_user_stream
 
-    stop_stream_from @watched_user_stream
-    @watched_user_stream = nil
-    @watched_user = nil
-    @watched_user_viewer = nil
+    stop_stream_from watched_user_stream
+    self.watched_user_stream = nil
   end
 end

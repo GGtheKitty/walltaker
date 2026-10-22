@@ -1,14 +1,15 @@
 module ApplicationCable
   class Connection < ActionCable::Connection::Base
-    attr_accessor :watched_links, :current_user
+    state_attr_accessor :watched_links, :current_user, :client_identity
 
     def connect
-      @watched_links = {}
-      @current_user = connection_current_user
+      self.watched_links = {}
+      self.current_user = connection_current_user
+      self.client_identity = request_client_identity
     end
 
     def disconnect
-      self.watched_links.each do |link_id, connection_id|
+      (watched_links || {}).each do |link_id, connection_id|
         next unless LinkPresence.leave_id(link_id, connection_id)
 
         link = Link.find_by(id: link_id)
@@ -20,27 +21,27 @@ module ApplicationCable
       end
 
       self.watched_links = {}
-      self.current_user&.leave_link
+      current_user&.leave_link
     end
 
     def user_agent
-      @request.user_agent
-    end
-
-    def client_identity
-      [
-        @request.user_agent,
-        @request.headers['joihow'],
-        @request.headers['User_Agent'],
-        @request.headers['Wallpaper-Engine-Client'].present? ? "Wallpaper-Engine-Client/#{@request.headers['Wallpaper-Engine-Client']}" : nil
-      ].compact_blank.join(' ')
+      request.user_agent
     end
 
     private
 
+    def request_client_identity
+      [
+        request.user_agent,
+        request.headers['joihow'],
+        request.headers['User_Agent'],
+        request.headers['Wallpaper-Engine-Client'].present? ? "Wallpaper-Engine-Client/#{request.headers['Wallpaper-Engine-Client']}" : nil
+      ].compact_blank.join(' ')
+    end
+
     def connection_current_user
       current_user = User.active.find_by(id: cookies.signed[:permanent_session_id]) if cookies.signed[:permanent_session_id]
-      current_user ||= User.active.find_by(id: @request.session[:user_id]) if @request.session[:user_id]
+      current_user ||= User.active.find_by(id: request.session[:user_id]) if request.session[:user_id]
       current_user
     end
   end

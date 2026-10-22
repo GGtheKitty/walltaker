@@ -1,7 +1,10 @@
 require "set"
 
 class LinkPresence
-  TTL = 90.seconds
+  # AnyCable invokes the channel and connection disconnect callbacks, which
+  # remove active clients immediately. This expiry is a safety net for hard
+  # process or host failures where no disconnect callback can run.
+  TTL = 7.days
 
   class << self
     def join(link, connection_id)

@@ -48,7 +48,7 @@ class LinkTest < ActiveSupport::TestCase
     assert_includes Link.is_online, link
   end
 
-  test 'redis ttl expiry makes live client presence go offline' do
+  test 'redis safety expiry makes abandoned live client presence go offline' do
     link = links(:one)
     link.update!(last_ping: nil, last_ping_user_agent: nil, live_client_started_at: Time.now.utc)
 
