@@ -1,7 +1,20 @@
+<% page_title = content_for?(:html_title) ? yield(:html_title) : "Walltaker" %>
+<% embed_title = content_for?(:og_title) ? yield(:og_title) : "(18+) " + page_title %>
+<% embed_description = content_for?(:og_description) ? yield(:og_description) : "Take control of your friends wallpapers" %>
+<% embed_img = content_for?(:og_image) ? yield(:og_image) : image_url('mascot/KiHead.png') %>
+<% theme_color = content_for?(:theme_color) ? yield(:theme_color) : "#ffb300" %>
+
 <!DOCTYPE html>
-<html>
+<html lang="<%= content_for?(:html_lang) ? yield(:html_lang) : 'en' %>">
 <head>
-  <title>Nuttracker</title>
+  <title><%= page_title %></title>
+  <meta charset="utf-8">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="<%= embed_title %>">
+  <meta property="og:description" content="<%= embed_description %>">
+  <meta property="og:url" content="<%= request.original_url %>">
+  <meta property="og:image" content="<%= embed_img %>">
+  <meta name="theme-color" content="<%= embed_color %>">
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
 

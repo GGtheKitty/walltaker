@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= content_for?(:html_lang) ? yield(:html_lang) : 'en' %>">
   <head>
     <title>Dummy</title>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
