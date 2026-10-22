@@ -107,7 +107,6 @@ services:
       ANYCABLE_RPC_HOST: http://web:3000/_anycable
       ANYCABLE_RPC_CONCURRENCY: 4
       ANYCABLE_HEADERS: cookie,origin,user-agent,joihow,user_agent,wallpaper-engine-client
-      ANYCABLE_ALLOWED_ORIGINS: ${WALLTAKER_HOST},localhost
       ANYCABLE_DISCONNECT_MODE: always
     networks:
       - backend
