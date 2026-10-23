@@ -1,13 +1,16 @@
 <%= turbo_stream_from link %>
 
+<% current_client = client_for_user_agent(link.last_ping_user_agent)&.link_label || link.last_ping_user_agent.presence || 'Unknown client' %>
+<% last_change = link.past_links.last %>
+<% last_changed = last_change ? "Last changed #{time_ago_in_words(last_change.created_at)} ago" : 'Last changed never' %>
 <% content_for :og_description do %>
   <%= [
-    ("#{link.user.username}'s link"),
+    last_changed,
     "\n",
     ("theme: #{link.theme}" if link.theme.present?),
     ("score > #{link.min_score}" if link.min_score.present? && link.min_score > 0),
     "\n",
-    link.terms
+    "Current client: #{current_client}"
   ].compact.join(" ") %>
 <% end %>
 
