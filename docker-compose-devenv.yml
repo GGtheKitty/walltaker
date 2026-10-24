@@ -1,4 +1,3 @@
-# VPS preview for dev-ggthekitty. Reuse installed gems, reload source, keep one Puma process.
 services:
   web:
     image: walltaker-web:devenv
