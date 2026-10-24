@@ -38,7 +38,7 @@ export function createNativeDelivery({pool,browserPool,renderer,redis,queue,disc
   }catch(error){await c.query('ROLLBACK');throw error;}finally{c.release();}
  }
  async function notify(graph,id){if(!activeUser(graph,id))return;await change(graph,'header_notifications_'+id,'replace','header_notifications','application/notifications',{notifications:graph.notifications.filter(n=>String(n.user_id)===String(id)).sort((a,b)=>Number(b.id)-Number(a.id)).slice(0,5).map(n=>reference('Notification',n.id))});}
- async function removeLink(id){await redis.del('link:'+id+':ws_clients');await publish(recordStream('Link',id),turbo('remove','link_'+id));await queue.enqueue('link:'+id);for(const kind of ['image','text'])await publish('link_preview_'+id+'_'+kind,turbo('update','preview_'+kind));}
+ async function removeLink(id){await redis.del(['link:'+id+':ws_clients','link:'+id+':ws_client_leases']);await publish(recordStream('Link',id),turbo('remove','link_'+id));await queue.enqueue('link:'+id);for(const kind of ['image','text'])await publish('link_preview_'+id+'_'+kind,turbo('update','preview_'+kind));}
  async function surrender(graph,snapshot,revoked=false){await change(graph,recordStream('Surrender',snapshot.id),'replace','surrender_status','layouts/surrender',{surrender:reference('Surrender',snapshot.id),revoked:revoked || graph.revoked_surrenders.includes(String(snapshot.id))});}
  async function newsroom(c,event){
   const state=(await c.query('SELECT generation,rendered_event_id FROM node_newsroom_states WHERE id=1 FOR UPDATE')).rows[0];

@@ -167,7 +167,8 @@ services:
       - frontend
 
   cable:
-    image: anycable/anycable-go:1.6-alpine
+    image: walltaker-anycable:liveness-node
+    build: ./services/anycable
     restart: unless-stopped
     ports:
       - "${ANYCABLE_HOST_PORT:-127.0.0.1:8080}:8080"
@@ -183,6 +184,9 @@ services:
       ANYCABLE_RPC_CONCURRENCY: 4
       ANYCABLE_HEADERS: cookie,origin,user-agent,joihow,user_agent,wallpaper-engine-client
       ANYCABLE_DISCONNECT_MODE: always
+      ANYCABLE_ENABLE_NATIVE_PINGS: "true"
+      ANYCABLE_PING_INTERVAL: "3"
+      ANYCABLE_PONG_TIMEOUT: "60"
     networks:
       - backend
 

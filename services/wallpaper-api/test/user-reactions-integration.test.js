@@ -87,7 +87,7 @@ test('user status and reactions against real PostgreSQL permissions and Redis', 
       await assert.rejects(writer.query("SELECT public.walltaker_api_authenticate('ownerkey')"), { code: '42501' });
     });
     await t.test('anonymous, friend, nonfriend and self status preserve visibility and audience flags', async () => {
-      await redis.sAdd('link:803:ws_clients', 'test-socket');
+      await redis.zAdd('link:803:ws_client_leases', {score:Date.now()/1000,value:'test-socket'});
       for (const [viewerId, authenticated, friend, self, online] of [[null,false,undefined,undefined,false],
         ['102',true,true,false,true], ['103',true,false,false,false], ['101',true,false,true,false], ['104',false,undefined,undefined,false]]) {
         const status = await readUser({ username: 'Owner', viewerId });
@@ -101,7 +101,7 @@ test('user status and reactions against real PostgreSQL permissions and Redis', 
       assert.deepEqual((await readUser({ username: 'Friend' })).pets, ['Owner']);
       assert.equal(await readUser({ username: 'Deleted' }), null);
       assert.equal(await readUser({ username: 'Missing' }), null);
-      await redis.del('link:803:ws_clients');
+      await redis.del('link:803:ws_client_leases');
     });
     await t.test('status excludes expired links and reflects polling and widget online windows immediately', async () => {
       await query("UPDATE links SET never_expires=false,expires=now()-interval '1 second' WHERE id=802");
@@ -212,7 +212,7 @@ test('user status and reactions against real PostgreSQL permissions and Redis', 
       assert.match(sent.options.headers.authorization,/^Bearer [0-9a-f]{64}$/);
     });
   } finally {
-    if (redis?.isOpen) { await redis.del('link:803:ws_clients'); await redis.close(); }
+    if (redis?.isOpen) { await redis.del('link:803:ws_client_leases'); await redis.close(); }
     await Promise.all([reader?.end(),writer?.end(),admin?.end(),bootstrap.end()]);
   }
 });

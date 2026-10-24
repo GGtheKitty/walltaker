@@ -16,7 +16,7 @@ function fixture() {
   const calls = [];
   const row = { id: '1', user_id: '7' };
   const repository = { findIdentifier: async (id) => ['1','slug'].includes(id) ? row : null, find: async () => row };
-  const presence = Object.fromEntries(['join','leave','view','announce'].map((name) => [name, async (...args) => { calls.push([name,...args]); return true; }]));
+  const presence = Object.fromEntries(['join','leave','view','announce','heartbeat'].map((name) => [name, async (...args) => { calls.push([name,...args]); return true; }]));
   const rpc = createRealtimeRpc({ repository, presence, publisher: { linkPayload: async () => ({ success: true,id: 1,online: true }) },
     readUser: async ({ username, viewerId }) => username === 'missing' ? null : { username,authenticated: !!viewerId,self: viewerId === 7,friend: false },
     sessionViewer: async (headers) => headers.cookie ? 7 : null, authenticateKey: async (key) => key === 'valid' ? 7 : null, secretKeyBase: secret, baseUrl });
@@ -112,4 +112,16 @@ test('client identity headers retain compatibility and cap database string lengt
   assert.equal(headerIdentity({ 'user-agent':'Agent',joihow:'Joi',user_agent:'Extra','wallpaper-engine-client':'1' }), 'Agent Joi Extra Wallpaper-Engine-Client/1');
   assert.equal(clientIdentity({ userAgent:'App' }),'App');
   assert.equal(clientIdentity({ client:'x'.repeat(1000) }).length,255);
+});
+
+test('heartbeat renews only socket-owned memberships and viewer identity from authenticated RPC state',async()=>{
+ const {rpc,calls}=fixture();const env=(await rpc('connect',{env:{headers:{cookie:'signed'}}})).env;
+ const identifier=JSON.stringify({channel:'LinkChannel',id:1});
+ const subscribed=await rpc('command',{command:'subscribe',identifier,env});
+ const members=Object.values(JSON.parse(subscribed.env.cstate.node_links));
+ await rpc('command',{command:'message',identifier,env:subscribed.env,data:JSON.stringify({action:'heartbeat',user_id:999,links:[{id:'999',token:'forged'}]})});
+ assert.deepEqual(calls.find(call=>call[0]==='heartbeat'),['heartbeat',members,7,env.cstate.node_connection]);
+ const web=JSON.stringify({channel:'WebPresenceChannel'});
+ await rpc('command',{command:'message',identifier:web,env:subscribed.env,data:JSON.stringify({action:'heartbeat'})});
+ assert.equal(calls.filter(call=>call[0]==='heartbeat').length,2);
 });

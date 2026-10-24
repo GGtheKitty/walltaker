@@ -129,12 +129,14 @@ must use the site origin or omit the origin as native clients do. Node resolves
 native sessions and legacy signed/encrypted cookies directly when connecting.
 The realtime database role cannot read password digests or stored API keys.
 
-Node writes polling heartbeats and maintains the shared `link:<id>:ws_clients`
-Redis sets. Subscriptions have separate members, so another client keeps a link
+Node writes polling heartbeats and maintains `link:<id>:ws_client_leases`
+Redis sorted sets. Subscriptions have separate members, so another client keeps a link
 online after one disconnects. RPC retries reuse membership. The historical
 `live_client_started_at` changes only on an offline-to-online transition. The
-existing seven-day Redis expiry remains a fallback for missed disconnects; normal
-unsubscribe and disconnect events remove members immediately. Polling windows
+five-minute per-connection leases are renewed by native pong replies every
+30 seconds. Expired members are pruned by every online-status reader; normal
+unsubscribe and disconnect events remove members immediately. Native ping/pong
+liveness disconnects nonresponsive sockets after approximately 60 seconds. Polling windows
 remain one minute, or twenty minutes for `widgetExtension` clients.
 
 Node also owns `WebPresenceChannel` and `users.viewing_link_id` writes. Per-user

@@ -41,7 +41,7 @@ import { createLinkHandler } from './link-handler.js';
 import { createInternalHandler, startEventDelivery } from './internal.js';
 import { createRealtimeQueue, startRealtimeDelivery } from './realtime-queue.js';
 import { createRealtimePublisher } from './realtime-publisher.js';
-import { createRealtimePresence } from './realtime-presence.js';
+import { createRealtimePresence, startPresenceCleanup } from './realtime-presence.js';
 import { createRealtimeHandler, createRealtimeRpc } from './realtime-rpc.js';
 
 for (const name of ['DATABASE_URL', 'REDIS_URL', 'SECRET_KEY_BASE', 'WALLTAKER_BASE_URL']) {
@@ -182,6 +182,7 @@ if(nativeDeliveryEnabled) {
 }
 const publisher = createRealtimePublisher({ redis, repository, store, readUser, nativeRender:nativeDelivery?.renderRealtime, ...realtimeOptions });
 const presence = realtimePool ? createRealtimePresence({ pool: realtimePool, redis, queue }) : null;
+const stopPresenceCleanup = presence ? startPresenceCleanup(presence) : async()=>{};
 const stopRealtimeDelivery = presence ? startRealtimeDelivery({ queue, deliver: publisher.deliver }) : async () => {};
 const realtimeHandler = presence ? createRealtimeHandler({
   rpc: createRealtimeRpc({ repository, presence, publisher, readUser, sessionViewer, authenticateKey,
@@ -211,7 +212,7 @@ const server = createApiServer({
 });
 server.listen(Number(process.env.PORT || 3002), '0.0.0.0', () => console.log('Wallpaper API listening on 3002'));
 const shutdown = () => {
-  server.close(async () => { await stopAutomation(); await stopNativeDelivery(); await Promise.all([stopDelivery(), stopReactionDelivery(), stopLinkDelivery(), stopRealtimeDelivery(), stopSocialDelivery(), stopTrackerDelivery(), stopModerationDelivery(), stopAutomationDelivery()]); await Promise.all([pool.end(), writerPool?.end(), managerPool?.end(), realtimePool?.end(), socialPool?.end(), discoveryPool?.end(), trackerPool?.end(), moderationPool?.end(), automationPool?.end(), activityPool?.end(), browserPool?.end(), deliveryPool?.end(), redis.close()]); process.exit(0); });
+  server.close(async () => { await stopAutomation(); await stopNativeDelivery(); await Promise.all([stopDelivery(), stopReactionDelivery(), stopLinkDelivery(), stopRealtimeDelivery(), stopPresenceCleanup(), stopSocialDelivery(), stopTrackerDelivery(), stopModerationDelivery(), stopAutomationDelivery()]); await Promise.all([pool.end(), writerPool?.end(), managerPool?.end(), realtimePool?.end(), socialPool?.end(), discoveryPool?.end(), trackerPool?.end(), moderationPool?.end(), automationPool?.end(), activityPool?.end(), browserPool?.end(), deliveryPool?.end(), redis.close()]); process.exit(0); });
   setTimeout(() => process.exit(1), 10000).unref();
 };
 process.once('SIGTERM', shutdown);

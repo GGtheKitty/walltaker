@@ -74,7 +74,7 @@ test('homepage, Browse, search and recommendations with production read-only gra
   // Same timestamp history rows must not duplicate a Browse card.
   await admin.query('INSERT INTO past_links(link_id,user_id,created_at) VALUES(9,1,$1),(9,1,$1)',[new Date(clock-30000)]);
   for(let id=20;id<32;id++)await admin.query(`INSERT INTO links(id,user_id,terms,created_at,updated_at) VALUES($1,1,'paginationmarker',$2,$2)`,[id,new Date(clock)]);
-  await redis.sAdd('link:4:ws_clients','discovery-test');
+  await redis.zAdd('link:4:ws_client_leases', {score:Date.now()/1000,value:'discovery-test'});
   const read=createDiscovery({pool,store:createRedisStore(redis),cache:createDiscoveryCache(redis),now:()=>clock});
   await redis.del('node:discovery:statistics:v1:2026-10-23');
   const ids=rows=>rows.map(row=>Number(row.id));
@@ -120,10 +120,10 @@ test('homepage, Browse, search and recommendations with production read-only gra
    const empty=await read('search',{query:'paginationmarker',page:4});assert.deepEqual(empty.links,[]);assert.equal(empty.total,12);
    const selected=await read('search',{query:'!candidate',page:2});assert.equal(selected.query,'!candidate');assert.ok(selected.total>5);assert.equal(selected.page,2);
    assert.equal((await read('search',{query:'paginationmarker',only_online:true})).total,0);
-   await redis.sAdd('link:20:ws_clients','discovery-test');assert.equal((await read('search',{query:'paginationmarker',only_online:true})).total,1);await redis.del('link:20:ws_clients');
+   await redis.zAdd('link:20:ws_client_leases', {score:Date.now()/1000,value:'discovery-test'});assert.equal((await read('search',{query:'paginationmarker',only_online:true})).total,1);await redis.del('link:20:ws_client_leases');
   });
   await t.test('subsequent reads immediately remove newly hidden, expired, deleted and disconnected links',async()=>{
-   assert.ok(ids((await read('browse')).links).includes(4));await redis.del('link:4:ws_clients');assert.ok(!ids((await read('browse')).links).includes(4));
+   assert.ok(ids((await read('browse')).links).includes(4));await redis.del('link:4:ws_client_leases');assert.ok(!ids((await read('browse')).links).includes(4));
    await admin.query('UPDATE links SET friends_only=true WHERE id=1');assert.ok(!ids((await read('browse')).links).includes(1));
    assert.ok(!(await read('recent')).recent_posts.some(p=>Number(p.link_id)===1));assert.deepEqual((await read('viewers')).viewers,[]);
    await admin.query('UPDATE links SET friends_only=false WHERE id=1');
@@ -139,5 +139,5 @@ test('homepage, Browse, search and recommendations with production read-only gra
    await admin.query('UPDATE links SET friends_only=true WHERE id=2');const selected=Number((await read('similar',{link_id:1})).link_id);assert.ok(![1,2,6,7,8].includes(selected));
    await admin.query('UPDATE links SET friends_only=true WHERE id<>1');assert.equal((await read('similar',{link_id:1})).link_id,null);
   });
- } finally {if(redis?.isOpen){await redis.del(['link:4:ws_clients','link:20:ws_clients','node:discovery:statistics:v1:2026-10-23']);await redis.close();}await pool?.end();await admin?.end();await bootstrap.end();}
+ } finally {if(redis?.isOpen){await redis.del(['link:4:ws_client_leases','link:20:ws_client_leases','node:discovery:statistics:v1:2026-10-23']);await redis.close();}await pool?.end();await admin?.end();await bootstrap.end();}
 });

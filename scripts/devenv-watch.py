@@ -15,6 +15,8 @@ SERVICES = ["web", "e621_media", "wallpaper_api", "accounts", "router", "cable"]
 
 
 def action_for(path):
+    if path.startswith("services/anycable/") and (path.endswith((".go", ".patch")) or Path(path).name == "Dockerfile"):
+        return "build_cable"
     if (path.startswith(("app/views/", "nuttracker/app/views/")) and path.endswith((".erb", ".jbuilder"))) or path == "scripts/compile-node-views.rb":
         return "compile_views"
     if path in {".env", ".env.example", "walltaker.env", "docker-compose.yml", "docker-compose-devenv.yml"}:
@@ -71,6 +73,15 @@ def run(*args):
 
 def apply_changes(paths):
     actions = {action_for(path) for path in paths}
+    if "build_cable" in actions:
+        # Compiling the cable server needs headroom on the small preview VPS.
+        run("stop", "web")
+        try:
+            subprocess.run(["docker", "build", "--memory=768m", "--memory-swap=768m",
+                "--cpu-period=100000", "--cpu-quota=100000", "-t", "walltaker-anycable:liveness-node",
+                "services/anycable"], cwd=ROOT, check=True, timeout=1800)
+        finally:
+            run("up", "-d", "--no-deps", "web")
     if "build_web" in actions:
         run("build", "web")
     if "build_media" in actions:
@@ -84,6 +95,8 @@ def apply_changes(paths):
     else:
         if actions & {"build_web", "restart_web"}:
             run("up", "-d", "--no-deps", "--force-recreate", "web")
+        if "build_cable" in actions:
+            run("up", "-d", "--no-deps", "--force-recreate", "cable")
         if "build_media" in actions:
             run("up", "-d", "--no-deps", "--force-recreate", "e621_media")
         if "build_api" in actions:

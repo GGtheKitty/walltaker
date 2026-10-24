@@ -42,16 +42,20 @@ test('live updates and presence with real PostgreSQL grants and Redis', {
     redis = createClient({ url:process.env.TEST_REDIS_URL }); await redis.connect(); await redis.flushDb();
     const queue = createRealtimeQueue(redis);
     const presence = createRealtimePresence({ pool:role,redis,queue });
+    let clock=Date.now();
+    const leasedPresence=createRealtimePresence({pool:role,redis,queue,now:()=>clock});
+    const leaseStore=createRedisStore(redis,{now:()=>clock});
     const row = async (id=1) => (await admin.query('SELECT * FROM links WHERE id=$1',[id])).rows[0];
     const viewing = async () => (await admin.query('SELECT viewing_link_id FROM users WHERE id=1')).rows[0].viewing_link_id;
     await t.test('multiple clients keep a link online until the last disconnect and retain the original start time', async () => {
       await presence.join('1','one','Desktop');
       const started = (await row()).live_client_started_at;
-      assert.ok(started); assert.equal(await redis.sCard('link:1:ws_clients'),1);
+      assert.ok(started); assert.equal(await redis.zCard('link:1:ws_client_leases'),1);
+      assert.ok(Math.abs(Number(await redis.zScore('link:1:ws_client_leases','one'))-Date.now()/1000)<5);
       await presence.join('1','two','Desktop 2'); await presence.join('1','one','Desktop');
       assert.equal((await row()).live_client_started_at.getTime(),started.getTime());
-      await presence.leave('1','one'); assert.equal(await redis.sCard('link:1:ws_clients'),1);
-      await presence.leave('1','two'); assert.equal(await redis.sCard('link:1:ws_clients'),0);
+      await presence.leave('1','one'); assert.equal(await redis.zCard('link:1:ws_client_leases'),1);
+      await presence.leave('1','two'); assert.equal(await redis.zCard('link:1:ws_client_leases'),0);
       assert.equal((await row()).live_client_started_at.getTime(),started.getTime());
       assert.ok(await redis.zScore(QUEUE_KEYS[0],'presence-link:1'));
       assert.ok(await redis.zScore(QUEUE_KEYS[0],'user:Alice'));
@@ -63,7 +67,7 @@ test('live updates and presence with real PostgreSQL grants and Redis', {
       await presence.announce('1','New desktop'); assert.equal((await row()).last_ping_user_agent,'New desktop');
       await presence.poll('1',{}); assert.equal((await row()).last_ping_user_agent,'New desktop');
       assert.equal(await presence.join('3','inactive','App'),false);
-      assert.equal(await redis.sCard('link:3:ws_clients'),0);
+      assert.equal(await redis.zCard('link:3:ws_client_leases'),0);
       await presence.poll('3',{ 'user-agent':'App' }); assert.equal((await row(3)).last_ping,null);
     });
     await t.test('browser tabs cannot remove another tab presence and transitions notify both links', async () => {
@@ -80,6 +84,30 @@ test('live updates and presence with real PostgreSQL grants and Redis', {
       await Promise.all([presence.view(1,'tab-a','1'),presence.view(1,'tab-b','2')]);
       await presence.view(1,'tab-b',null); assert.equal(await viewing(),'1');
       await presence.view(1,'tab-a',null); assert.equal(await viewing(),null);
+    });
+    await t.test('five-minute per-connection leases renew independently and preserve the original start timestamp',async()=>{
+      await leasedPresence.join('1','stale-client','App');await leasedPresence.join('1','live-client','App');
+      const started=(await row()).live_client_started_at.getTime();
+      clock+=240000;await leasedPresence.heartbeat([{id:'1',token:'live-client'}],null,'socket');clock+=120000;
+      assert.deepEqual(await leaseStore.connected(['1']),new Set(['1']));
+      assert.equal(await redis.zCard('link:1:ws_client_leases'),1);
+      assert.equal((await row()).live_client_started_at.getTime(),started);
+      await leasedPresence.leave('1','live-client');assert.equal(await redis.zCard('link:1:ws_client_leases'),0);
+      clock=Date.now();
+    });
+    await t.test('all online readers prune expired leases instead of trusting old presence sets',async()=>{
+      await redis.zAdd('link:1:ws_client_leases',{score:Date.now()/1000-301,value:'expired'});
+      await redis.sAdd('link:1:ws_clients','legacy');
+      assert.equal((await leaseStore.connected(['1'])).size,0);assert.ok(!(await leaseStore.onlineIds()).includes('1'));
+      await redis.del('link:1:ws_clients');
+    });
+    await t.test('viewer heartbeats preserve tab ordering and expired tabs cannot keep an old viewing target',async()=>{
+      clock=Date.now();await leasedPresence.view(1,'old-tab','1');clock++;
+      await leasedPresence.view(1,'new-tab','2');
+      clock+=240000;await leasedPresence.heartbeat([],1,'old-tab');assert.equal(await viewing(),'2');
+      clock+=120000;await leasedPresence.heartbeat([],1,'old-tab');assert.equal(await viewing(),'1');
+      clock+=301000;await leasedPresence.sweep();assert.equal(await viewing(),null);
+      clock=Date.now();
     });
     await t.test('actual database role cannot read credentials or change wallpapers, permissions or accounts', async () => {
       for (const sql of ['SELECT api_key FROM users','SELECT email FROM users','SELECT password_digest FROM users',

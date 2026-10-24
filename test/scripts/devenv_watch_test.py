@@ -27,6 +27,19 @@ class PreviewWatcherTest(unittest.TestCase):
         self.assertEqual("build_accounts", watcher.action_for("services/accounts/package-lock.json"))
 
     @patch.object(watcher, "run")
+    @patch.object(watcher.subprocess, "run", side_effect=subprocess.CalledProcessError(1, "docker"))
+    def test_failed_cable_build_restores_web_and_has_bounded_memory(self, build, run):
+        with self.assertRaises(subprocess.CalledProcessError):
+            watcher.apply_changes(["services/anycable/native_presence.go"])
+        self.assertEqual([call("stop", "web"), call("up", "-d", "--no-deps", "web")], run.call_args_list)
+        self.assertIn("--memory=768m", build.call_args.args[0])
+        self.assertIn("--memory-swap=768m", build.call_args.args[0])
+
+    def test_cable_documentation_does_not_trigger_a_server_rebuild(self):
+        self.assertIsNone(watcher.action_for("services/anycable/README.md"))
+        self.assertEqual("build_cable", watcher.action_for("services/anycable/liveness.patch"))
+
+    @patch.object(watcher, "run")
     def test_tracker_source_restarts_without_reinstalling_gems(self, run):
         watcher.apply_changes(["nuttracker/app/controllers/nuttracker/orgasms_controller.rb"])
         run.assert_called_once_with("up", "-d", "--no-deps", "--force-recreate", "web")

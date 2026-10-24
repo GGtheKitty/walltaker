@@ -1,23 +1,19 @@
 import { createHash } from 'node:crypto';
+import {connectedIds} from './presence-leases.js';
 
 const RATE = `local n = redis.call('INCR', KEYS[1]);
   if n == 1 then redis.call('PEXPIRE', KEYS[1], ARGV[1]) end; return n`;
 
-export function createRedisStore(client) {
+export function createRedisStore(client, {now=Date.now}={}) {
   return {
     async connected(ids) {
-      const counts = await Promise.all(ids.map((id) => client.sCard(`link:${id}:ws_clients`)));
-      return new Set(ids.filter((id, index) => counts[index] > 0).map(String));
+      return connectedIds(client, ids, now());
     },
     async onlineIds() {
       const ids = [];
-      for await (const batch of client.scanIterator({ MATCH: 'link:*:ws_clients', COUNT: 200 })) {
-        const keys = Array.isArray(batch) ? batch : [batch];
-        const counts = await Promise.all(keys.map((key) => client.sCard(key)));
-        keys.forEach((key, index) => {
-          const match = /^link:(\d+):ws_clients$/.exec(key);
-          if (match && counts[index] > 0) ids.push(match[1]);
-        });
+      for await (const batch of client.scanIterator({ MATCH: 'link:*:ws_client_leases', COUNT: 200 })) {
+        const candidates = (Array.isArray(batch) ? batch : [batch]).map(key => /^link:(\d+):ws_client_leases$/.exec(key)?.[1]).filter(Boolean);
+        ids.push(...await connectedIds(client,candidates,now()));
       }
       return ids;
     },

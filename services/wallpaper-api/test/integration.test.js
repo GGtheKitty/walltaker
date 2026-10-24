@@ -55,13 +55,13 @@ test('real PostgreSQL filtering, read permissions, Redis presence and rate limit
       assert.deepEqual(rows.map((row) => row.id).sort(), ['1', '5', '6', '7']);
     });
     await t.test('online listing includes polling, iOS grace period and live WebSocket clients', async () => {
-      await redis.sAdd('link:6:ws_clients', 'socket');
+      await redis.zAdd('link:6:ws_client_leases', {score:Date.now()/1000,value:'socket'});
       const onlineIds = await store.onlineIds();
       assert.deepEqual(onlineIds, ['6']);
       assert.deepEqual(await store.connected(['1', '6']), new Set(['6']));
       const rows = await repository.list({ onlyOnline: true, onlineIds, now });
       assert.deepEqual(rows.map((row) => row.id).sort(), ['1', '5', '6']);
-      await redis.del('link:6:ws_clients');
+      await redis.del('link:6:ws_client_leases');
       assert.deepEqual(await store.onlineIds(), []);
     });
     await t.test('listing retains the maximum of 100 entries', async () => {

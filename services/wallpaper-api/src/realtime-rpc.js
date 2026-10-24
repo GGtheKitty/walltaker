@@ -82,7 +82,9 @@ export function createRealtimeRpc({ repository, presence, publisher, readUser, s
       if (params.channel === 'WebPresenceChannel') await presence.view(viewerId, connectionId, null);
     } else if (payload.command === 'message') {
       const data = parse(payload.data);
-      if (params.channel === 'LinkChannel') {
+      if (data.action === 'heartbeat' && ['LinkChannel','WebPresenceChannel'].includes(params.channel)) {
+        await presence.heartbeat(Object.values(links), viewerId, connectionId);
+      } else if (params.channel === 'LinkChannel') {
         if (data.action === 'check') { const row = await findLink(); if (row) await watchLink(row); }
         else if (data.action === 'announce_client') { const row = await findLink(); if (row) await presence.announce(row.id, clientIdentity(data)); }
         else if (data.action === 'unwatch_user') { stopUser(); transmit({ type: 'user', success: true, watching: false }); }
