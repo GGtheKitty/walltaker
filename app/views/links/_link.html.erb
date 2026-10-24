@@ -1,5 +1,18 @@
 <%= turbo_stream_from link %>
 
+
+
+<% content_for :og_description do %>
+  <%= [
+    ("Send #{link.user.username} some nice wallpapers!"),
+    ("theme: #{link.theme}" if link.theme.present?),
+    ("score > #{link.min_score}" if link.min_score.present? && link.min_score > 0),
+    "\n",
+    "Current client: #{current_client}"
+  ].compact.join(" ") %>
+<% end %>
+<% content_for :og_image, image_url('logos/WT_wallpaper.png') %>
+
 <%= turbo_frame_tag dom_id(link), target: '_top' do %>
   <% if !link.never_expires && link.expires <= Time.now.utc %>
     <div class="accent-block accent-block--link">
