@@ -120,4 +120,15 @@ Rails.application.configure do
   # ]
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # The VPS preview reloads source without extra Rails workers or asset builds.
+  if ENV["WALLTAKER_LIVE_RELOAD"] == "true"
+    config.enable_reloading = true
+    config.eager_load = false
+    config.action_controller.perform_caching = false
+    config.cache_store = :null_store
+    config.assets.compile = true
+    config.assets.prefix = "/live-assets"
+    config.public_file_server.headers = { "Cache-Control" => "no-store" }
+  end
+
 end

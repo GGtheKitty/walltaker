@@ -140,3 +140,24 @@ Get details about this user's status such as if they're online, a friend, or the
   "self": false // 🔐 If they are logged in as this api_key's user, requires api_key param.
 }
 ```
+
+### WebSocket liveness and presence expiry
+
+`LinkPresence` now stores a five-minute lease for each connection. Successful
+native WebSocket pong replies renew that connection's leases every 30 seconds.
+Normal disconnects remove memberships immediately; expired members are also
+removed whenever presence is queried. User-status responses evaluate current
+presence rather than reusing cached online-link lists. A healthy client cannot keep another
+client's stale membership alive.
+
+Both Compose variants enable native WebSocket pings and a 60-second pong timeout
+while retaining the three-second Action Cable ping interval and `always`
+disconnect callbacks. This uses the [AnyCable native ping/pong settings](https://docs.anycable.io/anycable-go/options).
+Wallpaper clients need to process WebSocket control frames; standard browsers and
+WebSocket libraries handle pong replies automatically.
+
+The cable image is built from the pinned upstream revision with a small liveness
+patch. See [services/anycable/README.md](services/anycable/README.md) for the source
+pin, deadline correction, renewal behavior and tests. Build the cable image before
+deploying this change; recreating cable reconnects existing clients into the new
+lease namespace. The older Redis sets are not used to determine online status.

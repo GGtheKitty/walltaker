@@ -40,6 +40,21 @@ class LinkChannelTest < ActionCable::Channel::TestCase
     travel_back
   end
 
+  test 'server heartbeats renew connection leases without changing the historical start time' do
+    stub_connection current_user: nil, client_identity: 'presence-test'
+    connection.singleton_class.attr_accessor :watched_links
+    connection.watched_links = {}
+    subscribe id: @link.id
+    started_at = @link.reload.live_client_started_at
+    travel 4.minutes
+    perform :heartbeat
+    travel 2.minutes
+    assert @link.reload.is_online?
+    assert_equal started_at.to_i, @link.live_client_started_at.to_i
+  ensure
+    travel_back
+  end
+
   test 'unsubscribing keeps live_client_started_at as historical timestamp' do
     subscribe id: @link.id
     started_at = @link.reload.live_client_started_at

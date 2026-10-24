@@ -43,3 +43,6 @@
 # Local database dumps and Docker volumes
 *.dump
 .docker/volumes/
+# Generated development caches (kept out of branch-switch diffs).
+**/node_modules/
+**/__pycache__/

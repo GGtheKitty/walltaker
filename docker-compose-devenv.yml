@@ -1,0 +1,15 @@
+# VPS preview for dev-ggthekitty. Reuse installed gems, reload source, keep one Puma process.
+services:
+  web:
+    image: walltaker-web:devenv
+    command: ["bash", "-lc", "exec bundle exec rails server -e production -b 0.0.0.0 -P /tmp/walltaker-devenv.pid"]
+    environment:
+      WALLTAKER_LIVE_RELOAD: "true"
+      SOLID_QUEUE_IN_PUMA: "false"
+      WEB_CONCURRENCY: "0"
+      RAILS_MAX_THREADS: "4"
+    healthcheck:
+      test: ["CMD", "ruby", "-rnet/http", "-e", "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/up')).code == '200' ? 0 : 1)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s

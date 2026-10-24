@@ -9,6 +9,30 @@ class UserTest < ActiveSupport::TestCase
     assert_not user.valid?
   end
 
+  test 'online status reflects current connection leases despite old cache entries' do
+    user = User.create!(username: 'PresenceCacheUser', email: 'presence-cache@example.com',
+                        password: 'password', password_confirmation: 'password')
+    link = Link.create!(user:, never_expires: true, friends_only: false, terms: '',
+                        theme: '', blacklist: '', min_score: 0)
+    original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    %w[as-anon as-friend].each do |audience|
+      Rails.cache.write("v1/user-api/#{user.username}/online-links/#{audience}", [])
+    end
+    LinkPresence.join(link, 'cache-check')
+    assert user.api_payload[:online]
+    assert user.api_payload(audience: :friend)[:online]
+
+    LinkPresence.leave(link, 'cache-check')
+    %w[as-anon as-friend].each do |audience|
+      Rails.cache.write("v1/user-api/#{user.username}/online-links/#{audience}", [link.id])
+    end
+    assert_not user.api_payload[:online]
+    assert_not user.api_payload(audience: :friend)[:online]
+  ensure
+    Rails.cache = original_cache if original_cache
+  end
+
   test 'system account username, password, and status are immutable' do
     user = User.create!(
       username: 'SystemModelAccount',

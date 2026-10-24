@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get 'up', to: 'rails/health#show', as: :rails_health_check
   mount ActionCable.server => '/cable'
   resources :leashes, except: %i[index], as: :leashes
   get 'news_room/index'

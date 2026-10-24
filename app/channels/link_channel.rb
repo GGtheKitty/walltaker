@@ -26,6 +26,12 @@ class LinkChannel < ApplicationCable::Channel
     self.watched_link_id = nil
   end
 
+  # Invoked by AnyCable after successful native pongs, at most every 30 seconds.
+  # Renewal is limited to this connection's server-owned membership tokens.
+  def heartbeat
+    LinkPresence.refresh_many(connection.watched_links || {})
+  end
+
   def check
     link_identifier = params[:id].presence || params[:link_id].presence
     return unless link_identifier

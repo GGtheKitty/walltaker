@@ -249,8 +249,11 @@ class User < ApplicationRecord
     authenticated = audience != :anonymous
     has_friendship = audience == :friend
     self_view = audience == :self
-    online_links_ids = Rails.cache.fetch("v1/user-api/#{username}/online-links/as-anon", expires: 7.minutes) { link.where(friends_only: false).and(link.where('expires > ?', Time.now).or(link.where(never_expires: true))).and(link.is_online).pluck(:id) } unless has_friendship
-    online_links_ids = Rails.cache.fetch("v1/user-api/#{username}/online-links/as-friend", expires: 7.minutes) { link.where('expires > ?', Time.now).or(link.where(never_expires: true)).and(link.is_online).pluck(:id) } if has_friendship
+    # Presence changes independently of user records. Evaluate current leases so
+    # disconnect broadcasts and API reads cannot reuse an obsolete online list.
+    online_links = link.where('expires > ?', Time.now).or(link.where(never_expires: true))
+    online_links = online_links.where(friends_only: false) unless has_friendship
+    online_links_ids = online_links.and(link.is_online).pluck(:id)
     public_links = link.where(friends_only: false).and(link.where('expires > ?', Time.now).or(link.where(never_expires: true)))
 
     payload = {
