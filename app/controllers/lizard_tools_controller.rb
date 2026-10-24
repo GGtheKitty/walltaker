@@ -1,5 +1,7 @@
 class LizardToolsController < ApplicationController
   before_action :authorize_with_admin_or_lizard
+  before_action :serve_node_moderation
+
   def index
   end
 

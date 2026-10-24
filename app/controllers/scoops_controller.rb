@@ -1,5 +1,7 @@
 class ScoopsController < ApplicationController
+  include NodeSocialActions
   before_action :authorize, only: %i[index new create edit update destroy]
+  before_action :serve_node_social
 
   def index
     @scoops = current_user.scoops.order(created_at: :desc).limit(40)

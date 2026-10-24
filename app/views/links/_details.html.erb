@@ -19,7 +19,7 @@
       <% if link.past_links.last.present? %>
         by
         <% if link.past_links.last.set_by_id.present? %>
-          <% set_by = User.find(link.past_links.last.set_by_id) %>
+          <% set_by = link.past_links.last.set_by %>
           <%= link_to set_by.username, user_path(set_by.username), target: '_top', data: { controller: 'user-reference' } %>
         <% else %>
           anon

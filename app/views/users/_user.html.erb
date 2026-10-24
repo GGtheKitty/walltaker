@@ -11,7 +11,7 @@
   <p><%= truncate(strip_tags(user.details), length: 80, separator: ' ', escape: false) %></p>
 
   <div class="wallpapers">
-    <% past_links = user.past_links.limit 12 %>
+    <% past_links = user.instance_variable_get(:@node_browser_recent_sets) || user.past_links.limit(12) %>
     <% past_links.each do |pl| %>
       <%= image_tag pl.post_thumbnail_url, style: "transform: scale(#{rand(2) + 1})" if pl.present? && pl.post_thumbnail_url.present? %>
     <% end %>

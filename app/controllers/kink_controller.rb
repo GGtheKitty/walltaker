@@ -1,6 +1,8 @@
 class KinkController < ApplicationController
+  include NodeSocialActions
   include ActionView::RecordIdentifier
-  before_action :authorize, only: %i[update remove toggle_star]
+  before_action :authorize, only: %i[new update remove toggle_star]
+  before_action :serve_node_social
 
   def users_kinks
     @user = User.active.find_by_username(params['user_id'])
@@ -18,7 +20,7 @@ class KinkController < ApplicationController
   end
 
   def search_kinks
-    @link = Link.find(params[:link_id])
+    @link = NodeBrowserBackend.enabled? ? browser_link(params[:link_id], purpose: 'search') : Link.find(params[:link_id])
     return redirect_to root_path unless @link
 
     @user = @link.user
@@ -27,8 +29,14 @@ class KinkController < ApplicationController
   end
 
   def test_on_e621
-    kink = Kink.find(params['id'])
-    kink.test_on_e621 if kink
+    kink = NodeBrowserBackend.enabled? ? NodeBrowserBackend.find(Kink, params['id']) : Kink.find(params['id'])
+    if NodeBrowserBackend.enabled?
+      posts = get_tag_results(kink.name, nil, nil, nil, 1)
+      result = NodeSocialBackend.request('kink-status', kink_id: kink.id, works: posts.present?)
+      kink.works_on_e621 = result.fetch('works')
+    else
+      kink.test_on_e621 if kink
+    end
 
     if kink.works_on_e621?
       render turbo_stream: turbo_stream.update((dom_id(kink) + '_e621_status'), partial: 'kink/e621_status', locals: { kink: })

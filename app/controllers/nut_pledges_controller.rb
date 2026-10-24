@@ -1,6 +1,7 @@
 class NutPledgesController < ApplicationController
-  before_action :require_nnn_enabled
+  before_action :require_nnn_enabled, unless: -> { NodeTrackerBackend.enabled? }
   before_action :authorize, except: [:show, :history]
+  before_action :serve_node_tracker
   before_action :set_user
   before_action :must_be_current_user, except: [:show, :history]
 

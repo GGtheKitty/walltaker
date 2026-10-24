@@ -35,14 +35,14 @@
   <small>The highlighted button in each category is the most useful.</small>
 </h2>
 
-<%= button_to "Report Queue (#{Report.where(is_closed: false).count})", mod_tools_reports_path, method: :get %>
+<%= button_to "Report Queue (#{(@moderation_dashboard ? @moderation_dashboard.fetch('open_reports') : Report.where(is_closed: false).count)})", mod_tools_reports_path, method: :get %>
 <%= button_to "Closed tickets", mod_tools_reports_path, method: :get, params: {closed: true}, class: 'secondary' %>
 
 <section>
   <h3>Account issues</h3>
   <%= button_to "They forgot their password", mod_tools_passwords_index_path, method: :get %>
   <%= button_to "Edit a user", mod_tools_users_index_path, method: :get, class: 'secondary' %>
-  <%= button_to "Profile Domains (#{ProfileDomain.pending.count} pending)", mod_tools_profile_domains_path, method: :get, class: 'secondary' %>
+  <%= button_to "Profile Domains (#{(@moderation_dashboard ? @moderation_dashboard.fetch('pending_domains') : ProfileDomain.pending.count)} pending)", mod_tools_profile_domains_path, method: :get, class: 'secondary' %>
 </section>
 
 <section>
@@ -54,7 +54,7 @@
 
 <section>
   <h3>Misc. Fun</h3>
-  <% nnn_enabled = SiteConfig.nnn_enabled? %>
+  <% nnn_enabled = @moderation_dashboard ? @moderation_dashboard.fetch('settings').fetch('nnn_enabled', false) : SiteConfig.nnn_enabled? %>
   <%= button_to(
         nnn_enabled ? "Disable NNN" : "Enable NNN",
         mod_tools_toggle_nnn_path,

@@ -1,0 +1,15 @@
+[Unit]
+Description=Update the Walltaker node preview from the local checkout
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/walltaker/repo
+ExecStart=/usr/bin/python3 -u /root/walltaker/repo/scripts/devenv-watch.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

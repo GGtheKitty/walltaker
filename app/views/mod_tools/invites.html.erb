@@ -1,3 +1,4 @@
+<% invite_only = @moderation_settings ? @moderation_settings.fetch('invite_only', false) : SiteConfig.invite_only? %>
 <% content_for(:html_title) { 'Invite Management' } %>
 
 <h2>
@@ -8,18 +9,18 @@
 <section>
   <h3>Invite-only mode</h3>
   <p>
-    <% if SiteConfig.invite_only? %>
+    <% if invite_only %>
       New accounts require an unused invite code. The shared evil account cannot be logged into.
     <% else %>
       Anyone can create an account without an invite code.
     <% end %>
   </p>
   <%= button_to(
-        SiteConfig.invite_only? ? 'Disable invite-only mode' : 'Enable invite-only mode',
+        invite_only ? 'Disable invite-only mode' : 'Enable invite-only mode',
         mod_tools_toggle_invite_only_path,
         method: :post,
-        class: SiteConfig.invite_only? ? 'secondary' : nil,
-        form: { data: { turbo_confirm: "#{SiteConfig.invite_only? ? 'Open registration to everyone?' : 'Require an invite for every new account?'}" } }
+        class: invite_only ? 'secondary' : nil,
+        form: { data: { turbo_confirm: "#{invite_only ? 'Open registration to everyone?' : 'Require an invite for every new account?'}" } }
       ) %>
 </section>
 
@@ -62,3 +63,5 @@
 </section>
 
 <%= link_to 'Back to Mod Tools', mod_tools_index_path %>
+
+<%= render "mod_tools/pagination" %>

@@ -1,0 +1,140 @@
+{
+  "secretKeyBase": "node-proxy-test-secret",
+  "baseUrl": "https://devenv.playctrl.me",
+  "detail": {
+    "id": 9876543210,
+    "expires": "2100-01-01T00:00:00.000Z",
+    "terms": "Fixture terms",
+    "blacklist": "fixture_blacklist",
+    "post_url": "https://static1.e621.net/data/ab/cd/0123456789abcdef0123456789abcdef.jpg",
+    "post_thumbnail_url": "https://static1.e621.net/data/sample/fixture.jpg",
+    "created_at": "2024-01-01T00:00:00.000Z",
+    "updated_at": "2025-01-01T00:00:00.000Z",
+    "response_type": "ok",
+    "response_text": "Thanks",
+    "post_url_backup": "https://devenv.playctrl.me/e621-media?token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJazFvZEhSd2N6b3ZMM04wWVhScFl6RXVaVFl5TVM1dVpYUXZaR0YwWVM5aFlpOWpaQzh3TVRJek5EVTJOemc1WVdKalpHVm1NREV5TXpRMU5qYzRPV0ZpWTJSbFppNXFjR2NHT2daRlZBPT0iLCJleHAiOm51bGwsInB1ciI6ImU2MjFfbWVkaWEifX0%3D--6ba8065f4f6b2b124b618fabc13d1945e2c43d98",
+    "username": "FixtureOwner",
+    "set_by": "FixtureSetter",
+    "online": false,
+    "post_description": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀...",
+    "url": "https://devenv.playctrl.me/links/9876543210.json"
+  },
+  "listEntry": {
+    "id": 9876543210,
+    "expires": "2100-01-01T00:00:00.000Z",
+    "terms": "Fixture terms",
+    "blacklist": "fixture_blacklist",
+    "post_url": "https://static1.e621.net/data/ab/cd/0123456789abcdef0123456789abcdef.jpg",
+    "post_thumbnail_url": "https://static1.e621.net/data/sample/fixture.jpg",
+    "created_at": "2024-01-01T00:00:00.000Z",
+    "updated_at": "2025-01-01T00:00:00.000Z",
+    "response_type": "ok",
+    "response_text": "Thanks",
+    "post_url_backup": "https://devenv.playctrl.me/e621-media?token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJazFvZEhSd2N6b3ZMM04wWVhScFl6RXVaVFl5TVM1dVpYUXZaR0YwWVM5aFlpOWpaQzh3TVRJek5EVTJOemc1WVdKalpHVm1NREV5TXpRMU5qYzRPV0ZpWTJSbFppNXFjR2NHT2daRlZBPT0iLCJleHAiOm51bGwsInB1ciI6ImU2MjFfbWVkaWEifX0%3D--6ba8065f4f6b2b124b618fabc13d1945e2c43d98",
+    "username": "FixtureOwner",
+    "online": false,
+    "post_description": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀..."
+  },
+  "widget": {
+    "name": "Walltaker Link 9876543210",
+    "description": "Shows the current wallpaper for FixtureOwner's link.",
+    "version": 1,
+    "data": {
+      "content_url": "https://devenv.playctrl.me/links/9876543210",
+      "wallpaper": "https://static1.e621.net/data/sample/fixture.jpg"
+    },
+    "layouts": {
+      "small_layout": {
+        "size": "small",
+        "styles": {
+          "colours": {
+            "background_colour": {
+              "color": "#00000066"
+            }
+          }
+        },
+        "layers": [
+          {
+            "rows": [
+              {
+                "height": 12,
+                "cells": [
+                  {
+                    "width": 12,
+                    "image": {
+                      "data_ref": "wallpaper"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "large_layout": {
+        "size": "large",
+        "styles": {
+          "colours": {
+            "background_colour": {
+              "color": "#00000066"
+            }
+          }
+        },
+        "layers": [
+          {
+            "rows": [
+              {
+                "height": 12,
+                "cells": [
+                  {
+                    "width": 12,
+                    "image": {
+                      "data_ref": "wallpaper"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "rows": [
+              {
+                "height": 10
+              },
+              {
+                "height": 2,
+                "cells": [
+                  {
+                    "width": 12,
+                    "background_color_style": "background_colour",
+                    "padding": 0.5,
+                    "text": {
+                      "string": "From: FixtureSetter"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "row": {
+    "id": 9876543210,
+    "expires": "2100-01-01T00:00:00.000Z",
+    "terms": "Fixture terms",
+    "created_at": "2024-01-01T00:00:00.000Z",
+    "updated_at": "2025-01-01T00:00:00.000Z",
+    "blacklist": "fixture_blacklist",
+    "post_url": "https://static1.e621.net/data/ab/cd/0123456789abcdef0123456789abcdef.jpg",
+    "post_thumbnail_url": "https://static1.e621.net/data/sample/fixture.jpg",
+    "post_description": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+    "last_ping": null,
+    "last_ping_user_agent": "FixtureClient/1.0",
+    "response_text": "Thanks",
+    "response_type": 3,
+    "username": "FixtureOwner",
+    "set_by_username": "FixtureSetter"
+  }
+}

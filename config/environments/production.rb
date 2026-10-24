@@ -71,7 +71,7 @@ Rails.application.configure do
   # RPC endpoint and the health check must remain reachable over container HTTP.
   config.ssl_options = {
     redirect: {
-      exclude: ->(request) { request.path == "/up" || request.path.start_with?("/_anycable") }
+      exclude: ->(request) { request.path == "/up" || request.path.start_with?("/_anycable", "/_internal/wallpaper-presence/", "/_internal/wallpaper-events/", "/_internal/reaction-events/", "/_internal/link-events/", "/_internal/account-events/", "/_internal/social-events/", "/_internal/tracker-events/", "/_internal/moderation-events/", "/_internal/automation-events/") || ["/_internal/api-viewer.json", "/_internal/realtime-render.json"].include?(request.path) }
     }
   }
 
@@ -120,4 +120,16 @@ Rails.application.configure do
   # ]
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  # The public VPS preview uses production error handling and credentials, with
+  # source reloads and dynamic assets enabled only by its Compose override.
+  if ENV["WALLTAKER_LIVE_RELOAD"] == "true"
+    config.enable_reloading = true
+    config.eager_load = false
+    config.action_controller.perform_caching = false
+    config.cache_store = :null_store
+    config.assets.compile = true
+    config.assets.prefix = "/live-assets"
+    config.public_file_server.headers = { "Cache-Control" => "no-store" }
+  end
 end

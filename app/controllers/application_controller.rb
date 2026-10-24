@@ -1,5 +1,15 @@
 class ApplicationController < ActionController::Base
   include Pagy::Backend
+  include NodeTrackerActions
+  include NodeModerationActions
+  include NodeBrowserActions
+  include NodeRenderActions
+  rescue_from NodeActivityBackend::Unavailable do
+    render plain: 'Activity is temporarily unavailable. Please try again.', status: :service_unavailable
+  end
+  rescue_from NodeActivityBackend::Rejected do |error|
+    render plain: error.message, status: error.status
+  end
 
   delegate :get_tag_results, to: :e621_module
   delegate :get_possible_post_count, to: :e621_module
@@ -61,7 +71,19 @@ class ApplicationController < ActionController::Base
     track :visit, request.path unless request.format == :json
   end
 
+  def record_activity(kind, link)
+    return unless current_user
+    if NodeActivityBackend.enabled?
+      NodeActivityBackend.request('record', actor_id: current_user.id, surrender_id: browser_surrender_id,
+        kind:, link_id: link.id, visit: NodeActivityBackend.visit_proof(current_visit),
+        request_key: "history:#{request.request_id}:#{kind}:#{link.id}")
+    else
+      HistoryEvent.record(current_user, kind, link, surrender_controller, current_visit)
+    end
+  end
+
   def current_user
+    return node_browser_context.user if NodeBrowserBackend.enabled?
     @current_user ||= User.active.find_by(id: cookies.signed[:permanent_session_id]) if cookies.signed[:permanent_session_id]
     @current_user ||= User.active.find_by(id: session[:user_id]) if session[:user_id]
 
@@ -72,7 +94,12 @@ class ApplicationController < ActionController::Base
 
   def notifications
     if current_user
-      Notification.all.where(user: current_user).order(id: :desc).limit(5)
+      if NodeSocialBackend.enabled?
+        @node_notifications ||= NodeSocialBackend.records(NodeSocialBackend.request('notifications',
+          actor_id: current_user.id, surrender_id: current_surrender_session&.id, header: true), 'notifications', Notification)
+      else
+        Notification.all.where(user: current_user).order(id: :desc).limit(5)
+      end
     else
       []
     end
@@ -82,6 +109,15 @@ class ApplicationController < ActionController::Base
 
   def log_link_presence (link)
     if request.format == :json
+      if NodeRealtime.enabled?
+        headers = %w[user-agent joihow user_agent wallpaper-engine-client].to_h { |name| [name, request.headers[name]] }.compact
+        begin
+          NodeRealtime.poll(link, headers)
+        rescue StandardError => error
+          Rails.logger.warn("Node presence failed: #{error.class}")
+        end
+        return
+      end
       link.last_ping = Time.now.utc
       link.last_ping_user_agent = request.user_agent if request.user_agent
       link.last_ping_user_agent = @link.last_ping_user_agent + ' ' + request.headers['joihow'] if @link.last_ping_user_agent && request.headers['joihow']
@@ -140,6 +176,7 @@ class ApplicationController < ActionController::Base
   helper_method :surrender_controller
 
   def current_surrender_session
+    return node_browser_context.surrender if NodeBrowserBackend.enabled?
     return nil unless helpers.is_surrender_controller_session?
 
     surrender = Surrender.find_by(id: cookies.signed[:surrender_id])
@@ -155,12 +192,16 @@ class ApplicationController < ActionController::Base
   # @param [User] user
   # @param [Surrender] surrender
   def log_in_as(user, surrender = nil)
+    if NodeBrowserBackend.enabled?
+      node_browser_transition(surrender ? 'surrender-assume' : 'assume', user_id: user.id, id: surrender&.id)
+      return redirect_to root_path
+    end
     session[:user_id] = user.id
     cookies.signed[:permanent_session_id] = nil
 
     if surrender
       cookies.signed[:surrender_id] = surrender.id
-      Notification.create user:, notification_type: :surrender_event, link: root_path, text: "#{surrender.controller.username} logged in as you."
+      Notification.create user:, notification_type: :surrender_event, link: root_path, text: "#{surrender.controller.username} logged in as you." unless NodeSocialBackend.enabled?
       redirect_to root_path, notice: "#{surrender.controller.username} has logged in as #{ user.username }"
     else
       cookies.signed[:surrender_id] = nil
@@ -170,13 +211,23 @@ class ApplicationController < ActionController::Base
   end
 
   def kick_bad_surrender_controllers
+    if NodeBrowserBackend.enabled?
+      return redirect_to(login_path, alert: 'Account surrender for user is over.') if node_browser_context.data['expired_delegation']
+      return
+    end
     if helpers.is_surrender_controller_session?
       begin
         surrender = Surrender.find(cookies.signed[:surrender_id])
         if !surrender || !surrender.active?
           session[:user_id] = nil
           cookies.signed[:surrender_id] = nil
-          surrender.destroy if surrender
+          if surrender
+            if NodeSocialBackend.enabled? && surrender.expires_at <= Time.current
+              NodeSocialBackend.command('surrender-expire', actor: current_user, id: surrender.id)
+            elsif !NodeSocialBackend.enabled?
+              surrender.destroy
+            end
+          end
           return redirect_to new_session_url, alert: 'Account surrender for user is over.'
         end
       rescue
@@ -188,6 +239,7 @@ class ApplicationController < ActionController::Base
   end
 
   def authorize_for_surrendered_accounts
+    return node_browser_authorize(:surrendered) if NodeBrowserBackend.enabled?
     return redirect_to new_session_url, alert: 'Error 500, service/E621 down?' if current_visit&.banned_ip.present?
 
     return redirect_to new_session_url, alert: 'Not authorized' if current_user.nil?
@@ -196,6 +248,7 @@ class ApplicationController < ActionController::Base
   end
 
   def authorize
+    return node_browser_authorize(:standard) if NodeBrowserBackend.enabled?
     result = authorize_for_surrendered_accounts
     return result if result
 
@@ -205,8 +258,12 @@ class ApplicationController < ActionController::Base
     if helpers.is_surrender_controller_session? && request.method == 'GET'
       begin
         surrender = Surrender.find(cookies.signed[:surrender_id])
-        surrender.current_page = request.path
-        surrender.save
+        if NodeSocialBackend.enabled?
+          NodeSocialBackend.command('surrender-page', actor: current_user, surrender_id: surrender.id, id: surrender.id, page: request.path) if surrender.current_page != request.path
+        else
+          surrender.current_page = request.path
+          surrender.save
+        end
       rescue
       end
     end
@@ -215,6 +272,7 @@ class ApplicationController < ActionController::Base
   end
 
   def disallow_surrendered_accounts
+    return node_browser_authorize(:standard) if NodeBrowserBackend.enabled? && current_user
     current_surrender = current_user&.current_surrender
     if cookies.signed[:surrender_id].nil? && current_surrender && current_surrender.active?
       return redirect_to current_surrender, alert: "#{current_surrender.user.username} attempted to use walltaker while their account is surrendered."
@@ -224,13 +282,21 @@ class ApplicationController < ActionController::Base
   end
 
   def authorize_with_admin
-    redirect_to '/', alert: 'Not authorized' unless current_user && current_user.admin
+    return node_browser_authorize(:admin) if NodeBrowserBackend.enabled?
+    return redirect_to '/', alert: 'Not authorized' unless current_user && current_user.admin
+    if NodeModerationBackend.enabled?
+      NodeModerationBackend.request('admin-session', actor_id: current_user.id, surrender_id: browser_surrender_id)
+    end
   end
 
   def authorize_with_admin_or_lizard
-    redirect_to '/', alert: 'Not authorized' unless current_user
+    return node_browser_authorize(:lizard) if NodeBrowserBackend.enabled?
+    return redirect_to '/', alert: 'Not authorized' unless current_user
 
     is_lizard = %w[PornLizardWarren PornLizardKi PornLizardTaylor].include?(current_user.username)
-    redirect_to '/', alert: 'Not authorized' unless current_user && (current_user.admin || is_lizard)
+    return redirect_to '/', alert: 'Not authorized' unless current_user && (current_user.admin || is_lizard)
+    if NodeModerationBackend.enabled?
+      NodeModerationBackend.request('lizard-index', actor_id: current_user.id, surrender_id: browser_surrender_id)
+    end
   end
 end

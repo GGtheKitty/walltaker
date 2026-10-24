@@ -1,0 +1,46 @@
+services:
+  database:
+    image: postgres:14
+    mem_limit: 128m
+    memswap_limit: 160m
+    cpus: 0.5
+    environment:
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: wallpaper_api_test
+    command: ["postgres", "-c", "shared_buffers=16MB", "-c", "max_connections=20"]
+    # The image creates an anonymous disk volume. A tmpfs counts every fixture
+    # database against this cap and can OOM PostgreSQL during the full suite.
+    # Remove the disposable volume with `docker compose down --volumes`.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  redis:
+    image: redis:7-alpine
+    mem_limit: 32m
+    memswap_limit: 48m
+    cpus: 0.25
+  test:
+    mem_limit: 160m
+    memswap_limit: 224m
+    cpus: 0.5
+    build:
+      context: ../../..
+      dockerfile: wallpaper-api/Dockerfile
+    command: ["npm", "test"]
+    volumes:
+      - ..:/app/wallpaper-api/test:ro
+      - ../../src:/app/wallpaper-api/src:ro
+      - ../../../../scripts:/scripts:ro
+      - ../../../accounts/src:/app/accounts/src:ro
+      - ../../../accounts/package.json:/app/accounts/package.json:ro
+    environment:
+      NODE_OPTIONS: --max-old-space-size=64
+      TEST_DATABASE_URL: postgres://postgres:test@database:5432/wallpaper_api_test
+      TEST_REDIS_URL: redis://redis:6379/0
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_started

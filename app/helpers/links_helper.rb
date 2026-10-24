@@ -1,5 +1,11 @@
 module LinksHelper
   def link_id_for_decoration(link_id)
+    if NodeBrowserBackend.enabled?
+      @emoji_link_decorations ||= {}
+      unless @emoji_link_decorations.key?(link_id.to_i)
+        @emoji_link_decorations[link_id.to_i] = NodeBrowserBackend.request('decoration', link_id: link_id)['emoji'] || link_id
+      end
+    end
     @emoji_link_decorations ||= EmojiLinkDecoration.emoji_map
     @emoji_link_decorations.fetch(link_id.to_i, link_id)
   end
@@ -7,7 +13,7 @@ module LinksHelper
   def client_for_user_agent(user_agent)
     return if user_agent.blank?
 
-    @recognized_wallpaper_clients ||= WallpaperClient.recognized.to_a
+    @recognized_wallpaper_clients ||= NodeBrowserBackend.enabled? ? (NodeBrowserBackend.context&.graph&.clients || NodeBrowserBackend.request('site').fetch('clients').map { |row| WallpaperClient.instantiate(row) }) : WallpaperClient.recognized.to_a
     @recognized_wallpaper_clients.find { |client| user_agent.include?(client.match_text) }
   end
 

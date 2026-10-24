@@ -1,5 +1,7 @@
 class LeashesController < ApplicationController
+  include NodeSocialActions
   before_action :authorize, only: %i[ show new edit create update destroy ]
+  before_action :serve_node_social
   before_action :set_leash, only: %i[ show edit update destroy ]
 
   # GET /leashes or /leashes.json

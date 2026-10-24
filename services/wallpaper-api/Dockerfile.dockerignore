@@ -1,0 +1,10 @@
+*
+!wallpaper-api/
+!wallpaper-api/package.json
+!wallpaper-api/package-lock.json
+!wallpaper-api/src/
+!wallpaper-api/src/**
+!e621-media/
+!e621-media/package.json
+!e621-media/src/
+!e621-media/src/token.js

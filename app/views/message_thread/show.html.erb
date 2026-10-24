@@ -22,7 +22,12 @@
   <% end %>
 </h2>
 
-<%= turbo_stream_from @message_thread %>
+<% if NodeSocialBackend.enabled? %>
+  <% participant = @message_thread.participants.to_a.find { |p| p.user_id == current_user.id } %>
+  <%= turbo_stream_from "social_thread_member_#{participant.id}_#{current_user.id}" if participant %>
+<% else %>
+  <%= turbo_stream_from @message_thread %>
+<% end %>
 <%= turbo_frame_tag @message_thread, class: 'messages' do %>
   <%= render 'messages_from_thread', message_thread: @message_thread %>
 <% end %>

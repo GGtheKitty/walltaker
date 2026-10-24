@@ -1,5 +1,7 @@
 class FriendshipsController < ApplicationController
-  before_action :authorize, only: %i[index show new edit create update accept destroy]
+  include NodeSocialActions
+  before_action :authorize, only: %i[index requests show new edit create update accept destroy]
+  before_action :serve_node_social
   before_action :set_friendship, only: %i[show edit update accept destroy]
   after_action :track_visit, only: %i[index requests show new]
 

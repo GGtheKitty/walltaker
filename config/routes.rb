@@ -1,4 +1,16 @@
 Rails.application.routes.draw do
+  get 'up', to: 'rails/health#show', as: :rails_health_check
+  post '_internal/moderation-events/:id.json', to: 'internal/moderation_events#create'
+  post '_internal/automation-events/:id.json', to: 'internal/automation_events#create'
+  post '_internal/tracker-events/:id.json', to: 'internal/tracker_events#create'
+  post '_internal/social-events/:id.json', to: 'internal/social_events#create'
+  post '_internal/account-events/:id.json', to: 'internal/account_events#create'
+  post '_internal/realtime-render.json', to: 'internal/realtime_render#create'
+  post '_internal/wallpaper-presence/:id.json', to: 'internal/wallpaper_presence#create'
+  post '_internal/wallpaper-events/:id.json', to: 'internal/wallpaper_events#create'
+  post '_internal/reaction-events/:id.json', to: 'internal/reaction_events#create'
+  post '_internal/link-events/:id.json', to: 'internal/link_events#create'
+  get '_internal/api-viewer.json', to: 'internal/api_viewer#show'
   mount ActionCable.server => '/cable'
   resources :leashes, except: %i[index], as: :leashes
   get 'news_room/index'
@@ -31,7 +43,7 @@ Rails.application.routes.draw do
   get 'help/faq', to: 'help#faq', as: 'faq'
   get 'help/client_guide', to: 'help#client_guide', as: 'client_guide'
   get 'help/deprecated_client_guide', to: 'help#deprecated_client_guide', as: 'deprecated_client_guide'
-  match 'e621-media', to: 'e621_media#show', via: %i[get head], as: 'e621_media'
+  # /e621-media is served by services/e621-media through the Compose router.
   get 'leaderboard', to: 'leaderboard#index', as: 'leaderboard'
   get 'notifications/:id', to: 'notification#show', as: 'notification'
   delete 'notifications', to: 'notification#delete_all', as: 'clear_notifications'
@@ -172,6 +184,7 @@ Rails.application.routes.draw do
     get 'analytics/system', to: 'mod_tools#system_analytics', as: 'system_analytics'
     get 'analytics/activity', to: 'mod_tools#activity_analytics', as: 'activity_analytics'
 
+    delete 'links/:id', to: 'mod_tools#destroy_link', as: 'link'
     resources :reports, except: %i[new create]
 
     scope path: :passwords, as: 'passwords' do
@@ -182,7 +195,7 @@ Rails.application.routes.draw do
     scope path: :users, as: 'users' do
       get '/', to: 'mod_tools#show_user', as: 'index'
       get '/deleted', to: 'mod_tools#deleted_users', as: 'deleted'
-      get '/assume/:user', to: 'mod_tools#assume_user', as: 'assume'
+      post '/assume/:user', to: 'mod_tools#assume_user', as: 'assume'
       post 'update', to: 'mod_tools#update_user', as: 'update'
       post ':user/restore', to: 'mod_tools#restore_user', as: 'restore'
       delete ':user/purge', to: 'mod_tools#purge_user', as: 'purge'

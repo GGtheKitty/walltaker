@@ -10,32 +10,10 @@ module MessageThreadHelper
       meta = '' unless match[2].present?
       original_substring = root + post_id + meta
 
-      cached_url = CachedPost.where(post_id: post_id).limit 1
+      url = E621.new.get_media_url(post_id)
+      return 'Dead link :(' if url.blank?
 
-      if cached_url&.first
-        output = output.gsub(original_substring, cached_url.first&.url)
-      else
-        response = Excon.get(
-          "https://e621.net/posts/#{post_id.to_i}.json",
-          headers: {
-            'User-Agent': SiteConfig.e621_user_agent
-          }
-        )
-        if response.status != 200
-          #track :error, :e621_post_api_fail_in_Message_Thread_previewer, response: response, post_id: post_id.to_i
-          return 'Dead link :('
-        end
-
-        begin
-          post_response = JSON.parse(response.body)
-          url = post_response['post']['file']['url']
-          output = output.gsub(original_substring, url)
-          CachedPost.create post_id: post_id, url: url
-        rescue
-          #track :error, :e621_post_unreadable_fail_in_Message_Thread_previewer, response: response, post_id: post_id.to_i
-          return 'Dead link :('
-        end
-      end
+      output = output.gsub(original_substring, url)
     end
 
     return output

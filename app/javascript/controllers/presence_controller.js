@@ -10,13 +10,15 @@ export default class PresenceController extends Controller {
     connect() {
         if (!this.consumer && this.idValue) {
             this.consumer = window.webPresenceConsumer
-            setTimeout(() => this.consumer.viewLink(this.idValue), 2000)
+            this.viewTimer = setTimeout(() => this.consumer.viewLink(this.idValue), 2000)
         }
     }
 
     disconnect() {
+        clearTimeout(this.viewTimer)
         if (this.consumer) {
             this.consumer.leaveLink()
+            this.consumer = null
         }
     }
 }

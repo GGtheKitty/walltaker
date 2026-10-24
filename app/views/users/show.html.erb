@@ -99,7 +99,7 @@
         <small>
           <div>
             Last online
-            <%= @most_recent_pinged_link && @most_recent_pinged_link[0].last_ping ? time_tag(@most_recent_pinged_link[0].last_ping, (time_ago_in_words @most_recent_pinged_link[0].last_ping) + ' ago') : 'never' %>
+            <%= @most_recent_pinged_link&.first&.last_ping ? time_tag(@most_recent_pinged_link[0].last_ping, (time_ago_in_words @most_recent_pinged_link[0].last_ping) + ' ago') : 'never' %>
           </div>
           <div>
             Had <%= @total_orgasms %> orgasms in the last 7 days
@@ -129,7 +129,7 @@
       <% end %>
     </h2>
 
-    <%= turbo_frame_tag :pledge, src: user_nut_pledge_path(@user.username) if SiteConfig.nnn_enabled? && @user.current_nut_pledge.present? %>
+    <%= turbo_frame_tag :pledge, src: user_nut_pledge_path(@user.username) if tracker_pledges_enabled? && tracker_pledge(@user).present? %>
 
     <% unless @is_editing %>
       <%= render 'users/details', { user: @user, is_current_user: @is_current_user } %><%= render partial: 'users/past_links', locals: { past_links: @past_links } %>
@@ -151,7 +151,7 @@
         </div>
       <% end %>
 
-      <% if @is_current_user %>
+      <% if @is_current_user && current_user&.id == @user.id %>
         <div class="two-col">
           <%= turbo_frame_tag 'orgasm_form', src: '/nut/orgasms/new' %>
           <%= turbo_frame_tag 'api_key_form', class: "accent-block" do %>
@@ -230,7 +230,7 @@
           <div class="form__row profile_selector split">
             <% form = ProfileSelectorForm.from_user(@user) %>
             <%= form_with(model: form, url: user_set_profile_path(@user), data: { 'turbo-frame': '_top' }) do |f| %>
-              <%= f.select :profile_id, options_from_collection_for_select(@user.profiles.order(id: :desc), :id, :name, form.profile_id.to_s), {}, { onchange: 'requestSubmit()' } %>
+              <%= f.select :profile_id, options_from_collection_for_select(@profile_styles || @user.profiles.order(id: :desc), :id, :name, form.profile_id.to_s), {}, { onchange: 'requestSubmit()' } %>
             <% end %>
 
             <%= button_to 'New', profiles_path, form: { data: { 'turbo-frame': '_top' } } %>

@@ -1,6 +1,8 @@
 class NotificationController < ApplicationController
-  before_action :set_notification, only: %i[show]
+  include NodeSocialActions
   before_action :authorize_for_surrendered_accounts
+  before_action :serve_node_social
+  before_action :set_notification, only: %i[show]
 
   def index
     @notifications = current_user.notifications.order(created_at: :desc).limit(200)

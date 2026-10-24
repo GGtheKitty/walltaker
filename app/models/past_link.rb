@@ -30,13 +30,23 @@ class PastLink < ApplicationRecord
     "https://e621.net/posts?md5=#{md5}" if md5.present?
   end
 
-  after_commit do
-    broadcast_replace_to "link_details_#{link_id}", target: "link_details_#{link_id}", partial: 'links/details', locals: { link: self.link }
-    broadcast_replace_to "dashboard_recent_posts", target: "recent_posts", partial: "dashboard/recent_posts", locals: {
-      recent_posts: PastLink.order(id: :desc).take(6)
-    }
+  after_commit :broadcast_updates
 
-    if post_url.ends_with?(".png", ".jpg", ".jpeg", ".gif", ".bmp")
+  def broadcast_updates
+    broadcast_replace_to "link_details_#{link_id}", target: "link_details_#{link_id}", partial: 'links/details', locals: { link: self.link }
+    if NodeDiscoveryBackend.enabled?
+      NodeDiscoveryBackend.broadcast_recent_posts
+    else
+      broadcast_replace_to "dashboard_recent_posts", target: "recent_posts", partial: "dashboard/recent_posts", locals: {
+        recent_posts: PastLink.order(id: :desc).take(6)
+      }
+    end
+
+    if NodeAutomationBackend.enabled?
+      # Node wallpaper writes enqueue this in the same database transaction.
+      # The shared key also covers remaining legacy PastLink creation paths.
+      NodeAutomationBackend.request('wallpaper-news', past_link_id: id, request_key: "news-wallpaper:#{id}")
+    elsif post_url&.ends_with?(".png", ".jpg", ".jpeg", ".gif", ".bmp")
       waiting = Rails.cache.fetch('v1/newsroom_mutex').present?
 
       unless waiting

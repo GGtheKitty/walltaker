@@ -2,6 +2,7 @@ class BrowsePopulateJob < ApplicationJob
   queue_as :default
 
   def perform(*args)
+    return if NodeDiscoveryBackend.enabled? # Node selects fresh, bounded results; no Rails ID cache to warm.
     link_ids = Link.all
           .is_public
           .is_online

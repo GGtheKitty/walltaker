@@ -1,10 +1,22 @@
 class SearchController < ApplicationController
+  include NodeDiscoveryActions
   PAGE_SIZE = 5
 
   def index
   end
 
   def results
+    if NodeDiscoveryBackend.enabled?
+      page = discovery('search', query: params[:q].to_s, page: params[:page] || 1, only_online: params[:only_online] == '1')
+      data = page.data
+      @query = data.fetch('query')
+      @only_online = data.fetch('only_online')
+      @page = data.fetch('page')
+      @total = data.fetch('total')
+      @has_next_page = data.fetch('has_next')
+      @links = page.links
+      return
+    end
     @query = params[:q].gsub(/\![\w\d_\(\)]+/, '') || ''
     @only_online = params[:only_online] == '1'
     @page = (params[:page] || '1').to_i

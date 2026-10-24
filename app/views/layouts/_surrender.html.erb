@@ -1,12 +1,15 @@
+<% revoked = local_assigns.fetch(:revoked, false) %>
+<% controller = surrender&.controller_user %>
+<% can_manage = surrender && !revoked && !surrender.destroyed? && surrender.valid? %>
 <%= turbo_frame_tag :surrender_status, target: '_top' do %>
   <div class="surrender-status accent-block">
     <div class="surrender-status__status">
-      <% if !surrender || surrender.invalid? || surrender.destroyed? %>
+      <% if !can_manage %>
         <div class="surrender-status__circle surrender-status__circle--invalid">
           <ion-icon name="checkmark"></ion-icon>
         </div>
         <span>
-            <%= surrender ? (link_to surrender.controller.username, user_path(surrender.controller.username)) : 'The other user' %> no longer has access to your account.
+            <%= controller ? (link_to controller.username, user_path(controller.username)) : 'The other user' %> no longer has access to your account.
           </span>
       <% elsif surrender && surrender.active? %>
         <div class="surrender-status__circle surrender-status__circle--active">
@@ -14,7 +17,7 @@
         </div>
         <span>
             Account is surrendered to
-          <%= link_to surrender.controller.username, user_path(surrender.controller.username) %>.
+          <%= link_to controller.username, user_path(controller.username) %>.
 
           <% if surrender.logged_in %>
             Logged in
@@ -27,13 +30,13 @@
         </div>
         <span>
             Account will be surrendered when
-          <%= link_to surrender.controller.username, user_path(surrender.controller.username) %>
+          <%= link_to controller.username, user_path(controller.username) %>
           logs in.
           </span>
       <% else %>
         Uhhh... something is fucked up. Your account is screwed. 😐
       <% end %>
     </div>
-    <%= button_to (surrender && surrender.valid? && !surrender.destroyed? ? 'Help me!' : 'Next steps'), (surrender && surrender.valid? && !surrender.destroyed? ? surrender_path(surrender) : surrenders_path), method: :get, class: 'accent-block__button' %>
+    <%= button_to (can_manage ? 'Help me!' : 'Next steps'), (can_manage ? surrender_path(surrender) : surrenders_path), method: :get, class: 'accent-block__button' %>
   </div>
 <% end %>

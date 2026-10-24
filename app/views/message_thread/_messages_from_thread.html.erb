@@ -1,4 +1,4 @@
-<% messages = message_thread.messages.order(updated_at: :desc).includes(:from_user).limit(60) %>
+<% messages = @social_messages || message_thread.messages.order(updated_at: :desc).includes(:from_user).limit(60) %>
 
 <% messages.each_with_index do |message| %>
   <%= render 'single_message', message: %>

@@ -3,7 +3,9 @@
 
   <div class="dashboard__users-viewing-links">
     <% users_viewing_links.each do |user| %>
-      <%= link_to link_path(user.viewing_link) do %>
+      <% viewed_link = user.deleted? ? nil : user.viewing_link %>
+      <% next unless viewed_link %>
+      <%= link_to link_path(viewed_link) do %>
         <%= user.username %>
       <% end %>
     <% end %>

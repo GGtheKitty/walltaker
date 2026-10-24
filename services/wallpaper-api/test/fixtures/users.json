@@ -1,0 +1,140 @@
+{
+  "anonymous": {
+    "username": "FixtureOwner",
+    "id": 9876543210,
+    "set_count": 42,
+    "is_reporter": true,
+    "is_cutie": false,
+    "is_supporter": true,
+    "online": false,
+    "authenticated": false,
+    "links": [
+      {
+        "id": 9876543210,
+        "expires": "2100-01-01T00:00:00.000Z",
+        "username": "FixtureOwner",
+        "terms": "Fixture terms",
+        "blacklist": "fixture_blacklist",
+        "post_url": "https://static1.e621.net/data/ab/cd/0123456789abcdef0123456789abcdef.jpg",
+        "post_url_backup": "https://devenv.playctrl.me/e621-media?token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJazFvZEhSd2N6b3ZMM04wWVhScFl6RXVaVFl5TVM1dVpYUXZaR0YwWVM5aFlpOWpaQzh3TVRJek5EVTJOemc1WVdKalpHVm1NREV5TXpRMU5qYzRPV0ZpWTJSbFppNXFjR2NHT2daRlZBPT0iLCJleHAiOm51bGwsInB1ciI6ImU2MjFfbWVkaWEifX0%3D--6ba8065f4f6b2b124b618fabc13d1945e2c43d98",
+        "post_thumbnail_url": "https://static1.e621.net/data/sample/fixture.jpg",
+        "created_at": "2024-01-01T00:00:00.000Z",
+        "updated_at": "2025-01-01T00:00:00.000Z",
+        "response_type": "ok",
+        "response_text": "Thanks",
+        "online": false,
+        "post_description": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀..."
+      }
+    ],
+    "flair": "Fixture flair",
+    "master": "FixtureMaster",
+    "pets": [
+      "FixturePet"
+    ]
+  },
+  "authenticated": {
+    "username": "FixtureOwner",
+    "id": 9876543210,
+    "set_count": 42,
+    "is_reporter": true,
+    "is_cutie": false,
+    "is_supporter": true,
+    "online": false,
+    "authenticated": true,
+    "links": [
+      {
+        "id": 9876543210,
+        "expires": "2100-01-01T00:00:00.000Z",
+        "username": "FixtureOwner",
+        "terms": "Fixture terms",
+        "blacklist": "fixture_blacklist",
+        "post_url": "https://static1.e621.net/data/ab/cd/0123456789abcdef0123456789abcdef.jpg",
+        "post_url_backup": "https://devenv.playctrl.me/e621-media?token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJazFvZEhSd2N6b3ZMM04wWVhScFl6RXVaVFl5TVM1dVpYUXZaR0YwWVM5aFlpOWpaQzh3TVRJek5EVTJOemc1WVdKalpHVm1NREV5TXpRMU5qYzRPV0ZpWTJSbFppNXFjR2NHT2daRlZBPT0iLCJleHAiOm51bGwsInB1ciI6ImU2MjFfbWVkaWEifX0%3D--6ba8065f4f6b2b124b618fabc13d1945e2c43d98",
+        "post_thumbnail_url": "https://static1.e621.net/data/sample/fixture.jpg",
+        "created_at": "2024-01-01T00:00:00.000Z",
+        "updated_at": "2025-01-01T00:00:00.000Z",
+        "response_type": "ok",
+        "response_text": "Thanks",
+        "online": false,
+        "post_description": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀..."
+      }
+    ],
+    "flair": "Fixture flair",
+    "master": "FixtureMaster",
+    "pets": [
+      "FixturePet"
+    ],
+    "friend": false,
+    "self": false
+  },
+  "friend": {
+    "username": "FixtureOwner",
+    "id": 9876543210,
+    "set_count": 42,
+    "is_reporter": true,
+    "is_cutie": false,
+    "is_supporter": true,
+    "online": false,
+    "authenticated": true,
+    "links": [
+      {
+        "id": 9876543210,
+        "expires": "2100-01-01T00:00:00.000Z",
+        "username": "FixtureOwner",
+        "terms": "Fixture terms",
+        "blacklist": "fixture_blacklist",
+        "post_url": "https://static1.e621.net/data/ab/cd/0123456789abcdef0123456789abcdef.jpg",
+        "post_url_backup": "https://devenv.playctrl.me/e621-media?token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJazFvZEhSd2N6b3ZMM04wWVhScFl6RXVaVFl5TVM1dVpYUXZaR0YwWVM5aFlpOWpaQzh3TVRJek5EVTJOemc1WVdKalpHVm1NREV5TXpRMU5qYzRPV0ZpWTJSbFppNXFjR2NHT2daRlZBPT0iLCJleHAiOm51bGwsInB1ciI6ImU2MjFfbWVkaWEifX0%3D--6ba8065f4f6b2b124b618fabc13d1945e2c43d98",
+        "post_thumbnail_url": "https://static1.e621.net/data/sample/fixture.jpg",
+        "created_at": "2024-01-01T00:00:00.000Z",
+        "updated_at": "2025-01-01T00:00:00.000Z",
+        "response_type": "ok",
+        "response_text": "Thanks",
+        "online": false,
+        "post_description": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀..."
+      }
+    ],
+    "flair": "Fixture flair",
+    "master": "FixtureMaster",
+    "pets": [
+      "FixturePet"
+    ],
+    "friend": true,
+    "self": false
+  },
+  "self": {
+    "username": "FixtureOwner",
+    "id": 9876543210,
+    "set_count": 42,
+    "is_reporter": true,
+    "is_cutie": false,
+    "is_supporter": true,
+    "online": false,
+    "authenticated": true,
+    "links": [
+      {
+        "id": 9876543210,
+        "expires": "2100-01-01T00:00:00.000Z",
+        "username": "FixtureOwner",
+        "terms": "Fixture terms",
+        "blacklist": "fixture_blacklist",
+        "post_url": "https://static1.e621.net/data/ab/cd/0123456789abcdef0123456789abcdef.jpg",
+        "post_url_backup": "https://devenv.playctrl.me/e621-media?token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJazFvZEhSd2N6b3ZMM04wWVhScFl6RXVaVFl5TVM1dVpYUXZaR0YwWVM5aFlpOWpaQzh3TVRJek5EVTJOemc1WVdKalpHVm1NREV5TXpRMU5qYzRPV0ZpWTJSbFppNXFjR2NHT2daRlZBPT0iLCJleHAiOm51bGwsInB1ciI6ImU2MjFfbWVkaWEifX0%3D--6ba8065f4f6b2b124b618fabc13d1945e2c43d98",
+        "post_thumbnail_url": "https://static1.e621.net/data/sample/fixture.jpg",
+        "created_at": "2024-01-01T00:00:00.000Z",
+        "updated_at": "2025-01-01T00:00:00.000Z",
+        "response_type": "ok",
+        "response_text": "Thanks",
+        "online": false,
+        "post_description": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀..."
+      }
+    ],
+    "flair": "Fixture flair",
+    "master": "FixtureMaster",
+    "pets": [
+      "FixturePet"
+    ],
+    "friend": false,
+    "self": true
+  }
+}

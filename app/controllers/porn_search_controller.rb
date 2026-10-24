@@ -1,6 +1,8 @@
 class PornSearchController < ApplicationController
+  include NodeSocialActions
+  before_action :authorize, only: %i[send_message_and_return]
   def index
-    @link = Link.find(params[:link]) if params[:link]
+    @link = (NodeBrowserBackend.enabled? ? browser_link(params[:link], purpose: 'search') : Link.find(params[:link])) if params[:link]
   end
 
   def search
@@ -16,9 +18,10 @@ class PornSearchController < ApplicationController
     @before = porn_search_params[:before]
 
     if porn_search_params[:link].present?
-      @link = Link.find(porn_search_params[:link])
+      @link = NodeBrowserBackend.enabled? ? browser_link(porn_search_params[:link], purpose: 'search') : Link.find(porn_search_params[:link])
       @posts = get_tag_results porn_search_params[:tags], porn_search_params[:after], porn_search_params[:before], @link
       @last_tags = porn_search_params[:tags]
+      return render :index, status: :service_unavailable if @posts.nil?
 
       track :regular, :search_e621_on_link, search: porn_search_params[:tags]
 
@@ -30,20 +33,23 @@ class PornSearchController < ApplicationController
         ]
       end
 
-      return render :index if @posts.nil?
-
     elsif porn_search_params[:message_thread].present?
-      @message_thread = MessageThread.find(porn_search_params[:message_thread])
+      @message_thread = NodeSocialBackend.enabled? ? social_thread(porn_search_params[:message_thread]) : current_user.message_threads.find(porn_search_params[:message_thread])
       @posts = get_tag_results porn_search_params[:tags], porn_search_params[:after], porn_search_params[:before], nil
       @last_tags = porn_search_params[:tags]
+      return render :index, status: :service_unavailable if @posts.nil?
     else
       redirect_to :index
     end
   end
 
   def send_message_and_return
+    if NodeSocialBackend.enabled?
+      result = social('message-send', thread_id: porn_search_params[:message_thread], content: porn_search_params[:message])
+      return redirect_to message_thread_path(result.fetch('thread_id'))
+    end
     content = porn_search_params[:message]
-    message_thread = MessageThread.find(porn_search_params[:message_thread])
+    message_thread = current_user.message_threads.find(porn_search_params[:message_thread])
     new_message = message_thread.messages.new
     new_message.content = content
     new_message.from_user = current_user

@@ -2,12 +2,13 @@ default: &default
   dispatchers:
     - polling_interval: 1
       batch_size: 1
+<% if ENV['AUTOMATION_BACKEND_URL'].to_s.empty? %>
       recurring_tasks:
         scoop_round:
           class: ScoopPopJob
           schedule: every 2 minutes
         browse_populate:
-          class: BrowsePopulate
+          class: BrowsePopulateJob
           schedule: every 4 minutes
         taylor:
           class: LizardRoundJob
@@ -21,6 +22,7 @@ default: &default
           class: LizardRoundJob
           args: [ 'PornLizardKi' ]
           schedule: every 1 minute
+<% end %>
   workers:
     - queues: "*"
       threads: 3

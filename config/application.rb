@@ -24,7 +24,7 @@ module Walltaker
     #
     # config.time_zone = "Central Time (US & Canada)"
     config.eager_load_paths << Rails.root.join("scrubbers")
-    config.eager_load_paths << Rails.root.join("services")
+    # Root services/ contains standalone Node processes; Rails services live in app/services.
     configured_host = URI.parse(ENV.fetch("WALLTAKER_BASE_URL", "https://walltaker.joi.how")).host
     Rails.application.config.hosts << configured_host if configured_host.present?
     Rails.application.config.hosts << ENV["WALLTAKER_HOST"] if ENV["WALLTAKER_HOST"].present?

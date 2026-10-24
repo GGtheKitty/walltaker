@@ -43,3 +43,5 @@
 # Local database dumps and Docker volumes
 *.dump
 .docker/volumes/
+__pycache__/
+node_modules/

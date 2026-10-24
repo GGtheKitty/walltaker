@@ -37,3 +37,10 @@
     </div>
   </div>
 <% end %>
+
+<% if @moderation_lizard_page %>
+  <nav aria-label="Staff browse pages">
+    <%= link_to 'Previous page', url_for(page: @moderation_lizard_page - 1) if @moderation_lizard_page > 1 %>
+    <%= link_to 'Next page', url_for(page: @moderation_lizard_page + 1) if @moderation_lizard_has_more %>
+  </nav>
+<% end %>

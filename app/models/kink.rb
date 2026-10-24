@@ -34,6 +34,7 @@ class Kink < ApplicationRecord
 
   # @param [User] by
   def had_by (by)
+    return kink_havers.to_a.find { |edge| edge.user_id == by.id } if association(:kink_havers).loaded?
     self.kink_havers.find_by(user_id: by.id)
   end
 

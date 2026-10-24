@@ -1,5 +1,8 @@
 class PushNewsJob < ApplicationJob
   def perform(news_entry_json, transitioning: false, done: false)
+    if NodeAutomationBackend.enabled?
+      return NodeAutomationBackend.enqueue_news(news_entry_json, request_key: "legacy-news:#{job_id}", transitioning:, done:)
+    end
     news_entry = NewsEntry.new.from_json(news_entry_json)
 
     Rails.cache.write('v1/newsroom_mutex', { news_entry: news_entry.to_json, transitioning:, done: }, expires_in: 50.seconds)

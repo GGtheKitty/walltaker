@@ -286,8 +286,10 @@ class User < ApplicationRecord
     "User::#{username}::#{audience}"
   end
 
-  def self.broadcast_api_update_for_username(username, user = active.find_by(username: username))
+  def self.broadcast_api_update_for_username(username, user = nil)
     return unless username
+    return NodeRealtime.enqueue("user:#{username}") if NodeRealtime.enabled?
+    user ||= active.find_by(username: username)
 
     API_AUDIENCES.each do |audience|
       payload = if user

@@ -19,9 +19,19 @@
     </tr>
     <% @users.each do |user| %>
       <%
-        visits = user.ahoy_visits.where("started_at > ?", 3.days.ago)
-        sets = user.past_links.where("created_at > ?", 3.days.ago).order(id: :desc)
-        set_count = sets.count
+        if @moderation_activity
+          stats = @moderation_activity.fetch(user.id.to_s)
+          visits = user.ahoy_visits.to_a
+          visit_count = stats.fetch('visits')
+          set_count = stats.fetch('sets')
+          avg = set_count > 1 ? ((Time.iso8601(stats.fetch('last')) - Time.iso8601(stats.fetch('first'))) / set_count).round(2) : nil
+        else
+          visits = user.ahoy_visits.where("started_at > ?", 3.days.ago)
+          sets = user.past_links.where("created_at > ?", 3.days.ago).order(id: :desc)
+          visit_count = visits.count
+          set_count = sets.count
+          avg = set_count > 1 ? ((sets.first.created_at - sets.last.created_at) / set_count).round(2) : nil
+        end
       %>
       <tr id="<%= dom_id user %>">
         <td>
@@ -51,7 +61,7 @@
             <%= button_to 'Revive', mod_tools_quarantine_update_path(user) %>
           <% else %>
             <%= button_to 'Quarantine', mod_tools_quarantine_update_path(user) %>
-            <%= button_to 'IP Ban', mod_tools_quarantine_ipban_path(user) if visits.count > 0 %>
+            <%= button_to 'IP Ban', mod_tools_quarantine_ipban_path(user) if visit_count > 0 %>
           <% end %>
         </td>
       </tr>
@@ -60,7 +70,6 @@
         <td colspan="2">
           <h3 style="margin-top: 0; font-size: 0.8rem; font-weight: bold">Recent activity:</h3>
           <% if set_count > 1 %>
-            <% avg = ((sets.first.created_at - sets.last.created_at) / set_count).round(2) %>
             <% if avg < 10.minutes %>
               <ion-icon name="warning"></ion-icon>
             <% end %>
@@ -72,11 +81,11 @@
             Set <%= pluralize set_count, 'wallpaper' %> recently.
           <% end %><br/>
 
-          <em>Visited <%= pluralize visits.count, 'time' %> in the last 3 days</em>
+          <em>Visited <%= pluralize visit_count, 'time' %> in the last 3 days</em>
           <ol>
             <% visits.each do |visit| %>
               <li>
-                <%= visit.banned_ip.present? ? "❌ IPBANNED BY #{visit.banned_ip.banned_by.username.upcase}" : '' %>
+                <%= visit.banned_ip.present? ? "❌ IPBANNED BY #{(visit.banned_ip.banned_by&.username || 'deleted moderator').upcase}" : '' %>
                 <%= visit.ip %> <%= visit.user_agent %>,
                 <strong><%= time_ago_in_words visit.started_at %> ago</strong></li>
             <% end %>

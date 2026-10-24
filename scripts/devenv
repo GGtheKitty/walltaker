@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+if [[ "$(git branch --show-current)" != "node" ]]; then
+  echo "The VPS preview must run from the node branch." >&2
+  exit 1
+fi
+
+env_files=(--env-file .env.example)
+if [[ -f .env ]]; then
+  env_files+=(--env-file .env)
+fi
+env_files+=(--env-file walltaker.env)
+
+exec docker compose --project-name walltaker "${env_files[@]}" \
+  -f docker-compose.yml -f docker-compose-devenv.yml "$@"

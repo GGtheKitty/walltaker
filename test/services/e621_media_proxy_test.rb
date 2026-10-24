@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'minitest/mock'
 
 class E621MediaProxyTest < ActiveSupport::TestCase
   VALID_URL = 'https://static1.e621.net/data/ab/cd/0123456789abcdef0123456789abcdef.jpg'
@@ -20,5 +21,18 @@ class E621MediaProxyTest < ActiveSupport::TestCase
     token = Rack::Utils.parse_query(fallback_url.query)['token']
 
     assert_nil E621MediaProxy.resolve("#{token}changed")
+  end
+
+  test 'issues tokens compatible with the Node media service' do
+    fixture = JSON.parse(Rails.root.join('services/e621-media/test/fixtures/rails-token.json').read)
+    key = Rails.application.key_generator(fixture.fetch('secretKeyBase')).generate_key(E621MediaProxy::PURPOSE.to_s)
+    verifier = ActiveSupport::MessageVerifier.new(key)
+
+    E621MediaProxy.stub(:verifier, verifier) do
+      fallback_url = URI.parse(E621MediaProxy.fallback_url(fixture.fetch('source')))
+      token = Rack::Utils.parse_query(fallback_url.query).fetch('token')
+
+      assert_equal fixture.fetch('token'), token
+    end
   end
 end

@@ -1,6 +1,8 @@
 class ModToolsController < ApplicationController
   before_action :authorize_with_admin
 
+  before_action :serve_node_moderation
+
   def index
   end
 
@@ -358,6 +360,10 @@ class ModToolsController < ApplicationController
     BannedIp.create(ip_address: event.visit.ip, banned_by: current_user)
 
     redirect_to mod_tools_events_index_url, notice: "IP banned #{event.visit.ip}"
+  end
+
+  def destroy_link
+    head :not_found
   end
 
   private

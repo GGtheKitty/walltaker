@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Rack::Attack
   throttle('req/ip', limit: 250, period: 1.minute) do |req|
-    req.ip unless req.path.start_with?('/assets') || req.path.match?(/\/api\/users\/\w*\.json$/)
+    req.ip unless ENV['BROWSER_BACKEND_URL'].present? || req.path.start_with?('/assets') || req.path.match?(/\/api\/users\/\w*\.json$/)
   end
 
   throttle('link_pings/ip', limit: 3, period: 10.seconds) do |req|
@@ -9,17 +9,17 @@ class Rack::Attack
   end
 
   throttle('logins/ip', limit: 5, period: 20.seconds) do |req|
-    if req.path == '/session' && req.post?
+    if ENV['BROWSER_BACKEND_URL'].blank? && req.path == '/session' && req.post?
       req.ip
     end
   end
 
   throttle('password_resets/ip', limit: 5, period: 15.minutes) do |req|
-    req.ip if req.path == '/i-forgor' && req.post?
+    req.ip if ENV['BROWSER_BACKEND_URL'].blank? && req.path == '/i-forgor' && req.post?
   end
 
   throttle('password_resets/email', limit: 5, period: 1.hour) do |req|
-    if req.path == '/i-forgor' && req.post?
+    if ENV['BROWSER_BACKEND_URL'].blank? && req.path == '/i-forgor' && req.post?
       req.params['email'].to_s.strip.downcase.presence
     end
   end

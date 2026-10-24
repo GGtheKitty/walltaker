@@ -1,8 +1,9 @@
 module Nuttracker
   class OrgasmsController < ApplicationController
-    before_action :set_orgasm, only: %i[ show edit update destroy ]
+    before_action :set_orgasm, only: %i[ show edit update destroy ], unless: -> { NodeTrackerBackend.enabled? }
     before_action :authorize, only: %i[ create new edit update destroy ]
-    before_action :protected, only: %i[ edit update destroy ]
+    before_action :serve_node_tracker
+    before_action :protected, only: %i[ edit update destroy ], unless: -> { NodeTrackerBackend.enabled? }
 
     # GET /orgasms
     def index

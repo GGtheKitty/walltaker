@@ -10,7 +10,11 @@
         <ul>
           <% list.group_by(&:link).each do |link, link_group| %>
             <li>
-              <%= render 'links/link', link: %>
+              <% if link %>
+                <%= render 'links/link', link: %>
+              <% else %>
+                <p>This wallpaper link is no longer available.</p>
+              <% end %>
               <ul>
                 <% link_group.each do |e| %>
                   <li class="history__record">
@@ -22,7 +26,7 @@
                       <% end %>
                     </div>
                     <%= e.did_what.humanize.downcase %>
-                    <%= link_to e.link %>
+                    <%= link_to e.link if e.link %>
                   </li>
                 <% end %>
               </ul>

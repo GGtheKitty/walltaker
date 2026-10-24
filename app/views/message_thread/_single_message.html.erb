@@ -7,7 +7,7 @@
   # DO NOT TRUST `images`! It's coming from users, and we need to filter EVERYTHING thru CGI.escape if it's not
   # heavily scoped by our Regex.
 %>
-<div class="messages__message__container" data-controller="message" data-message-from-value="<%= message.from_user.username %>">
+<div id="<%= dom_id message %>" class="messages__message__container" data-controller="message" data-message-from-value="<%= message.from_user.username %>">
   <div class="messages__message">
     <% unless filtered_content.empty? %>
       <%= (simple_format filtered_content).gsub(URI.regexp, '<a href="\0">\0</a>').html_safe %>

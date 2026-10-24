@@ -1,5 +1,7 @@
 class MessageThreadController < ApplicationController
+  include NodeSocialActions
   before_action :authorize, only: %i[index show send_message new create destroy edit remove_user add_user update resolve load_more]
+  before_action :serve_node_social
   before_action :set_message_thread, only: %i[show send_message edit update remove_user add_user load_more]
 
   def index

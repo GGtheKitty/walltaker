@@ -10,8 +10,8 @@
 
 <% unless current_user.nil? %>
   <% content_for(:html_title) { 'Walltaker Dashboard' } %>
-  <% if SiteConfig.nnn_enabled? %>
-    <% if current_user.current_nut_pledge.nil? %>
+  <% if tracker_pledges_enabled? %>
+    <% if tracker_pledge(current_user).nil? %>
       <div class="dashboard-header">
         <%= link_to new_user_nut_pledge_path(current_user.username) do %>
           Sign the NNN Pledge!
@@ -105,7 +105,7 @@
     <div class="dashboard__newest-user">
       <h2>Newest User</h2>
       <div class="dashboard__newest-user__content">
-        <%= link_to @newest_user.username, user_path(@newest_user.username) %>
+        <%= link_to @newest_user.username, user_path(@newest_user.username) if @newest_user %>
       </div>
     </div>
 

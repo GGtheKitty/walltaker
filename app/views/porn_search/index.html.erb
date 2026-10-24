@@ -7,5 +7,9 @@
     <%= turbo_frame_tag :kink_tools, src: search_kinks_path(@link), class: 'kinks' if params['link'] %>
   <% end %>
 
-  <%= turbo_frame_tag "pornsearch_results" %>
+  <%= turbo_frame_tag "pornsearch_results" do %>
+    <% if response.status == 503 %>
+      <p>Search is temporarily unavailable. Please try again shortly.</p>
+    <% end %>
+  <% end %>
 <% end %>

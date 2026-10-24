@@ -125,8 +125,16 @@ class Link < ApplicationRecord
     next unless client_visible_fields_previously_changed?
 
     broadcast_link_page_updates
-    ActionCable.server.broadcast("Link::#{id}", api_payload)
+    broadcast_api_update
     User.broadcast_api_update(user)
+  end
+
+  def broadcast_api_update
+    if NodeRealtime.enabled?
+      NodeRealtime.enqueue("link:#{id}")
+    else
+      ActionCable.server.broadcast("Link::#{id}", api_payload)
+    end
   end
 
   def client_visible_fields_previously_changed?
@@ -153,11 +161,12 @@ class Link < ApplicationRecord
     ).any?
   end
 
-  def broadcast_link_page_updates
+  def broadcast_link_page_updates(raise_on_error: false)
     broadcast_update
     broadcast_update_to "link_preview_#{id}_image", target: "preview_image", partial: 'links/embed_image', locals: { link: self }
     broadcast_update_to "link_preview_#{id}_text", target: "preview_text", partial: 'links/embed_text', locals: { link: self }
   rescue => e
+    raise if raise_on_error
     Rails.logger.warn("Link #{id} page broadcast failed: #{e.class}: #{e.message}")
   end
 

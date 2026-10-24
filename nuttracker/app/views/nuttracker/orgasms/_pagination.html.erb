@@ -1,0 +1,6 @@
+<% if @tracker_page %>
+  <nav aria-label="Tracker history pages">
+    <%= link_to 'Previous page', url_for(page: @tracker_page - 1) if @tracker_page > 1 %>
+    <%= link_to 'Next page', url_for(page: @tracker_page + 1) if @tracker_has_more %>
+  </nav>
+<% end %>

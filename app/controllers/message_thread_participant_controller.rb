@@ -1,7 +1,9 @@
 class MessageThreadParticipantController < ApplicationController
+  include NodeSocialActions
   include ActionView::RecordIdentifier
 
   before_action :authorize
+  before_action :serve_node_social
 
   def update
     message_thread = MessageThread.find(params[:message_thread_id])

@@ -7,7 +7,7 @@
 <h2>
   <ion-icon role="presentation" name="warning" class="big"></ion-icon>
   Deleted Account Queue
-  <small><%= pluralize(@deleted_users.count, 'account') %></small>
+  <small><%= pluralize(@moderation_pagy ? @moderation_pagy.count : @deleted_users.count, 'account') %></small>
 </h2>
 
 <% if @deleted_users.empty? %>
@@ -41,3 +41,5 @@
     </tbody>
   </table>
 <% end %>
+
+<%= render "mod_tools/pagination" %>

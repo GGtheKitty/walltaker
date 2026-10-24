@@ -1,4 +1,7 @@
 class SettingsController < ApplicationController
+  rescue_from NodeAccountBackend::Unavailable do
+    render plain: 'Settings are temporarily unavailable. Please try again.', status: :service_unavailable
+  end
   before_action :authorize
 
   def index
@@ -7,6 +10,7 @@ class SettingsController < ApplicationController
 
   def save
     @user = settings_user
+    return save_node_settings if NodeAccountBackend.enabled?
 
     case params[:settings_action]
     when 'username'
@@ -20,6 +24,18 @@ class SettingsController < ApplicationController
 
   def destroy
     @user = settings_user
+
+    if NodeAccountBackend.enabled?
+      begin
+        node_settings_command('account-delete', current_password: account_deletion_params[:password])
+        cookies.delete :permanent_session_id
+        cookies.delete :surrender_id
+        reset_session
+        return redirect_to login_path, notice: 'Your account has been deleted.'
+      rescue NodeAccountBackend::Rejected => error
+        return redirect_to settings_path, alert: error.message
+      end
+    end
 
     return redirect_to settings_path, alert: 'System accounts cannot be deleted.' if @user.system_account?
     unless @user.authenticate(account_deletion_params[:password].to_s)
@@ -36,6 +52,25 @@ class SettingsController < ApplicationController
   end
 
   private
+
+  def node_settings_command(operation, **input)
+    NodeAccountBackend.command(operation, actor: current_user, target_id: @user.id, surrender_id: current_surrender_session&.id,
+      request_key: "web:#{request.request_id}:#{operation}", **input)
+  end
+
+  def save_node_settings
+    operation = %w[username password].include?(params[:settings_action]) ? params[:settings_action] : 'colour'
+    node_settings_command(operation, **user_params.to_h.symbolize_keys)
+    @user.reload
+    current_user.reload if @user.id == current_user.id
+    case operation
+    when 'password' then redirect_to settings_path, notice: 'Password changed successfully!'
+    when 'username' then redirect_to user_path(@user.username), notice: 'Username changed successfully!'
+    else redirect_to user_path(@user.username), notice: 'Settings changed successfully!'
+    end
+  rescue NodeAccountBackend::Rejected => error
+    redirect_to settings_path, alert: error.message
+  end
 
   def update_colour_preference
     @user.colour_preference = user_params['colour_preference']
@@ -103,6 +138,7 @@ class SettingsController < ApplicationController
   end
 
   def settings_user
+    return browser_page('settings').user if NodeBrowserBackend.enabled?
     surrender_controller || current_user
   end
 

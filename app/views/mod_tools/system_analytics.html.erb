@@ -65,6 +65,7 @@
 
 <h3>Job Queue</h3>
 <% queue = @metrics[:queue] %>
+<% if queue[:backend].present? %><p>Scheduler and worker: <%= queue[:backend] %></p><% end %>
 <% if queue[:unavailable] %>
   <p>Queue metrics unavailable.</p>
 <% else %>

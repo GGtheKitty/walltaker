@@ -281,7 +281,7 @@ class ModToolsAccountLifecycleTest < ActionDispatch::IntegrationTest
       system_account: true
     )
 
-    get mod_tools_users_assume_path(system_user)
+    post mod_tools_users_assume_path(system_user)
 
     assert_redirected_to root_path
     follow_redirect!

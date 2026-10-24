@@ -1,0 +1,37 @@
+# VPS test site: layer over docker-compose.yml with scripts/devenv.
+services:
+  accounts:
+    command: ["node", "--watch", "--watch-preserve-output", "src/server.js"]
+    volumes:
+      - ./services/accounts/src:/app/src:ro
+
+  web:
+    image: walltaker-web:devenv
+    mem_limit: 768m
+    memswap_limit: 896m
+    command: ["bash", "-lc", "bundle exec rails db:prepare && exec bundle exec rails server -e production -b 0.0.0.0 -P /tmp/walltaker-devenv.pid"]
+    environment:
+      WALLTAKER_LIVE_RELOAD: "true"
+      WEB_CONCURRENCY: "0"
+      RAILS_MAX_THREADS: "4"
+    healthcheck:
+      test: ["CMD", "ruby", "-rnet/http", "-e", "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/up')).code == '200' ? 0 : 1)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+
+  e621_media:
+    command: ["node", "--watch", "--watch-preserve-output", "src/server.js"]
+    volumes:
+      - ./services/e621-media:/app:ro
+
+  router:
+    # Mount the directory so atomic editor saves do not leave a stale inode.
+    volumes: !override
+      - ./services/router:/etc/nginx/conf.d:ro
+
+  wallpaper_api:
+    command: ["node", "--watch", "--watch-preserve-output", "src/server.js"]
+    volumes:
+      - ./services/wallpaper-api/src:/app/wallpaper-api/src:ro
+      - ./services/e621-media/src:/app/e621-media/src:ro

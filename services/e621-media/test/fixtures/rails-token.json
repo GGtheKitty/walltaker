@@ -1,0 +1,5 @@
+{
+  "secretKeyBase": "node-proxy-test-secret",
+  "source": "https://static1.e621.net/data/ab/cd/0123456789abcdef0123456789abcdef.jpg",
+  "token": "eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJazFvZEhSd2N6b3ZMM04wWVhScFl6RXVaVFl5TVM1dVpYUXZaR0YwWVM5aFlpOWpaQzh3TVRJek5EVTJOemc1WVdKalpHVm1NREV5TXpRMU5qYzRPV0ZpWTJSbFppNXFjR2NHT2daRlZBPT0iLCJleHAiOm51bGwsInB1ciI6ImU2MjFfbWVkaWEifX0=--6ba8065f4f6b2b124b618fabc13d1945e2c43d98"
+}

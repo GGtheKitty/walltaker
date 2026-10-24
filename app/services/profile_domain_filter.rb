@@ -21,8 +21,8 @@ class ProfileDomainFilter
       result
     end
 
-    def filter(content)
-      new(content).call
+    def filter(content, rules: nil)
+      new(content, rules:).call
     end
 
     def normalize_hostname(hostname)
@@ -45,6 +45,8 @@ class ProfileDomainFilter
     end
 
     def record_domains(domains)
+      return NodeModerationBackend.request('domain-seen', domains:) if NodeModerationBackend.enabled?
+
       now = Time.current
 
       domains.each do |domain|
@@ -77,7 +79,8 @@ class ProfileDomainFilter
     end
   end
 
-  def initialize(content)
+  def initialize(content, rules: nil)
+    @domain_rules = rules || (NodeModerationBackend.domain_rules if NodeModerationBackend.enabled?)
     @content = content.to_s
     @domains = Set.new
     @blocked_domains = Set.new
@@ -169,7 +172,7 @@ class ProfileDomainFilter
     return false if hostname.blank?
 
     @domains << hostname
-    decision = ProfileDomain.decision_for(hostname)
+    decision = @domain_rules ? NodeModerationBackend.domain_decision(hostname, rules: @domain_rules) : ProfileDomain.decision_for(hostname)
     return false unless decision&.blocked?
 
     @blocked_domains << decision.domain

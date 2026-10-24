@@ -1,4 +1,10 @@
 class ApiController < ApplicationController
+  rescue_from NodeAccountBackend::Unavailable do
+    render plain: 'Account preferences are temporarily unavailable.', status: :service_unavailable
+  end
+  rescue_from NodeAccountBackend::Rejected do |error|
+    render plain: error.message, status: error.status
+  end
   after_action :log_presence, only: %i[show_link show_link_widget]
   prepend_before_action :authenticate_link_response_request, only: :set_link_response
   before_action :authorize_for_surrendered_accounts, only: %i[update_mascot update_perviness]
@@ -17,8 +23,14 @@ class ApiController < ApplicationController
       next_mascot = 'warren'
     end
 
-    current_user.mascot = next_mascot
-    current_user.save
+    if NodeAccountBackend.enabled?
+      NodeAccountBackend.command('mascot', actor: current_user, surrender_id: current_surrender_session&.id, request_key: "web:#{request.request_id}:mascot")
+      current_user.reload
+      next_mascot = current_user.mascot
+    else
+      current_user.mascot = next_mascot
+      current_user.save
+    end
 
     render turbo_stream: [
       turbo_stream.replace("title", partial: 'layouts/title', locals: { mascot: next_mascot, pervert: current_user.pervert }),
@@ -27,8 +39,13 @@ class ApiController < ApplicationController
   end
 
   def update_perviness
-    current_user.pervert = !current_user.pervert
-    current_user.save
+    if NodeAccountBackend.enabled?
+      NodeAccountBackend.command('pervert', actor: current_user, surrender_id: current_surrender_session&.id, request_key: "web:#{request.request_id}:pervert")
+      current_user.reload
+    else
+      current_user.pervert = !current_user.pervert
+      current_user.save
+    end
 
     render turbo_stream: [
       turbo_stream.replace("title", partial: 'layouts/title', locals: { mascot: current_user.mascot, pervert: current_user.pervert }),

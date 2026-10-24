@@ -5,7 +5,7 @@
 
 <p><strong>Remember!</strong> You need to have a confirmed friendship with your future owner first.</p>
 
-<% current_user.friendships.each do |friendship| %>
+<% (@social_friendships || current_user.friendships).each do |friendship| %>
   <% friend = friendship.other_user(current_user) %>
   <% if friend.present? %>
     <div class="master-row" data-controller="master">

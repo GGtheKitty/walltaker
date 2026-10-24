@@ -1,6 +1,14 @@
 # frozen_string_literal: true
+require 'digest'
 
 class LinksController < ApplicationController
+  include NodeDiscoveryActions
+  rescue_from NodeLinkBackend::Unavailable do |error|
+    render plain: error.message, status: :service_unavailable
+  end
+  rescue_from NodeLinkBackend::Rejected do |error|
+    render plain: error.message, status: error.status
+  end
   ######
   # WELCOME TO HELL
   ######
@@ -30,10 +38,15 @@ class LinksController < ApplicationController
 
   # GET /links or /links.json (only your links)
   def index
-    @links = User.find(current_user.id).link
+    @links = NodeLinkBackend.enabled? ? NodeLinkBackend.list(actor: current_user) : User.find(current_user.id).link
   end
 
   def show_similar
+    if NodeDiscoveryBackend.enabled?
+      result = discovery('similar', link_id: @link.id, viewer_id: current_user&.id).data
+      return redirect_to link_path(result.fetch('link_id')) if result['link_id']
+      return redirect_back_or_to root_path, alert: 'No other link was found.'
+    end
     query = Link.order('RANDOM()').where.not(id: @link.id).is_public
     random_link = nil
     random_link = query.is_online.find_by(theme: @link.theme) if @link.theme
@@ -48,6 +61,12 @@ class LinksController < ApplicationController
 
   # GET /browse (all online links)
   def browse
+    if NodeDiscoveryBackend.enabled?
+      page = discovery('browse')
+      @links = page.links
+      @new_user_links = page.links('new_user_links')
+      return
+    end
     # FUCK YOU, I join what I want, get ready for the query from hell
     science_links = Rails.cache.fetch("v2/browselinks", expires_in: 4.minutes) do
       Link.all
@@ -69,12 +88,11 @@ class LinksController < ApplicationController
 
   # GET /links/1 or /links/1.json
   def show
-    @has_friendship = Friendship.find_friendship(current_user, @link.user).exists? if current_user
+    @has_friendship = NodeBrowserBackend.enabled? ? @node_has_friendship : Friendship.find_friendship(current_user, @link.user).exists? if current_user
     @set_by = @link.set_by if @link.set_by_id && request.format == :json
     @is_current_user = (current_user && (current_user.id == @link.user.id))
 
-    HistoryEvent.record(current_user, :looked_at, @link, nil, current_visit) if current_user && !surrender_controller
-    HistoryEvent.record(current_user, :looked_at, @link, surrender_controller, current_visit) if surrender_controller
+    record_activity(:looked_at, @link)
   end
 
   # GET /links/new
@@ -90,10 +108,17 @@ class LinksController < ApplicationController
   def create
     @link = Link.new(link_params)
     @link.user_id = current_user.id
-    @link.custom_url = nil if @link.user.set_count < 300
-    result = @link.save
+    if NodeLinkBackend.enabled?
+      saved = NodeLinkBackend.save(link: @link, actor: current_user, attributes: link_params.except(:response_type, :response_text),
+                                  request_key: "web:#{request.request_id}:create", surrender_id: management_surrender_id, ahoy_visit_id: current_visit&.id)
+      result = saved.present?
+      @link = saved if saved
+    else
+      @link.custom_url = nil if @link.user.set_count < 300
+      result = @link.save
+    end
 
-    if params[:commit] == 'Update and Test'
+    if result && params[:commit] == 'Update and Test'
       do_link_request_test
       return
     end
@@ -130,14 +155,20 @@ class LinksController < ApplicationController
     result_of_link_model_save = if e621_post.nil?
                                   @link.assign_attributes(link_params)
 
-                                  @link.custom_url = nil if @link.custom_url == ''
-                                  @link.custom_url = nil if @link.user.set_count < 300
-
-                                  unless link_params['response_type'].nil?
-                                    @link = on_link_react(@link)
+                                  if NodeLinkBackend.enabled?
+                                    did_save_successfully = save_node_link_details
+                                  else
+                                    @link.custom_url = nil if @link.custom_url == ''
+                                    @link.custom_url = nil if @link.user.set_count < 300
+                                    if !link_params['response_type'].nil? && NodeWallpaperBackend.enabled?
+                                      unless NodeWallpaperBackend.react(link: @link)
+                                        return render :edit, status: :unprocessable_entity
+                                      end
+                                    elsif !link_params['response_type'].nil?
+                                      @link = on_link_react(@link)
+                                    end
+                                    did_save_successfully = @link.save
                                   end
-
-                                  did_save_successfully = @link.save
 
                                   track :regular, :update_link_details
                                   did_save_successfully
@@ -149,12 +180,11 @@ class LinksController < ApplicationController
                                   if current_user&.current_surrender
                                     Notification.create user: current_user, notification_type: :surrender_event, link: link_path(@link), text: "#{current_user.current_surrender.controller.username} set a new wallpaper for #{@link.user.username}"
                                   end
-                                  HistoryEvent.record(current_user, :set_wallpaper, @link, nil, current_visit) if current_user && !surrender_controller
-                                  HistoryEvent.record(current_user, :set_wallpaper, @link, surrender_controller, current_visit) if surrender_controller
+                                  record_activity(:set_wallpaper, @link) unless NodeActivityBackend.enabled? && NodeWallpaperBackend.enabled?
                                   assign_e621_post_to_self e621_post, @link
                                 end
 
-    if params[:commit] == 'Update and Test'
+    if result_of_link_model_save && params[:commit] == 'Update and Test'
       do_link_request_test
       return
     end
@@ -179,7 +209,12 @@ class LinksController < ApplicationController
       track :nefarious, :delete_others_link
       return
     end
-    @link.destroy
+    if NodeLinkBackend.enabled?
+      NodeLinkBackend.command('destroy', actor: current_user, link: @link,
+                              request_key: "web:#{request.request_id}:destroy", surrender_id: management_surrender_id)
+    else
+      @link.destroy
+    end
     track :regular, :delete_link
 
     redirect_to links_url, notice: 'Link was successfully destroyed.'
@@ -187,10 +222,17 @@ class LinksController < ApplicationController
 
   def export
     track :regular, :export_link
+    return render plain: NodeLinkBackend.export(link: @link), content_type: 'application/toml' if NodeLinkBackend.enabled?
+
     render layout: nil, content_type: 'application/toml'
   end
 
   def toggle_ability
+    if NodeLinkBackend.enabled?
+      NodeLinkBackend.command('toggle-ability', actor: current_user, link: @link, ability: params['ability'],
+                              request_key: "web:#{request.request_id}:ability", surrender_id: management_surrender_id)
+      return redirect_to(params['ability'] == 'is_master_only' ? link_path(@link) : edit_link_path(@link))
+    end
     if params['ability'] != 'is_master_only' && current_user == @link.user
       @link.toggle_ability params['ability']
       return redirect_to edit_link_path @link
@@ -246,6 +288,31 @@ class LinksController < ApplicationController
 
   private
 
+  def management_surrender_id
+    browser_surrender_id if helpers.is_surrender_controller_session?
+  end
+
+  def save_node_link_details
+    reaction = link_params.slice(:response_type, :response_text)
+    settings = link_params.except(:response_type, :response_text)
+    if !settings.empty? || reaction['response_type'].nil?
+      saved = NodeLinkBackend.save(link: @link, actor: current_user, attributes: settings,
+                                  request_key: "web:#{request.request_id}:settings", surrender_id: management_surrender_id)
+      return false unless saved
+
+      @link = saved
+    end
+    return true if reaction['response_type'].nil?
+
+    @link.assign_attributes(reaction)
+    if NodeWallpaperBackend.enabled?
+      NodeWallpaperBackend.react(link: @link, request_key: "web:#{request.request_id}:reaction")
+    else
+      @link = on_link_react(@link)
+      @link.save
+    end
+  end
+
   # Guards
 
   def update_request_unsafe?
@@ -265,7 +332,7 @@ class LinksController < ApplicationController
       authorize if @link.friends_only
 
       unless current_user.nil?
-        friendship_exists = Friendship.find_friendship(@link.user, current_user).exists?
+        friendship_exists = NodeBrowserBackend.enabled? ? @node_has_friendship : Friendship.find_friendship(@link.user, current_user).exists?
         if @link.friends_only && !friendship_exists && (current_user.id != @link.user.id)
           return redirect_to root_url, alert: 'Not Authorized'
         end
@@ -279,6 +346,12 @@ class LinksController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_link
+    if NodeBrowserBackend.enabled?
+      page = browser_page('link', identifier: params[:id], purpose: action_name)
+      @link = page.link
+      @node_has_friendship = page.data.fetch('has_friendship')
+      return
+    end
     if params[:id].match? /\D+/
       @link = Link.joins(:user).left_joins(:set_by).find_by(custom_url: params[:id])
     else
@@ -311,7 +384,7 @@ class LinksController < ApplicationController
   def do_link_request_test
     post_count = get_possible_post_count @link
     if post_count.nil?
-      redirect_to edit_link_path(@link), alert: "E621 may be down. You can save your link for now, though we can't verify that posts match your filter criteria at the moment."
+      return redirect_to edit_link_path(@link), alert: "E621 may be down. You can save your link for now, though we can't verify that posts match your filter criteria at the moment."
     end
     if post_count > 99
       redirect_to edit_link_path(@link), notice: "Many posts are selectable with these settings."
@@ -331,23 +404,32 @@ class LinksController < ApplicationController
     set_by = current_user || nil
     e621_service = E621.new
 
-    link.update(
-      {
-        e621_post_id: e621_post['id'],
-        post_url: e621_post['file']['url'],
-        post_thumbnail_url: e621_post['sample']['url'] || e621_post['preview']['url'],
-        post_description: e621_post['description'],
-        set_by_id: set_by.nil? ? nil : set_by.id,
-        response_type: nil,
-        response_text: nil
-      }
-    )
+    if NodeWallpaperBackend.enabled?
+      saved = NodeWallpaperBackend.apply(link:, post: e621_post, set_by:,
+        request_key: "web:#{request.request_id}", ahoy_visit_id: current_visit&.id,
+        activity: NodeActivityBackend.enabled? && set_by ? { actor_id: set_by.id, surrender_id: browser_surrender_id, visit: NodeActivityBackend.visit_proof(current_visit) } : nil)
+      return false unless saved
+    else
+      link.update(
+        {
+          e621_post_id: e621_post['id'],
+          post_url: e621_post['file']['url'],
+          post_thumbnail_url: e621_post['sample']['url'] || e621_post['preview']['url'],
+          post_description: e621_post['description'],
+          set_by_id: set_by.nil? ? nil : set_by.id,
+          response_type: nil,
+          response_text: nil
+        }
+      )
+    end
     link.forks.each do |fork|
       result = e621_service.get_post e621_post['id'], fork
-      SetLinkJob.set(wait: 1.second, priority: 10).perform_later(e621_post: result, link: fork, set_by:) if result
+      child_key = "fork:#{Digest::SHA256.hexdigest("#{request.request_id}:#{fork.id}")}"
+      SetLinkJob.set(wait: 1.second, priority: 10).perform_later(e621_post: result, link: fork, set_by:, request_key: child_key) if result
     rescue
       track :error, :bad_fork, fork_id: fork.id, post_id: e621_post['id']
-    end
+    end unless NodeAutomationBackend.enabled?
+    return true if NodeWallpaperBackend.enabled?
     if set_by.present? && (link.user.id != set_by.id)
       set_by.set_count = set_by.set_count.to_i + 1
       set_by.save

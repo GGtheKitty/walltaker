@@ -1,16 +1,12 @@
 module Nuttracker
-  class ApplicationController < ActionController::Base
-    def current_user
-      @current_user ||= User.active.find_by(id: cookies.signed[:permanent_session_id]) if cookies.signed[:permanent_session_id]
-      @current_user ||= User.active.find_by(id: session[:user_id]) if session[:user_id]
-
-      @current_user
-    end
-
-    helper_method :current_user
+  class ApplicationController < ::ApplicationController
+    # These browser-session destinations belong to the host application, while
+    # tracker form routes continue to resolve inside the isolated engine.
+    delegate :new_session_url, :login_path, :root_path, :surrender_url, to: :main_app
 
     def authorize
-      redirect_to '/', alert: 'Not authorized' if current_user.nil?
+      return redirect_to '/', alert: 'Not authorized' if current_user.nil?
+      super
     end
   end
 end

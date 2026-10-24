@@ -1,6 +1,6 @@
 class HelpController < ApplicationController
   def index
-    @wallpaper_clients = WallpaperClient.in_section('clients')
+    @wallpaper_clients = NodeBrowserBackend.enabled? ? NodeBrowserBackend.request('site-clients').fetch('clients').map { |row| WallpaperClient.instantiate(row) } : WallpaperClient.in_section('clients')
   end
 
   def faq

@@ -11,12 +11,12 @@
   <%= f.submit 'Search Links', name: nil %>
   <%= f.label :only_online do %>
     <strong class="online">Online</strong> Only
-    <%= f.check_box :only_online %>
+    <%= f.check_box :only_online, checked: params[:only_online] == '1' %>
   <% end %>
 <% end %>
 
 <% if params['q'] %>
-  <%= turbo_frame_tag :link_search_results, src: results_url(q: params['q']) %>
+  <%= turbo_frame_tag :link_search_results, src: results_url(q: params['q'], only_online: params[:only_online]) %>
 <% else %>
   <%= turbo_frame_tag :link_search_results do %>
     <div class="accent-block spaced">

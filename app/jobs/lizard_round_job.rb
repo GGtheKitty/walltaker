@@ -2,6 +2,10 @@ class LizardRoundJob < ApplicationJob
   queue_as :default
 
   def perform(lizard_username)
+    if NodeAutomationBackend.enabled?
+      bot = { 'PornLizardTaylor' => 'taylor', 'PornLizardWarren' => 'warren', 'PornLizardKi' => 'ki' }.fetch(lizard_username)
+      return NodeAutomationBackend.round(bot, request_key: "legacy-lizard:#{job_id}")
+    end
     pornbot = User.find_by(username: lizard_username)
 
     unless pornbot
@@ -58,28 +62,31 @@ class LizardRoundJob < ApplicationJob
       controller = ApplicationController.new
       results = controller.get_tag_results "order:random #{tags} -nightmare_fuel", nil, nil, link, 1
       begin
-        if results[0] && results[0]['file']['url']
-          result = link.update(
-            HashWithIndifferentAccess.new(
-              {
-                e621_post_id: results[0]['id'],
-                post_url: results[0]['file']['url'],
-                post_thumbnail_url: results[0]['sample']['url'] || results[0]['preview']['url'],
-                post_description: results[0]['description'],
-                set_by_id: pornbot.id,
-                response_type: nil,
-                response_text: nil
-              }
+        if results&.first&.dig('file', 'url')
+          result = if NodeWallpaperBackend.enabled?
+            NodeWallpaperBackend.apply(link:, post: results[0], set_by: pornbot,
+              request_key: "lizard:#{job_id}:#{link.id}", count_self: true)
+          else
+            link.update(
+              e621_post_id: results[0]['id'],
+              post_url: results[0]['file']['url'],
+              post_thumbnail_url: results[0]['sample']['url'] || results[0]['preview']['url'],
+              post_description: results[0]['description'],
+              set_by_id: pornbot.id,
+              response_type: nil,
+              response_text: nil
             )
-          )
+          end
 
           if result
             puts "Set link_id=#{link.id} to #{results[0]['file']['url']}"
             set_count += 1
-            tag_string = "#{results[0]['tags']['general'].join(' ')} #{results[0]['tags']['character'].join(' ')} #{results[0]['tags']['species'].join(' ')} #{results[0]['tags']['lore'].join(' ')} #{results[0]['tags']['copyright'].join(' ')} #{results[0]['tags']['meta'].join(' ')} rating:#{results[0]['rating']}"
-            PastLink.log_link(link, tag_string).save
-            pornbot.set_count = pornbot.set_count.to_i + 1
-            pornbot.save
+            unless NodeWallpaperBackend.enabled?
+              tag_string = "#{results[0]['tags']['general'].join(' ')} #{results[0]['tags']['character'].join(' ')} #{results[0]['tags']['species'].join(' ')} #{results[0]['tags']['lore'].join(' ')} #{results[0]['tags']['copyright'].join(' ')} #{results[0]['tags']['meta'].join(' ')} rating:#{results[0]['rating']}"
+              PastLink.log_link(link, tag_string).save
+              pornbot.set_count = pornbot.set_count.to_i + 1
+              pornbot.save
+            end
           end
         end
       rescue

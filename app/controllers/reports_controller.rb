@@ -1,7 +1,9 @@
 class ReportsController < ApplicationController
   before_action :authorize, only: %i[new create]
   before_action :authorize_with_admin, only: %i[index show edit update destroy]
-  before_action :set_reportable, only: %i[new create]
+  before_action :set_reportable, only: %i[new create], unless: -> { NodeModerationBackend.enabled? }
+
+  before_action :serve_node_moderation
 
   def index
     @reports = Report.where(is_closed: params[:closed].present?).includes(:reporter).limit(100).order(id: :desc)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_18_163000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_24_030000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -73,6 +73,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_18_163000) do
     t.text "properties"
     t.datetime "time"
     t.index ["name", "time"], name: "index_ahoy_events_on_name_and_time"
+    t.index ["time"], name: "index_ahoy_events_on_time"
     t.index ["user_id"], name: "index_ahoy_events_on_user_id"
     t.index ["visit_id"], name: "index_ahoy_events_on_visit_id"
   end
@@ -103,6 +104,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_18_163000) do
     t.string "os_version"
     t.string "platform"
     t.datetime "started_at"
+    t.index ["started_at"], name: "index_ahoy_visits_on_started_at"
     t.index ["user_id"], name: "index_ahoy_visits_on_user_id"
     t.index ["visit_token"], name: "index_ahoy_visits_on_visit_token", unique: true
   end
@@ -240,6 +242,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_18_163000) do
     t.index ["ahoy_visit_id"], name: "index_history_events_on_ahoy_visit_id"
     t.index ["link_id"], name: "index_history_events_on_link_id"
     t.index ["surrender_controller_id"], name: "index_history_events_on_surrender_controller_id"
+    t.index ["user_id", "id"], name: "index_history_events_on_user_id_and_id", order: { id: :desc }
     t.index ["user_id"], name: "index_history_events_on_user_id"
   end
 
@@ -341,6 +344,206 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_18_163000) do
     t.string "content"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "node_account_events", force: :cascade do |t|
+    t.string "request_key", limit: 160, null: false
+    t.string "payload_digest", limit: 64, null: false
+    t.bigint "user_id"
+    t.string "operation", null: false
+    t.string "previous_username"
+    t.bigint "notification_id"
+    t.jsonb "result", default: {}, null: false
+    t.datetime "delivered_at"
+    t.integer "delivery_attempts", default: 0, null: false
+    t.datetime "available_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["available_at"], name: "node_account_events_pending", where: "(delivered_at IS NULL)"
+    t.index ["request_key"], name: "index_node_account_events_on_request_key", unique: true
+  end
+
+  create_table "node_activity_receipts", force: :cascade do |t|
+    t.string "request_key", limit: 160, null: false
+    t.string "payload_digest", limit: 64, null: false
+    t.string "operation", null: false
+    t.jsonb "result", default: {}, null: false
+    t.bigint "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["request_key"], name: "index_node_activity_receipts_on_request_key", unique: true
+    t.index ["user_id"], name: "index_node_activity_receipts_on_user_id"
+  end
+
+  create_table "node_automation_events", force: :cascade do |t|
+    t.string "request_key", limit: 160, null: false
+    t.bigint "generation", null: false
+    t.jsonb "effects", default: {}, null: false
+    t.datetime "delivered_at"
+    t.integer "delivery_attempts", default: 0, null: false
+    t.datetime "available_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["available_at"], name: "index_node_automation_events_on_available_at", where: "(delivered_at IS NULL)"
+    t.index ["request_key"], name: "index_node_automation_events_on_request_key", unique: true
+  end
+
+  create_table "node_automation_jobs", force: :cascade do |t|
+    t.string "job_key", limit: 160, null: false
+    t.string "kind", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.jsonb "result", default: {}, null: false
+    t.string "status", default: "queued", null: false
+    t.integer "attempts", default: 0, null: false
+    t.datetime "run_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "locked_at"
+    t.string "locked_by"
+    t.string "last_error"
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["job_key"], name: "index_node_automation_jobs_on_job_key", unique: true
+    t.index ["locked_at"], name: "index_node_automation_jobs_on_locked_at", where: "((status)::text = 'running'::text)"
+    t.index ["run_at", "id"], name: "index_node_automation_jobs_on_run_at_and_id", where: "((status)::text = 'queued'::text)"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'completed'::character varying, 'failed'::character varying]::text[])", name: "node_automation_job_status"
+  end
+
+  create_table "node_automation_schedules", primary_key: "name", id: :string, force: :cascade do |t|
+    t.datetime "next_run_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "node_browser_legacy_sessions", primary_key: "fingerprint", id: { type: :string, limit: 64 }, force: :cascade do |t|
+    t.bigint "user_id"
+    t.datetime "expires_at", null: false
+    t.datetime "revoked_at"
+    t.datetime "created_at", null: false
+    t.index ["user_id"], name: "index_node_browser_legacy_sessions_on_user_id"
+  end
+
+  create_table "node_browser_sessions", force: :cascade do |t|
+    t.string "token_digest", limit: 64, null: false
+    t.bigint "user_id", null: false
+    t.bigint "original_actor_id"
+    t.bigint "surrender_id"
+    t.jsonb "legacy_fingerprints", default: [], null: false
+    t.boolean "remember", default: false, null: false
+    t.datetime "expires_at", null: false
+    t.datetime "revoked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_node_browser_sessions_on_expires_at"
+    t.index ["original_actor_id"], name: "index_node_browser_sessions_on_original_actor_id"
+    t.index ["surrender_id"], name: "index_node_browser_sessions_on_surrender_id"
+    t.index ["token_digest"], name: "index_node_browser_sessions_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_node_browser_sessions_on_user_id"
+  end
+
+  create_table "node_link_events", force: :cascade do |t|
+    t.string "request_key", limit: 160, null: false
+    t.string "payload_digest", limit: 64, null: false
+    t.bigint "link_id", null: false
+    t.bigint "user_id", null: false
+    t.string "operation", null: false
+    t.jsonb "result", null: false
+    t.datetime "delivered_at"
+    t.integer "delivery_attempts", default: 0, null: false
+    t.datetime "available_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["id"], name: "index_pending_node_link_events", where: "(delivered_at IS NULL)"
+    t.index ["request_key"], name: "index_node_link_events_on_request_key", unique: true
+  end
+
+  create_table "node_moderation_events", force: :cascade do |t|
+    t.string "request_key", limit: 160, null: false
+    t.string "payload_digest", limit: 64, null: false
+    t.string "operation", null: false
+    t.bigint "user_id"
+    t.jsonb "result", default: {}, null: false
+    t.jsonb "effects", default: {}, null: false
+    t.datetime "delivered_at"
+    t.integer "delivery_attempts", default: 0, null: false
+    t.datetime "available_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["available_at"], name: "index_node_moderation_events_on_available_at", where: "(delivered_at IS NULL)"
+    t.index ["request_key"], name: "index_node_moderation_events_on_request_key", unique: true
+  end
+
+  create_table "node_newsroom_states", force: :cascade do |t|
+    t.bigint "generation", default: 0, null: false
+    t.bigint "rendered_event_id"
+    t.string "kind"
+    t.jsonb "entry", default: {}, null: false
+    t.jsonb "story", default: {}, null: false
+    t.datetime "busy_until"
+    t.datetime "throttle_until"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "node_reaction_events", force: :cascade do |t|
+    t.string "request_key", limit: 160, null: false
+    t.string "payload_digest", limit: 64, null: false
+    t.bigint "link_id", null: false
+    t.bigint "comment_ids", default: [], null: false, array: true
+    t.bigint "notification_id"
+    t.boolean "history_changed", default: false, null: false
+    t.datetime "delivered_at"
+    t.integer "delivery_attempts", default: 0, null: false
+    t.datetime "available_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["id"], name: "index_pending_node_reaction_events", where: "(delivered_at IS NULL)"
+    t.index ["request_key"], name: "index_node_reaction_events_on_request_key", unique: true
+  end
+
+  create_table "node_social_events", force: :cascade do |t|
+    t.string "request_key", limit: 160, null: false
+    t.string "payload_digest", limit: 64, null: false
+    t.string "operation", null: false
+    t.bigint "user_id"
+    t.jsonb "result", default: {}, null: false
+    t.jsonb "effects", default: {}, null: false
+    t.datetime "delivered_at"
+    t.integer "delivery_attempts", default: 0, null: false
+    t.datetime "available_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["available_at"], name: "index_node_social_events_on_available_at", where: "(delivered_at IS NULL)"
+    t.index ["request_key"], name: "index_node_social_events_on_request_key", unique: true
+  end
+
+  create_table "node_tracker_events", force: :cascade do |t|
+    t.string "request_key", limit: 160, null: false
+    t.string "payload_digest", limit: 64, null: false
+    t.string "operation", null: false
+    t.bigint "user_id"
+    t.jsonb "result", default: {}, null: false
+    t.jsonb "effects", default: {}, null: false
+    t.datetime "delivered_at"
+    t.integer "delivery_attempts", default: 0, null: false
+    t.datetime "available_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["available_at"], name: "index_node_tracker_events_on_available_at", where: "(delivered_at IS NULL)"
+    t.index ["request_key"], name: "index_node_tracker_events_on_request_key", unique: true
+  end
+
+  create_table "node_wallpaper_events", force: :cascade do |t|
+    t.string "request_key", limit: 160, null: false
+    t.string "payload_digest", limit: 64, null: false
+    t.bigint "link_id", null: false
+    t.bigint "past_link_id", null: false
+    t.datetime "delivered_at"
+    t.integer "delivery_attempts", default: 0, null: false
+    t.datetime "available_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["id"], name: "index_pending_node_wallpaper_events", where: "(delivered_at IS NULL)"
+    t.index ["request_key"], name: "index_node_wallpaper_events_on_request_key", unique: true
   end
 
   create_table "notifications", force: :cascade do |t|

@@ -34,6 +34,7 @@ class LinkPresence
     end
 
     def online?(link)
+      return link.instance_variable_get(:@node_browser_connected) if link.instance_variable_defined?(:@node_browser_connected)
       online_id?(link.id)
     end
 

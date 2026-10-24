@@ -4,6 +4,10 @@ class SiteSetting < ApplicationRecord
 
   class << self
     def boolean(key, default: false)
+      if NodeBrowserBackend.enabled?
+        flags = NodeBrowserBackend.context&.data&.fetch('flags', nil) || NodeBrowserBackend.request('site').fetch('flags')
+        return flags.fetch(key.to_s, default)
+      end
       value = find_by(key:)&.value
       return default if value.nil?
 
@@ -19,6 +23,7 @@ class SiteSetting < ApplicationRecord
     end
 
     def cached_boolean(key, default: false)
+      return boolean(key, default:) if NodeBrowserBackend.enabled?
       Rails.cache.fetch(cache_key(key), expires_in: 1.minute) do
         boolean(key, default:)
       end

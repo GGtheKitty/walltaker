@@ -1,13 +1,31 @@
 class LinkWizardController < ApplicationController
   include Wicked::Wizard
+  rescue_from NodeLinkBackend::Unavailable do |error|
+    render plain: error.message, status: :service_unavailable
+  end
+  rescue_from NodeLinkBackend::Rejected do |error|
+    if action_name == 'apply' && @link && error.status == 422
+      flash.now[:alert] = error.errors.values.flatten.join(', ')
+      render_wizard nil, status: :unprocessable_entity
+    elsif action_name == 'apply' && @link && error.status == 409
+      @link.reload
+      redirect_to wizard_path(@link.wizard_page.presence || 'orgasmic_conclusion'), alert: error.message
+    else
+      render plain: error.errors.values.flatten.join(', '), status: error.status
+    end
+  end
 
-  before_action :set_progress, only: %i[show]
-  before_action :set_link, only: %i[show apply]
+  before_action :set_progress, only: %i[show apply]
+  before_action :set_link, only: %i[show apply update]
   before_action :authorize
 
   steps :intro, :summon, :control, :kinks, :gender, :surprise, :no_fun, :orgasmic_conclusion
 
   def show
+    if NodeLinkBackend.enabled?
+      expected_step = @link.wizard_page.presence || 'orgasmic_conclusion'
+      return redirect_to wizard_path(expected_step) if step.to_s != expected_step
+    end
     case step
     when :summon
       @link
@@ -16,6 +34,13 @@ class LinkWizardController < ApplicationController
   end
 
   def apply
+    if NodeLinkBackend.enabled?
+      result = NodeLinkBackend.command('wizard-apply', actor: current_user, link: @link, step: step.to_s,
+        choices: params.permit(:gooner, :impatient, :protect, :terms, :theme, :friends_only,
+                              blacklisted_genders: [], blacklisted_parts: [], blacklisted_sexualities: []).to_h,
+        request_key: "web:#{request.request_id}:wizard", surrender_id: management_surrender_id)
+      return redirect_to wizard_path(result.fetch('next_step'))
+    end
     case step
     when :intro
       if params[:gooner] == 'true'
@@ -93,6 +118,11 @@ class LinkWizardController < ApplicationController
   end
 
   def spawn_link
+    if NodeLinkBackend.enabled?
+      result = NodeLinkBackend.command('wizard-start', actor: current_user, request_key: "web:#{request.request_id}:wizard-start",
+                                      surrender_id: management_surrender_id, ahoy_visit_id: current_visit&.id)
+      return redirect_to link_wizard_path(link_id: result.fetch('link').fetch('id'), id: :intro)
+    end
     link = Link.new
     link.user = current_user
     link.wizard_page = :intro
@@ -103,6 +133,9 @@ class LinkWizardController < ApplicationController
   end
 
   def update
+    if NodeLinkBackend.enabled?
+      return redirect_to(@link.wizard_page.present? ? link_wizard_path(link_id: @link.id, id: @link.wizard_page) : link_path(@link))
+    end
     @link.unfinished = true
 
     if @link.errors.count == 0
@@ -115,8 +148,12 @@ class LinkWizardController < ApplicationController
 
   private
 
+  def management_surrender_id
+    browser_surrender_id if helpers.is_surrender_controller_session?
+  end
+
   def set_link
-    @link = Link.find(params['link_id'])
+    @link = NodeBrowserBackend.enabled? ? browser_link(params['link_id'], purpose: 'wizard') : Link.find(params['link_id'])
 
     if current_user&.id != @link.user.id
       redirect_to link_url(@link), alert: 'Not authorized.'

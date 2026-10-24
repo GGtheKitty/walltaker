@@ -1,5 +1,6 @@
 namespace :walltaker do
   task porn_bot_round: :environment do
+    next NodeAutomationBackend.round('pornbot') if NodeAutomationBackend.enabled?
     pornbot = User.find_by(username: 'PornBot')
 
     unless pornbot
@@ -20,27 +21,29 @@ namespace :walltaker do
 
       results = controller.get_tag_results 'order:random score:>100 -nightmare_fuel -nazi -swf rating:e', nil, nil, link, 1
       begin
-        if results[0] && results[0]['file']['url']
-          result = link.update(
-            HashWithIndifferentAccess.new(
-              {
-                post_url: results[0]['file']['url'],
-                post_thumbnail_url: results[0]['sample']['url'] || results[0]['preview']['url'],
-                post_description: results[0]['description'],
-                set_by_id: pornbot.id,
-                response_type: nil,
-                response_text: nil
-              }
+        if results&.first&.dig('file', 'url')
+          result = if NodeWallpaperBackend.enabled?
+            NodeWallpaperBackend.apply(link:, post: results[0], set_by: pornbot, count_self: true)
+          else
+            link.update(
+              post_url: results[0]['file']['url'],
+              post_thumbnail_url: results[0]['sample']['url'] || results[0]['preview']['url'],
+              post_description: results[0]['description'],
+              set_by_id: pornbot.id,
+              response_type: nil,
+              response_text: nil
             )
-          )
+          end
 
           if result
             puts "Set link_id=#{link.id} to #{results[0]['file']['url']}"
             set_count += 1
-            tag_string = "#{results[0]['tags']['general'].join(' ')} #{results[0]['tags']['character'].join(' ')} #{results[0]['tags']['species'].join(' ')} #{results[0]['tags']['lore'].join(' ')} #{results[0]['tags']['copyright'].join(' ')} #{results[0]['tags']['meta'].join(' ')} rating:#{results[0]['rating']}"
-            PastLink.log_link(link, tag_string).save
-            pornbot.set_count = pornbot.set_count.to_i + 1
-            pornbot.save
+            unless NodeWallpaperBackend.enabled?
+              tag_string = "#{results[0]['tags']['general'].join(' ')} #{results[0]['tags']['character'].join(' ')} #{results[0]['tags']['species'].join(' ')} #{results[0]['tags']['lore'].join(' ')} #{results[0]['tags']['copyright'].join(' ')} #{results[0]['tags']['meta'].join(' ')} rating:#{results[0]['rating']}"
+              PastLink.log_link(link, tag_string).save
+              pornbot.set_count = pornbot.set_count.to_i + 1
+              pornbot.save
+            end
           end
         end
       rescue
@@ -53,6 +56,7 @@ namespace :walltaker do
   end
 
   task ki_round: :environment do
+    next NodeAutomationBackend.round('ki') if NodeAutomationBackend.enabled?
     pornbot = User.find_by(username: 'PornLizardKi')
 
     unless pornbot
@@ -78,27 +82,29 @@ namespace :walltaker do
       controller = ApplicationController.new
       results = controller.get_tag_results "order:random #{tags} -nightmare_fuel", nil, nil, link, 1
       begin
-        if results[0] && results[0]['file']['url']
-          result = link.update(
-            HashWithIndifferentAccess.new(
-              {
-                post_url: results[0]['file']['url'],
-                post_thumbnail_url: results[0]['sample']['url'] || results[0]['preview']['url'],
-                post_description: results[0]['description'],
-                set_by_id: pornbot.id,
-                response_type: nil,
-                response_text: nil
-              }
+        if results&.first&.dig('file', 'url')
+          result = if NodeWallpaperBackend.enabled?
+            NodeWallpaperBackend.apply(link:, post: results[0], set_by: pornbot, count_self: true)
+          else
+            link.update(
+              post_url: results[0]['file']['url'],
+              post_thumbnail_url: results[0]['sample']['url'] || results[0]['preview']['url'],
+              post_description: results[0]['description'],
+              set_by_id: pornbot.id,
+              response_type: nil,
+              response_text: nil
             )
-          )
+          end
 
           if result
             puts "Set link_id=#{link.id} to #{results[0]['file']['url']}"
             set_count += 1
-            tag_string = "#{results[0]['tags']['general'].join(' ')} #{results[0]['tags']['character'].join(' ')} #{results[0]['tags']['species'].join(' ')} #{results[0]['tags']['lore'].join(' ')} #{results[0]['tags']['copyright'].join(' ')} #{results[0]['tags']['meta'].join(' ')} rating:#{results[0]['rating']}"
-            PastLink.log_link(link, tag_string).save
-            pornbot.set_count = pornbot.set_count.to_i + 1
-            pornbot.save
+            unless NodeWallpaperBackend.enabled?
+              tag_string = "#{results[0]['tags']['general'].join(' ')} #{results[0]['tags']['character'].join(' ')} #{results[0]['tags']['species'].join(' ')} #{results[0]['tags']['lore'].join(' ')} #{results[0]['tags']['copyright'].join(' ')} #{results[0]['tags']['meta'].join(' ')} rating:#{results[0]['rating']}"
+              PastLink.log_link(link, tag_string).save
+              pornbot.set_count = pornbot.set_count.to_i + 1
+              pornbot.save
+            end
           end
         end
       rescue
@@ -111,6 +117,7 @@ namespace :walltaker do
   end
 
   task warren_round: :environment do
+    next NodeAutomationBackend.round('warren') if NodeAutomationBackend.enabled?
     pornbot = User.find_by(username: 'PornLizardWarren')
 
     unless pornbot
@@ -136,27 +143,29 @@ namespace :walltaker do
       controller = ApplicationController.new
       results = controller.get_tag_results "order:random #{tags} -nightmare_fuel", nil, nil, link, 1
       begin
-        if results[0] && results[0]['file']['url']
-          result = link.update(
-            HashWithIndifferentAccess.new(
-              {
-                post_url: results[0]['file']['url'],
-                post_thumbnail_url: results[0]['sample']['url'] || results[0]['preview']['url'],
-                post_description: results[0]['description'],
-                set_by_id: pornbot.id,
-                response_type: nil,
-                response_text: nil
-              }
+        if results&.first&.dig('file', 'url')
+          result = if NodeWallpaperBackend.enabled?
+            NodeWallpaperBackend.apply(link:, post: results[0], set_by: pornbot, count_self: true)
+          else
+            link.update(
+              post_url: results[0]['file']['url'],
+              post_thumbnail_url: results[0]['sample']['url'] || results[0]['preview']['url'],
+              post_description: results[0]['description'],
+              set_by_id: pornbot.id,
+              response_type: nil,
+              response_text: nil
             )
-          )
+          end
 
           if result
             puts "Set link_id=#{link.id} to #{results[0]['file']['url']}"
             set_count += 1
-            tag_string = "#{results[0]['tags']['general'].join(' ')} #{results[0]['tags']['character'].join(' ')} #{results[0]['tags']['species'].join(' ')} #{results[0]['tags']['lore'].join(' ')} #{results[0]['tags']['copyright'].join(' ')} #{results[0]['tags']['meta'].join(' ')} rating:#{results[0]['rating']}"
-            PastLink.log_link(link, tag_string).save
-            pornbot.set_count = pornbot.set_count.to_i + 1
-            pornbot.save
+            unless NodeWallpaperBackend.enabled?
+              tag_string = "#{results[0]['tags']['general'].join(' ')} #{results[0]['tags']['character'].join(' ')} #{results[0]['tags']['species'].join(' ')} #{results[0]['tags']['lore'].join(' ')} #{results[0]['tags']['copyright'].join(' ')} #{results[0]['tags']['meta'].join(' ')} rating:#{results[0]['rating']}"
+              PastLink.log_link(link, tag_string).save
+              pornbot.set_count = pornbot.set_count.to_i + 1
+              pornbot.save
+            end
           end
         end
 
@@ -170,6 +179,7 @@ namespace :walltaker do
   end
 
   task taylor_round: :environment do
+    next NodeAutomationBackend.round('taylor') if NodeAutomationBackend.enabled?
     pornbot = User.find_by(username: 'PornLizardTaylor')
 
     unless pornbot
@@ -195,27 +205,29 @@ namespace :walltaker do
       controller = ApplicationController.new
       results = controller.get_tag_results "order:random #{tags} -nightmare_fuel", nil, nil, link, 1
       begin
-        if results[0] && results[0]['file']['url']
-          result = link.update(
-            HashWithIndifferentAccess.new(
-              {
-                post_url: results[0]['file']['url'],
-                post_thumbnail_url: results[0]['sample']['url'] || results[0]['preview']['url'],
-                post_description: results[0]['description'],
-                set_by_id: pornbot.id,
-                response_type: nil,
-                response_text: nil
-              }
+        if results&.first&.dig('file', 'url')
+          result = if NodeWallpaperBackend.enabled?
+            NodeWallpaperBackend.apply(link:, post: results[0], set_by: pornbot, count_self: true)
+          else
+            link.update(
+              post_url: results[0]['file']['url'],
+              post_thumbnail_url: results[0]['sample']['url'] || results[0]['preview']['url'],
+              post_description: results[0]['description'],
+              set_by_id: pornbot.id,
+              response_type: nil,
+              response_text: nil
             )
-          )
+          end
 
           if result
             puts "Set link_id=#{link.id} to #{results[0]['file']['url']}"
             set_count += 1
-            tag_string = "#{results[0]['tags']['general'].join(' ')} #{results[0]['tags']['character'].join(' ')} #{results[0]['tags']['species'].join(' ')} #{results[0]['tags']['lore'].join(' ')} #{results[0]['tags']['copyright'].join(' ')} #{results[0]['tags']['meta'].join(' ')} rating:#{results[0]['rating']}"
-            PastLink.log_link(link, tag_string).save
-            pornbot.set_count = pornbot.set_count.to_i + 1
-            pornbot.save
+            unless NodeWallpaperBackend.enabled?
+              tag_string = "#{results[0]['tags']['general'].join(' ')} #{results[0]['tags']['character'].join(' ')} #{results[0]['tags']['species'].join(' ')} #{results[0]['tags']['lore'].join(' ')} #{results[0]['tags']['copyright'].join(' ')} #{results[0]['tags']['meta'].join(' ')} rating:#{results[0]['rating']}"
+              PastLink.log_link(link, tag_string).save
+              pornbot.set_count = pornbot.set_count.to_i + 1
+              pornbot.save
+            end
           end
         end
       rescue
@@ -228,6 +240,7 @@ namespace :walltaker do
   end
 
   task scoop_round: :environment do
+    next NodeAutomationBackend.request('scoop-round', request_key: SecureRandom.uuid) if NodeAutomationBackend.enabled?
     next_scoop = Scoop.where(was_shown: false).order(created_at: :asc).first
     if next_scoop
       news_entry = NewsEntry.from_scoop(next_scoop)

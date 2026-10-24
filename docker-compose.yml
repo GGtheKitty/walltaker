@@ -7,6 +7,19 @@ x-redis-env: &redis
 x-walltaker-env: &walltaker
   WALLTAKER_HOST: ${WALLTAKER_HOST?error}
   WALLTAKER_BASE_URL: ${WALLTAKER_URL?error}
+  E621_BACKEND_URL: http://wallpaper_api:3002
+  LINK_MANAGEMENT_URL: http://wallpaper_api:3002
+  NODE_REALTIME_URL: http://wallpaper_api:3002
+  ACCOUNTS_BACKEND_URL: http://accounts:3003
+  SOCIAL_BACKEND_URL: http://wallpaper_api:3002
+  DISCOVERY_BACKEND_URL: http://wallpaper_api:3002
+  TRACKER_BACKEND_URL: http://wallpaper_api:3002
+  MODERATION_BACKEND_URL: http://wallpaper_api:3002
+  AUTOMATION_BACKEND_URL: http://wallpaper_api:3002
+  ACTIVITY_BACKEND_URL: http://wallpaper_api:3002
+  BROWSER_BACKEND_URL: http://wallpaper_api:3002
+  RENDER_BACKEND_URL: http://wallpaper_api:3002
+  NODE_RENDER_ACTIVE: ${NODE_RENDER_ACTIVE:-false}
   E621_USER_AGENT: ${WALLTAKER_HOST} (forked from ailurus and run by ${E621_USER})
 
 x-anycable-env: &anycable
@@ -15,6 +28,86 @@ x-anycable-env: &anycable
   ANYCABLE_REDIS_CHANNEL: __anycable__
 
 services:
+  accounts:
+    build: ./services/accounts
+    restart: unless-stopped
+    mem_limit: 160m
+    memswap_limit: 192m
+    cpus: 0.5
+    environment:
+      DATABASE_URL: postgres://${ACCOUNTS_DB_USER}:${ACCOUNTS_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      NODE_NATIVE_DELIVERY: ${NODE_NATIVE_DELIVERY:-false}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      RAILS_INTERNAL_URL: http://web:3000
+    networks:
+      - backend
+
+  router:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${RAILS_HOST_PORT}:8080"
+    volumes:
+      - ./services/router/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
+      - e621_media
+      - wallpaper_api
+    networks:
+      - frontend
+
+  e621_media:
+    build: ./services/e621-media
+    restart: unless-stopped
+    environment:
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      E621_USER_AGENT: ${WALLTAKER_HOST} (forked from ailurus and run by ${E621_USER})
+    networks:
+      - frontend
+
+  wallpaper_api:
+    build:
+      context: ./services
+      dockerfile: wallpaper-api/Dockerfile
+    restart: unless-stopped
+    mem_limit: 256m
+    memswap_limit: 320m
+    cpus: 1.0
+    environment:
+      NODE_OPTIONS: --max-old-space-size=128
+      DATABASE_URL: postgres://${WALLPAPER_API_DB_USER}:${WALLPAPER_API_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      WALLPAPER_WRITER_DATABASE_URL: postgres://${WALLPAPER_WRITER_DB_USER}:${WALLPAPER_WRITER_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      LINK_MANAGER_DATABASE_URL: postgres://${LINK_MANAGER_DB_USER}:${LINK_MANAGER_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      MODERATION_DATABASE_URL: postgres://${MODERATION_DB_USER}:${MODERATION_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      AUTOMATION_DATABASE_URL: postgres://${AUTOMATION_DB_USER}:${AUTOMATION_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      NODE_RENDERING_ENABLED: ${NODE_RENDERING_ENABLED:-false}
+      NODE_NATIVE_DELIVERY: ${NODE_NATIVE_DELIVERY:-false}
+      DELIVERY_DATABASE_URL: postgres://${DELIVERY_DB_USER}:${DELIVERY_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_SMTP_PASSWORD: ${RESEND_SMTP_PASSWORD:-}
+      RESEND_SMTP_ADDRESS: ${RESEND_SMTP_ADDRESS:-smtp.resend.com}
+      RESEND_SMTP_PORT: ${RESEND_SMTP_PORT:-587}
+      RESEND_SMTP_USER_NAME: ${RESEND_SMTP_USER_NAME:-resend}
+      RESEND_SMTP_AUTHENTICATION: ${RESEND_SMTP_AUTHENTICATION:-plain}
+      RESEND_SMTP_ENABLE_STARTTLS_AUTO: ${RESEND_SMTP_ENABLE_STARTTLS_AUTO:-true}
+      WALLTAKER_MAIL_FROM: ${WALLTAKER_MAIL_FROM:-walltaker@${WALLTAKER_HOST}}
+      BROWSER_DATABASE_URL: postgres://${BROWSER_DB_USER}:${BROWSER_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      ACCOUNTS_INTERNAL_URL: http://accounts:3003
+      ACTIVITY_DATABASE_URL: postgres://${ACTIVITY_DB_USER}:${ACTIVITY_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      PORNBOT_INTERVAL_SECONDS: ${PORNBOT_INTERVAL_SECONDS:-600}
+      TRACKER_DATABASE_URL: postgres://${TRACKER_DB_USER}:${TRACKER_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      DISCOVERY_DATABASE_URL: postgres://${DISCOVERY_DB_USER}:${DISCOVERY_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      SOCIAL_DATABASE_URL: postgres://${SOCIAL_DB_USER}:${SOCIAL_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      REALTIME_DATABASE_URL: postgres://${REALTIME_DB_USER}:${REALTIME_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      REDIS_URL: redis://${CACHE_HOST}:${CACHE_PORT}/1
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      WALLTAKER_BASE_URL: ${WALLTAKER_URL}
+      RAILS_INTERNAL_URL: http://web:3000
+      E621_USER_AGENT: ${WALLTAKER_HOST} (forked from ailurus and run by ${E621_USER})
+    networks:
+      - backend
+      - frontend
+
   database:
     image: postgres:14
     restart: unless-stopped
@@ -59,8 +152,6 @@ services:
     command: bash -lc 'ruby -rsocket -e "loop { begin; TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; break; rescue; sleep 1; end }" && bundle exec rails assets:precompile && bundle exec rails db:prepare && bundle exec rails server -e production -b 0.0.0.0'
     volumes:
       - ./:/ror
-    ports:
-      - "127.0.0.1:${RAILS_HOST_PORT}:3000"
     depends_on:
       - database
       - redis
@@ -70,27 +161,10 @@ services:
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       RAILS_ENV: production
       RAILS_SERVE_STATIC_FILES: true
+      WALLPAPER_BACKEND_URL: http://wallpaper_api:3002
     networks:
       - backend
       - frontend
-
-  pornbot_scheduler:
-    image: walltaker-web:anycable
-    build: .
-    restart: unless-stopped
-    command: bash -lc 'ruby -rsocket -e "loop { begin; TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; break; rescue; sleep 1; end }" && while true; do bundle exec rake walltaker:porn_bot_round; sleep "$${PORNBOT_INTERVAL_SECONDS:-600}"; done'
-    volumes:
-      - ./:/ror
-    depends_on:
-      - database
-      - redis
-    environment:
-      <<: [*database, *redis, *walltaker]
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      RAILS_ENV: production
-      PORNBOT_INTERVAL_SECONDS: ${PORNBOT_INTERVAL_SECONDS:-600}
-    networks:
-      - backend
 
   cable:
     image: anycable/anycable-go:1.6-alpine
@@ -100,11 +174,12 @@ services:
     depends_on:
       - web
       - redis
+      - wallpaper_api
     environment:
       <<: *anycable
       ANYCABLE_HOST: 0.0.0.0
       ANYCABLE_PORT: 8080
-      ANYCABLE_RPC_HOST: http://web:3000/_anycable
+      ANYCABLE_RPC_HOST: http://wallpaper_api:3002/_internal/realtime-rpc
       ANYCABLE_RPC_CONCURRENCY: 4
       ANYCABLE_HEADERS: cookie,origin,user-agent,joihow,user_agent,wallpaper-engine-client
       ANYCABLE_DISCONNECT_MODE: always

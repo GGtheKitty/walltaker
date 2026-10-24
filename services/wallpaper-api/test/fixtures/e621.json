@@ -1,0 +1,207 @@
+[
+  {
+    "input": {
+      "tags": "",
+      "policy": {
+        "blacklist": "",
+        "theme": null,
+        "min_score": 0,
+        "can_show_videos": false,
+        "is_kink_aligned": false,
+        "kinks": [
+
+        ]
+      }
+    },
+    "expected": {
+      "tags": " -flash  -animated",
+      "limit": 15,
+      "page": null,
+      "suffix": "-flash  -animated",
+      "blacklist": "",
+      "videos": false
+    }
+  },
+  {
+    "input": {
+      "tags": "foo foo blocked",
+      "policy": {
+        "blacklist": "BLOCKED gore",
+        "theme": "forest",
+        "min_score": 50,
+        "can_show_videos": false,
+        "is_kink_aligned": false,
+        "kinks": [
+
+        ]
+      }
+    },
+    "expected": {
+      "tags": "foo -flash forest -blocked -gore score:>50 -animated",
+      "limit": 15,
+      "page": null,
+      "suffix": "-flash forest -blocked -gore score:>50 -animated",
+      "blacklist": "blocked gore",
+      "videos": false
+    }
+  },
+  {
+    "input": {
+      "tags": "order:random ~foo",
+      "policy": {
+        "blacklist": "",
+        "theme": null,
+        "min_score": 0,
+        "can_show_videos": true,
+        "is_kink_aligned": true,
+        "kinks": [
+          "foo",
+          "bar"
+        ]
+      }
+    },
+    "expected": {
+      "tags": "order:random ~foo -flash  ~foo ~bar",
+      "limit": 15,
+      "page": null,
+      "suffix": "-flash  ~foo ~bar",
+      "blacklist": "",
+      "videos": true
+    }
+  },
+  {
+    "input": {
+      "tags": "foo",
+      "policy": {
+        "blacklist": "",
+        "theme": null,
+        "min_score": 0,
+        "can_show_videos": false,
+        "is_kink_aligned": true,
+        "kinks": [
+          "foo",
+          "bar"
+        ]
+      }
+    },
+    "expected": {
+      "tags": "foo -flash  -animated",
+      "limit": 15,
+      "page": null,
+      "suffix": "-flash  -animated",
+      "blacklist": "",
+      "videos": false
+    }
+  },
+  {
+    "input": {
+      "tags": "",
+      "policy": {
+        "blacklist": "",
+        "theme": null,
+        "min_score": 0,
+        "can_show_videos": false,
+        "is_kink_aligned": true,
+        "kinks": [
+
+        ]
+      }
+    },
+    "expected": {
+      "tags": " -flash  -animated ",
+      "limit": 15,
+      "page": null,
+      "suffix": "-flash  -animated ",
+      "blacklist": "",
+      "videos": false
+    }
+  },
+  {
+    "input": {
+      "tags": "a a",
+      "policy": null
+    },
+    "expected": {
+      "tags": "a a",
+      "limit": 15,
+      "page": null,
+      "suffix": "",
+      "blacklist": "",
+      "videos": true
+    }
+  },
+  {
+    "input": {
+      "tags": "fox",
+      "after": "123",
+      "limit": 150,
+      "policy": {
+        "blacklist": "MALE/MALE -gore rating:e <script>",
+        "theme": null,
+        "min_score": 0,
+        "can_show_videos": false,
+        "is_kink_aligned": false,
+        "kinks": [
+
+        ]
+      }
+    },
+    "expected": {
+      "tags": "fox -flash  -malemale -gore -rating:e -script -animated",
+      "limit": 150,
+      "page": "b123",
+      "suffix": "-flash  -malemale -gore -rating:e -script -animated",
+      "blacklist": "malemale gore rating:e script",
+      "videos": false
+    }
+  },
+  {
+    "input": {
+      "tags": "forest",
+      "before": "456",
+      "policy": {
+        "blacklist": "",
+        "theme": "forest",
+        "min_score": 300,
+        "can_show_videos": false,
+        "is_kink_aligned": false,
+        "kinks": [
+
+        ]
+      }
+    },
+    "expected": {
+      "tags": "forest -flash forest score:>300 -animated",
+      "limit": 15,
+      "page": "a456",
+      "suffix": "-flash forest score:>300 -animated",
+      "blacklist": "",
+      "videos": false
+    }
+  },
+  {
+    "input": {
+      "tags": "foo",
+      "after": "123",
+      "before": "456",
+      "policy": {
+        "blacklist": "",
+        "theme": null,
+        "min_score": 0,
+        "can_show_videos": false,
+        "is_kink_aligned": false,
+        "kinks": [
+
+        ]
+      }
+    },
+    "expected": {
+      "tags": "foo -flash  -animated",
+      "limit": 15,
+      "page": "a456",
+      "suffix": "-flash  -animated",
+      "blacklist": "",
+      "videos": false
+    }
+  }
+]

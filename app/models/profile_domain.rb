@@ -11,6 +11,8 @@ class ProfileDomain < ApplicationRecord
     hostname = ProfileDomainFilter.normalize_hostname(hostname)
     return if hostname.blank?
 
+    return NodeModerationBackend.domain_decision(hostname) if NodeModerationBackend.enabled?
+
     labels = hostname.split('.')
     candidates = ProfileDomainFilter.ip_address?(hostname) ? [hostname] : labels.each_index.map { |index| labels[index..].join('.') }
     decisions = where(domain: candidates).where.not(status: statuses[:pending]).index_by(&:domain)
