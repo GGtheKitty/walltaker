@@ -1,4 +1,15 @@
 <%= turbo_stream_from link %>
+<% current_client = client_for_user_agent(link.last_ping_user_agent)&.link_label || link.last_ping_user_agent.presence || 'Unknown client' %>
+<% content_for :og_description do %>
+  <%= [
+    ("Send #{link.user.username} some nice wallpapers!"),
+    ("theme: #{link.theme}" if link.theme.present?),
+    ("score > #{link.min_score}" if link.min_score.present? && link.min_score > 0),
+    "\n",
+    "Current client: #{current_client}"
+  ].compact.join(" ") %>
+<% end %>
+<% content_for :og_image, image_url('logos/WT_wallpaper.png') %>
 
 <% current_client = client_for_user_agent(link.last_ping_user_agent)&.link_label || link.last_ping_user_agent.presence || 'Unknown client' %>
 <% last_change = link.past_links.last %>
