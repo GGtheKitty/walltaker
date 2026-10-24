@@ -1,7 +1,5 @@
 <%= turbo_stream_from link %>
-
-
-
+<% current_client = client_for_user_agent(link.last_ping_user_agent)&.link_label || link.last_ping_user_agent.presence || 'Unknown client' %>
 <% content_for :og_description do %>
   <%= [
     ("Send #{link.user.username} some nice wallpapers!"),
