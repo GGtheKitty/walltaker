@@ -9,7 +9,9 @@ export const isMarkdown=value=>String(value ?? '').startsWith(MARKDOWN_MARKER);
 export function markdown(value){return require('marked').marked.parse(markdownSource(value),{gfm:true,breaks:true});}
 const tags='table th picture nav header footer ins kbd main marquee section map time area figure figcaption hgroup thead tbody tfoot details summary caption colgroup td tr link a abbr acronym address b big blockquote br cite code dd del dfn div dl dt em h1 h2 h3 h4 h5 h6 hr i img ins kbd li ol p pre samp small span strong sub sup time tt ul var style video audio source iframe relative-time sparkly-text'.split(' ');
 const attributes='behavior bgcolor direction hspace datetime scrollamount scrolldelay truespeed align valign vspace style src href class id width height alt lang title rel colspan rowspan controls autoplay loop preload muted shape coords target'.split(' ');
-const unsafeCss=value=>/(?:expression\s*\(|(?:java|vb)script\s*:|@(?:-moz-)?document|behavior\s*:|-moz-binding\s*:)/i.test(value);
+// Match the legacy executable property, not ordinary properties such as
+// scroll-behavior. A false positive here removes the entire custom stylesheet.
+const unsafeCss=value=>/(?:expression\s*\(|(?:java|vb)script\s*:|@(?:-moz-)?document|(?<![\w-])behavior\s*:|-moz-binding\s*:)/i.test(value);
 export function sanitizeProfileHTML(value,{advanced=true}={}){
   const sanitize=require('sanitize-html');
   return sanitize(String(value ?? ''),{allowedTags:advanced?tags:[...sanitize.defaults.allowedTags,'img','style','ins'],allowedAttributes:{'*':attributes},allowedSchemes:['http','https','ftp','mailto','tel'],allowedSchemesByTag:{img:['http','https','data']},allowVulnerableTags:true,parseStyleAttributes:false,

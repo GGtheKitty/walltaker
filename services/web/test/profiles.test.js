@@ -132,6 +132,34 @@ test('profile sanitization retains layouts but strips scripts, handlers and unsa
   assert.match(html,/<style>body/);assert.match(html,/class="split"/);assert.doesNotMatch(html,/script|onerror|javascript/);assert.match(html,/iframe/);
   assert.equal(dumpMarkdown('x'.repeat(50001)).length,MARKDOWN_MARKER.length+50000);
 });
+test('custom CSS preserves scroll-behavior while executable behavior properties remain blocked',()=>{
+  const css='html {scroll-behavior: smooth} :root {--accent: #800e5a} .details {border: 3px solid var(--accent)}';
+  const source='<div class="details" style="scroll-behavior: smooth">Biography</div><style>'+css+'</style>';
+  const rendered=renderedProfile(source,true);
+  assert.ok(rendered.includes('<style>'+css+'</style>'));
+  assert.match(rendered,/style="scroll-behavior: smooth"/);
+  assert.equal(sanitizeProfileHTML(rendered),rendered);
+  for(const property of ['behavior','BEHAVIOR','-moz-binding']){
+    const dangerous=sanitizeProfileHTML('<style>body {'+property+': url(https://example.com/payload)}</style><p style="'+property+': url(https://example.com/payload)">Biography</p>');
+    assert.doesNotMatch(dangerous,/<style|style=|payload/);
+    assert.match(dangerous,/<p>Biography<\/p>/);
+  }
+});
+test('custom profile CSS survives document, details, style preview and editor rendering',async t=>{
+  const {state,get}=await fixture(t);
+  const css='html {scroll-behavior: smooth} :root {--accent: #800e5a} .details {border: 3px solid var(--accent)}';
+  const source='<div class="details" style="scroll-behavior: smooth">Custom biography</div><!-- EDITORSPLIT --><style>'+css+'</style>';
+  state.users[0].advanced=true;
+  state.profiles[0].content=source;
+  for(const path of ['/users/Alice/profile-document','/users/7/details','/profiles/41/preview','/users/Alice/edit']){
+    const response=await get(path,{headers:path.endsWith('profile-document')?{'sec-fetch-dest':'iframe'}:{}});
+    assert.equal(response.status,200,path);
+    const body=await response.text();
+    assert.ok(body.includes('<style>'+css+'</style>'),path+' retains complete custom stylesheet');
+    assert.match(body,/class="details" style="scroll-behavior: smooth"/);
+  }
+  assert.equal(state.profiles[0].content,source);
+});
 test('domain filtering covers HTML/CSS, subdomains, overrides, Markdown references and IDN normalization',()=>{
   const rules=[{domain:'blocked.invalid',status:2},{domain:'allowed.blocked.invalid',status:1}];
   const html=filterProfileDomains('<a href="https://sub.blocked.invalid">bad</a><style>body{background:url(https://blocked.invalid/a)} @import "https://blocked.invalid/style";</style><img src="https://allowed.blocked.invalid/ok">',rules);
