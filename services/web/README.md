@@ -51,3 +51,12 @@ assets rebuild automatically. `scripts/devenv-watch.py` performs bounded image
 builds for dependency/Dockerfile changes, runs Node schema migrations, and
 validates Nginx before reload. `NODE_WEB_TRUST_PROXY_HOPS=2` matches this VPS's TLS
 proxy plus Nginx. Change it when deployment proxy topology changes.
+
+The footer reads `COMMIT_HASH`, `COMMIT_LINK`, and `RELEASE_CREATED_AT` from the
+web service environment. `scripts/compose` (also used by `scripts/devenv`)
+defaults the hash and date to Git HEAD. The link defaults to that exact commit
+in GGtheKitty/walltaker. Explicit deployment variables override these defaults.
+The preview watcher refreshes the web container when HEAD changes; uncommitted
+edits still reload normally and keep the last committed hash. Deployments
+started without the wrapper must provide their own metadata; an absent hash
+displays “Commit unavailable”.

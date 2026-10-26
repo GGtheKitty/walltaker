@@ -27,6 +27,18 @@ class PreviewWatcherTest(unittest.TestCase):
         watcher.apply_changes(['services/web/scripts/build-assets.js'])
         run.assert_called_once_with('up','-d','--no-deps','--force-recreate','node_web')
     @patch.object(watcher,'run')
+    @patch.object(watcher.subprocess,'run')
+    def test_new_commit_refreshes_web_metadata_without_rebuilding(self,build,run):
+        watcher.apply_changes(['.git/HEAD'])
+        build.assert_not_called()
+        run.assert_called_once_with('up','-d','--no-deps','--force-recreate','node_web')
+    @patch.object(watcher.subprocess,'check_output')
+    def test_snapshot_tracks_resolved_commit_instead_of_head_file_timestamp(self,git):
+        git.return_value='a'*40+'\n'
+        self.assertEqual('a'*40,watcher.snapshot()['.git/HEAD'])
+        git.return_value='b'*40+'\n'
+        self.assertEqual('b'*40,watcher.snapshot()['.git/HEAD'])
+    @patch.object(watcher,'run')
     def test_environment_changes_validate_schema_before_recreation(self,run):
         watcher.apply_changes(['docker-compose-devenv.yml'])
         self.assertEqual([call('run','--rm','--no-deps','migrate'),call('up','-d','--no-deps','--force-recreate',*watcher.SERVICES)],run.call_args_list)

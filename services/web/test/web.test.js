@@ -53,6 +53,22 @@ async function web(t, overrides = {}, extra = {}) {
 const post = fields => ({method:'POST', headers:{'content-type':'application/x-www-form-urlencoded'}, body:new URLSearchParams(fields)});
 const cookieHeader = cookies => cookies.map(value => value.split(';')[0]).join('; ');
 
+test('footer links retain spacing and identify the exact configured commit',async t=>{
+  const hash='abcdef0123456789abcdef0123456789abcdef01';
+  const {get}=await web(t,{'browser/context':()=>({...auth(),user:{id:7,username:'Admin',admin:true}})},{publicEnv:{COMMIT_HASH:hash}});
+  const response=await get('/');assert.equal(response.status,200);
+  const footer=(await response.text()).match(/<footer>([\s\S]*?)<\/footer>/)[1];
+  assert.ok(footer.includes('href="https://github.com/GGtheKitty/walltaker/commit/'+hash+'">#abcdef012'));
+  assert.match(footer,/Stats<\/a>\s+<a href="\/mod_tools">/);
+  assert.match(footer,/Mod Tools<\/a>\s+<a href="\/lizard_tools">/);
+});
+test('footer handles missing metadata and respects explicit deployment links',async t=>{
+  const missing=await web(t),page=await missing.get('/login');
+  const body=await page.text();assert.match(body,/Commit unavailable/);assert.doesNotMatch(body,/>#\s*<\/a>/);
+  const configured=await web(t,{}, {publicEnv:{COMMIT_HASH:'123456789abcdef',COMMIT_LINK:'https://example.com/releases/123456789'}});
+  assert.match(await (await configured.get('/login')).text(),/href="https:\/\/example.com\/releases\/123456789">#123456789/);
+});
+
 test('nested forms support checkboxes, arrays and grouped records without prototype pollution', () => {
   const form = parseFields([['user[name]','Alice'],['user[active]','0'],['user[active]','1'],['tags[]','a'],['tags[]','b'],['rows[][name]','one'],['rows[][value]','1'],['rows[][name]','two']]);
   assert.equal(form.user.active, '1'); assert.deepEqual(form.tags, ['a','b']); assert.equal(form.rows[0].value, '1'); assert.equal(form.rows[1].name, 'two');

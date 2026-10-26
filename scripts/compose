@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Public version metadata comes from the checkout unless deployment variables
+# explicitly override it. No repository or Git credentials enter the container.
+if command -v git >/dev/null 2>&1; then
+  WALLTAKER_GIT_COMMIT_HASH="$(git rev-parse --verify HEAD 2>/dev/null || true)"
+  WALLTAKER_GIT_COMMIT_TIME="$(git show -s --format=%cI HEAD 2>/dev/null || true)"
+  export WALLTAKER_GIT_COMMIT_HASH WALLTAKER_GIT_COMMIT_TIME
+fi
 env_files=(--env-file .env.example)
 if [[ -f .env ]]; then env_files+=(--env-file .env); fi
 env_files+=(--env-file walltaker.env)

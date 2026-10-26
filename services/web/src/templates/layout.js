@@ -45,6 +45,8 @@ export function layout(view, content, pageTitle) {
   const mascot = ['ki','warren','taylor'].includes(user?.mascot) ? user.mascot : 'ki';
   const head = {ki:'Ki',warren:'Warren',taylor:'Taylor'}[mascot];
   const controller = view.surrender && view.users.get(String(view.surrender.controller_user_id));
+  const commitHash = String(view.env.COMMIT_HASH || '').trim();
+  const commitLink = safeUrl(view.env.COMMIT_LINK,commitHash ? 'https://github.com/GGtheKitty/walltaker/commit/'+encodeURIComponent(commitHash) : 'https://github.com/GGtheKitty/walltaker/tree/node');
   return html`<!doctype html><html lang="en" class="${user ? 'force-' + (['light','dark'].includes(user.colour_preference) ? user.colour_preference : ({0:'auto',1:'light',2:'dark'}[user.colour_preference] || 'auto')) : ''} current-mascot-${mascot} ${user?.pervert ? 'currently-perverted' : ''}">
   <head><meta charset="utf-8"><title>${pageTitle}</title>
     ${view.profileDocument?html`<base target="_top"><meta name="robots" content="noindex, nofollow">`:empty}<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1"><meta name="rating" content="adult">
@@ -72,8 +74,8 @@ export function layout(view, content, pageTitle) {
       <div class="modal__buttons"><a href="https://discord.gg/s4z9GfwuKw" class="no-underline secondary" target="_blank" rel="noopener">Let me join!</a></div></dialog>${icon('logo-discord','big')} Join our Discord</div>${mascotPicker(view)}</div>` : empty}
     <main ${view.mainClass?html`class="${view.mainClass}"`:empty}>${content}</main><footer><p>Want more horny debauchery? Try <a href="https://joi.how">joi.how</a>.<br>Horny lizards Warren, Taylor, and Ki conceived of and drawn by
       <a href="https://www.furaffinity.net/user/cherryzbun/" target="_blank" rel="noopener">CherryzBun</a><br><a href="/help">Need help with Walltaker?</a> &nbsp; <a href="/help/faq">FAQs</a> &nbsp; <a href="/help/client_guide" target="_top">Client Building Guide</a></p>
-      <small>© joi.how 2024 / Commit <a href="${safeUrl(view.env.COMMIT_LINK,'https://github.com/GGtheKitty/walltaker/tree/node')}">#${view.env.COMMIT_HASH?.slice(0,9) || ''} ${view.env.RELEASE_CREATED_AT ? timeAgo(view.env.RELEASE_CREATED_AT)+' ago' : ''}</a>
-      ${user?.admin ? html`<a href="/blazer">${icon('stats-chart')} Stats</a><a href="/mod_tools">${icon('nuclear')} Mod Tools</a>` : empty}
+      <small>© joi.how 2024 / Commit ${commitHash ? html`<a href="${commitLink}">#${commitHash.slice(0,9)} ${view.env.RELEASE_CREATED_AT ? timeAgo(view.env.RELEASE_CREATED_AT)+' ago' : ''}</a>` : 'unavailable'}
+      ${user?.admin ? html`<a href="/blazer">${icon('stats-chart')} Stats</a> <a href="/mod_tools">${icon('nuclear')} Mod Tools</a>` : empty}
       ${user && (user.admin || ['PornLizardWarren','PornLizardKi','PornLizardTaylor'].includes(user.username)) ? html`<a href="/lizard_tools">${icon('sparkles')} Lizard Tools</a>` : empty}</small></footer>
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script><script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
   </body></html>`;

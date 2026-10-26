@@ -60,9 +60,9 @@ services:
       NODE_WEB_ASSET_DIR: /app/web/dist
       # Outer TLS proxy and the internal Nginx router.
       NODE_WEB_TRUST_PROXY_HOPS: "2"
-      COMMIT_HASH: ${COMMIT_HASH:-}
+      COMMIT_HASH: ${COMMIT_HASH:-${WALLTAKER_GIT_COMMIT_HASH:-}}
       COMMIT_LINK: ${COMMIT_LINK:-}
-      RELEASE_CREATED_AT: ${RELEASE_CREATED_AT:-}
+      RELEASE_CREATED_AT: ${RELEASE_CREATED_AT:-${WALLTAKER_GIT_COMMIT_TIME:-}}
     depends_on:
       - wallpaper_api
     networks:

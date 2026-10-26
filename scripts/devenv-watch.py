@@ -11,6 +11,8 @@ STATE=ROOT/'tmp/devenv-watch-state.json'
 SERVICES=['e621_media','wallpaper_api','accounts','node_web','router','cable']
 
 def action_for(path):
+    if path=='.git/HEAD':
+        return 'restart_node_web'
     if path in {'.env','.env.example','walltaker.env','docker-compose.yml','docker-compose-devenv.yml'}:
         return 'recreate'
     for folder,action in [('e621-media','build_media'),('wallpaper-api','build_api'),('accounts','build_accounts'),('web','build_node_web'),('database','build_database'),('cable','build_cable')]:
@@ -32,7 +34,11 @@ def snapshot():
         for parent,dirs,files in os.walk(ROOT/folder):
             dirs[:]=[name for name in dirs if name not in {'.git','node_modules','tmp','dist','log','vendor','__pycache__'}]
             paths.extend(Path(parent)/name for name in files)
-    return {path.relative_to(ROOT).as_posix():[path.stat().st_mtime_ns,path.stat().st_size] for path in paths if path.is_file() and action_for(path.relative_to(ROOT).as_posix())}
+    result={path.relative_to(ROOT).as_posix():[path.stat().st_mtime_ns,path.stat().st_size] for path in paths if path.is_file() and action_for(path.relative_to(ROOT).as_posix())}
+    # Resolve the commit rather than stat HEAD: a commit normally changes a
+    # branch ref, and packed refs/worktrees do not share one fixed ref path.
+    result['.git/HEAD']=subprocess.check_output(['git','rev-parse','--verify','HEAD'],cwd=ROOT,text=True).strip()
+    return result
 
 def run(*args):
     print('Applying:',' '.join(args),flush=True)
