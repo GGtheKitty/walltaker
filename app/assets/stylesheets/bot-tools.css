@@ -1,0 +1,50 @@
+.bot-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.bot-tools__bot {
+    margin: 0;
+}
+.bot-tools__heading,
+.bot-tools__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.bot-tools__heading h3 {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+.bot-tools__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.bot-tools__form textarea {
+    display: block;
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+}
+.bot-tools__timing {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+.bot-tools__timing label,
+.bot-tools__timing input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+.bot-tools__actions {
+    justify-content: flex-start;
+    margin-top: 1rem;
+}
+.bot-tools__actions form,
+.bot-tools__actions button {
+    margin: 0;
+}

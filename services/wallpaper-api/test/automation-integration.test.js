@@ -8,6 +8,7 @@ import { enqueueWallpaperAutomation,verifyAutomationSelection,automationLink,wal
 import { createWallpaperWriter } from '../src/updates.js';
 import { createLegacyAutomationImporter } from '../src/automation-legacy.js';
 import { createNewsroom } from '../src/newsroom.js';
+import {changeBot} from '../src/bot-settings.js';
 
 pg.types.setTypeParser(1114,value=>new Date(value+'Z'));
 const post={id:321,file:{url:'https://static1.e621.net/data/aa/test.jpg',ext:'jpg'},sample:{url:'https://static1.e621.net/data/thumb.jpg'},preview:{url:null},description:'A wallpaper',tags:{general:['forest'],species:['canine']},rating:'e'};
@@ -20,6 +21,7 @@ test('persistent automation with production grants, races, restart recovery, for
   admin=new pg.Pool({connectionString:url.href,max:2});
   await admin.query(readFileSync(new URL('./fixtures/moderation-schema.sql',import.meta.url),'utf8'));
   await admin.query(readFileSync(new URL('./fixtures/automation-schema.sql',import.meta.url),'utf8'));
+  await admin.query(readFileSync(new URL('../../../db/migrations/20261026050000_add_bot_controls.sql',import.meta.url),'utf8'));
   await admin.query(`CREATE ROLE node_automation LOGIN PASSWORD 'test';CREATE ROLE node_automation_writer LOGIN PASSWORD 'test';
     INSERT INTO users(id,username,email,password_digest,api_key,mascot,system_account,created_at,updated_at) VALUES
       (1,'Alice','private@example.test','private-hash','privkey','ki',false,now(),now()),
@@ -49,16 +51,24 @@ test('persistent automation with production grants, races, restart recovery, for
   const automation=createAutomation({pool,store:{onlineIds:async()=>liveIds},e621,writeWallpaper,newsroom});
   const reset=async()=>{
    await admin.query(`DELETE FROM node_automation_events;DELETE FROM node_automation_jobs;DELETE FROM node_automation_schedules;
+    UPDATE node_bot_settings SET enabled=true,normal_tags=NULL,perverted_tags=NULL,interval_seconds=NULL,cooldown_seconds=NULL,round_limit=NULL,revision=1;
     DELETE FROM node_wallpaper_events;DELETE FROM scoops;DELETE FROM past_links;DELETE FROM link_abilities;DELETE FROM kink_havers;
     UPDATE links SET forked_from_id=NULL,last_ping=now(),last_ping_user_agent='Test',blacklist='',theme='',e621_post_id=NULL,post_url=NULL;
     UPDATE users SET mascot='ki',pervert=false,set_count=0;UPDATE users SET system_account=true WHERE id IN (2,3);
     UPDATE node_newsroom_states SET generation=0,kind=NULL,entry='{}',story='{}',busy_until=NULL,throttle_until=NULL,rendered_event_id=NULL WHERE id=1;`);
    searches=[];selects=[];liveIds=[];selectHook=undefined;
   };
+  const configure=async(op,attributes={},bot='ki')=>{
+   const c=await admin.connect();
+   try{await c.query('BEGIN');const revision=(await c.query('SELECT revision FROM node_bot_settings WHERE name=$1',[bot])).rows[0].revision;
+    const result=await changeBot(c,op,{bot,revision,attributes});await c.query('COMMIT');return result;
+   }catch(error){await c.query('ROLLBACK');throw error;}finally{c.release();}
+  };
+  const custom={normal_tags:'forest rating:e',perverted_tags:'latex rating:e',interval_seconds:180,cooldown_seconds:0,round_limit:1};
   const next=async()=>{const job=await automation.queue.claim();assert.ok(job);const result=await automation.run(job);if(result?.deferUntil)await automation.queue.defer(job,result.deferUntil);else await automation.queue.complete(job);return job;};
-  const runKind=async kind=>{
+  const runKind=async(kind,bot=null)=>{
    await admin.query("UPDATE node_automation_jobs SET run_at=now()+interval '1 day' WHERE status='queued'");
-   await admin.query("UPDATE node_automation_jobs SET run_at=now() WHERE id=(SELECT id FROM node_automation_jobs WHERE kind=$1 AND status='queued' ORDER BY id LIMIT 1)",[kind]);
+   await admin.query("UPDATE node_automation_jobs SET run_at=now() WHERE id=(SELECT id FROM node_automation_jobs WHERE kind=$1 AND ($2::text IS NULL OR payload->>'bot'=$2) AND status='queued' ORDER BY id LIMIT 1)",[kind,bot]);
    return next();
   };
   const apply=async(linkId=1,key='root')=>{
@@ -67,6 +77,51 @@ test('persistent automation with production grants, races, restart recovery, for
   };
   await t.test('worker role cannot read credentials, edit users/wallpapers, or acknowledge Rails rendering',async()=>{
    for(const sql of ['SELECT password_digest FROM users','SELECT api_key FROM users','SELECT email FROM users','UPDATE users SET admin=true','UPDATE links SET post_url=\'https://bad.test\'','UPDATE node_automation_events SET delivered_at=now()','UPDATE node_newsroom_states SET rendered_event_id=1'])await assert.rejects(pool.query(sql),{code:'42501'});
+  });
+  await t.test('worker and wallpaper writer can read bot settings but cannot change them',async()=>{
+   for(const role of [pool,writer]){
+    assert.equal((await role.query('SELECT count(*) FROM node_bot_settings')).rows[0].count,'4');
+    await assert.rejects(role.query('UPDATE node_bot_settings SET enabled=false'),{code:'42501'});
+   }
+  });
+  await t.test('custom tags, intervals, batch sizes and worker heartbeats survive a new automation instance',async()=>{
+   for(const pervert of [false,true]){
+    await reset();await configure('bot-update',custom);
+    await admin.query("INSERT INTO link_abilities(link_id,ability,created_at,updated_at) SELECT id,'can_be_set_by_lizard',now(),now() FROM links WHERE id IN(1,2)");
+    await admin.query('UPDATE users SET pervert=$1 WHERE id=1',[pervert]);
+    const fresh=createAutomation({pool,store:{onlineIds:async()=>[]},e621,writeWallpaper,newsroom});
+    await fresh.request('round',{bot:'ki',request_key:'custom-round'});await next();
+    assert.equal((await admin.query("SELECT count(*) FROM node_automation_jobs WHERE kind='bot-link'")).rows[0].count,'1');
+    await runKind('bot-link');assert.equal(searches.length,1);assert.equal(searches[0].tags,'order:random '+(pervert?custom.perverted_tags:custom.normal_tags)+' -nightmare_fuel');
+    await admin.query("UPDATE node_automation_schedules SET next_run_at=now()-interval '1 second' WHERE name='ki'");await fresh.schedule();
+    const schedule=(await admin.query("SELECT extract(epoch FROM next_run_at-now()) AS wait,last_checked_at FROM node_automation_schedules WHERE name='ki'")).rows[0];
+    assert.ok(Number(schedule.wait)>175&&Number(schedule.wait)<=180);assert.ok(schedule.last_checked_at);
+   }
+  });
+  await t.test('configured cooldown prevents selecting a recently changed link',async()=>{
+   await reset();await configure('bot-update',{...custom,cooldown_seconds:60});
+   await admin.query("INSERT INTO link_abilities(link_id,ability,created_at,updated_at) VALUES(1,'can_be_set_by_lizard',now(),now()); INSERT INTO past_links(link_id,user_id,post_url,created_at,updated_at) VALUES(1,1,'https://example.test/recent.jpg',now()-interval '30 seconds',now())");
+   await automation.request('round',{bot:'ki',request_key:'cooldown'});await next();
+   assert.equal((await admin.query("SELECT count(*) FROM node_automation_jobs WHERE kind='bot-link'")).rows[0].count,'0');
+  });
+  await t.test('stopping skips queued rounds and selections; restarting invalidates old work and schedules a new check',async()=>{
+   for(const selected of [false,true]){
+    await reset();await admin.query("INSERT INTO link_abilities(link_id,ability,created_at,updated_at) VALUES(1,'can_be_set_by_lizard',now(),now())");
+    await automation.request('round',{bot:'ki',request_key:'before-stop'});if(selected)await next();
+    await configure('bot-stop');await assert.rejects(automation.request('round',{bot:'ki',request_key:'stopped'}),{status:422});
+    await next();assert.equal(searches.length,0);assert.equal((await admin.query('SELECT count(*) FROM past_links')).rows[0].count,'0');
+    await automation.schedule();assert.equal((await admin.query("SELECT count(*) FROM node_automation_jobs WHERE kind='bot-round' AND payload->>'bot'='ki' AND status='queued'")).rows[0].count,'0');
+    await configure('bot-start');await automation.schedule();await runKind('bot-round','ki');await runKind('bot-link');
+    assert.equal(searches.length,1);assert.equal((await admin.query('SELECT count(*) FROM past_links')).rows[0].count,'1');
+   }
+  });
+  await t.test('a stop or settings edit during the e621 request prevents the wallpaper transaction from committing',async()=>{
+   for(const operation of ['bot-stop','bot-update']){
+    await reset();await admin.query("INSERT INTO link_abilities(link_id,ability,created_at,updated_at) VALUES(1,'can_be_set_by_lizard',now(),now())");
+    await automation.request('round',{bot:'ki',request_key:'in-flight'});await next();
+    selectHook=()=>configure(operation,custom);await runKind('bot-link');
+    assert.equal(searches.length,1);assert.equal((await admin.query('SELECT count(*) FROM past_links')).rows[0].count,'0');
+   }
   });
   await t.test('schedules serialize across instances and skip missed rounds after downtime',async()=>{
    await reset();await Promise.all([automation.schedule(),automation.schedule()]);

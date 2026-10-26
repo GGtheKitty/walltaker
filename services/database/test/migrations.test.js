@@ -15,7 +15,9 @@ test('Node schema setup handles fresh/existing data, locks, SQL migrations, roll
     await migrate(pool,options);await migrate(pool,{...options,check:true});
     assert.ok((await pool.query("SELECT similarity('native','native') AS score")).rows[0].score>0.9);
     assert.equal((await pool.query('SELECT count(*) FROM users')).rows[0].count,'8');assert.equal((await pool.query('SELECT count(*) FROM wallpaper_clients')).rows[0].count,'19');
-    await pool.query("UPDATE users SET details='preserve account content' WHERE username='evil'");await pool.query('DELETE FROM node_schema_migrations');await migrate(pool,options);
+    // Rebaseline an existing installation without erasing its SQL migration
+    // history: later migrations must never be reapplied to the same schema.
+    await pool.query("UPDATE users SET details='preserve account content' WHERE username='evil'");await pool.query("DELETE FROM node_schema_migrations WHERE version='00000000000000'");await migrate(pool,options);
     assert.equal((await pool.query("SELECT details FROM users WHERE username='evil'")).rows[0].details,'preserve account content');
     await writeFile(join(directory,'migrations','00000000000001_probe.sql'),'CREATE TABLE migration_probe(id bigint);');
     await assert.rejects(migrate(pool,{...options,check:true}),/Pending migration/);

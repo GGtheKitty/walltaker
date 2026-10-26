@@ -5,16 +5,17 @@ import {domainService} from './moderation-domains.js';
 import {purgeUser,removeLinks} from './moderation-purge.js';
 import {reportTarget,reportSnapshot,reportDocuments,createReport} from './moderation-reports.js';
 import {systemMetrics,activityMetrics} from './moderation-metrics.js';
+import {botAdministration,changeBot} from './bot-settings.js';
 
 const canonical=v=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
-const READS=new Set(['admin-session','dashboard','invites','emoji-links','user-icons','clients','domains','system','activity','user','deleted-users','quarantine','events','reports','report','report-target','lizard-browse','lizard-index']);
-const WRITES=new Set(['setting-toggle','invite-create','invite-delete','emoji-create','emoji-update','emoji-delete','icon-create','icon-update','icon-delete','client-create','client-update','client-delete','client-move','domain-update','user-update','user-restore','user-purge','user-assume','user-quarantine','user-ipban','event-ipban','password-reset','report-create','report-close','link-delete']);
+const READS=new Set(['admin-session','dashboard','invites','emoji-links','user-icons','clients','domains','system','activity','user','deleted-users','quarantine','events','reports','report','report-target','lizard-browse','lizard-index','bots']);
+const WRITES=new Set(['setting-toggle','invite-create','invite-delete','emoji-create','emoji-update','emoji-delete','icon-create','icon-update','icon-delete','client-create','client-update','client-delete','client-move','domain-update','user-update','user-restore','user-purge','user-assume','user-quarantine','user-ipban','event-ipban','password-reset','report-create','report-close','link-delete','bot-update','bot-start','bot-stop']);
 const DOMAIN_SERVICE=new Set(['domain-rules','domain-seen','domain-scrub-page','domain-scrub-save']);
 const icon=v=>/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(text(v))?v:fail(422,'Icon must be a valid Ionicon name.');
 const escapedLike=v=>v.replace(/[\\%_]/g,'\\$&');
 const settings=async c=>Object.fromEntries((await rows(c,"SELECT key,value FROM site_settings WHERE key IN ('nnn_enabled','invite_only')")).map(r=>[r.key,r.value!=null&&r.value!==''&&!['0','f','false','off'].includes(r.value.toLowerCase())]));
 
-export function createModeration({pool,store,redis,secretKeyBase,baseUrl}) {
+export function createModeration({pool,store,redis,secretKeyBase,baseUrl,pornbotInterval=600}) {
  async function paginated(c,from,args=[],order='id',rawPage,per=100,select='*') {
   const count=Number((await one(c,'SELECT count(*) '+from,args)).count),requested=page(rawPage);
   const p=Math.min(requested,Math.max(1,Math.ceil(count/per)));
@@ -31,6 +32,7 @@ export function createModeration({pool,store,redis,secretKeyBase,baseUrl}) {
  }
  async function read(c,op,input,u) {
   if(op==='admin-session')return {};
+  if(op==='bots')return botAdministration(c,pornbotInterval);
   if(op==='dashboard')return {open_reports:Number((await one(c,'SELECT count(*) FROM reports WHERE is_closed=false')).count),pending_domains:Number((await one(c,'SELECT count(*) FROM profile_domains WHERE status=0')).count),settings:await settings(c)};
   if(op==='invites') {
    const list=await paginated(c,'FROM invite_codes',[],'redeemed_at IS NOT NULL,created_at DESC,id DESC',input.page);
@@ -109,6 +111,7 @@ export function createModeration({pool,store,redis,secretKeyBase,baseUrl}) {
   return await one(c,`SELECT * FROM ${table} WHERE id=$1 FOR UPDATE`,[id]) || fail(404,'Record not found.');
  }
  async function mutate(c,op,input,admin,effects) {
+  if(['bot-update','bot-start','bot-stop'].includes(op))return changeBot(c,op,input,pornbotInterval);
   if(op==='report-create')return createReport(c,input,admin);
   if(op==='setting-toggle') {
    if(!['nnn_enabled','invite_only'].includes(input.key))fail(422,'Invalid site setting.');

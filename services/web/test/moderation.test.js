@@ -8,12 +8,14 @@ import {addModerationRoutes} from '../src/moderation-routes.js';
 import {addBlazerRoutes} from '../src/blazer-routes.js';
 import {HttpError} from '../src/errors.js';
 import {blazerVariables,bindBlazer,createBlazer} from '../../wallpaper-api/src/blazer.js';
+import {BOTS,effectiveBot} from '../../wallpaper-api/src/bot-settings.js';
 const now=new Date().toISOString();
 const post=fields=>({method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({authenticity_token:'valid',...fields})});
 async function fixture(t,{anonymous=false,admin=true,lizard=false}={}){
   const current={id:7,username:lizard?'PornLizardKi':'AdminAlice',admin,mascot:'ki'},target={id:8,username:'Bob',email:'private-bob@example.test',advanced:false,details:'',set_count:3,created_at:now};
   const state={calls:[],anonymous,admin,lizard,delegated:false,target,profile:{id:31,content:'<!-- walltaker:markdown -->\n# Bio'},query:{id:41,name:'Saved Query',statement:'SELECT 1 AS total',creator_id:7,data_source:'main'},dashboard:{id:51,name:'Dashboard'},check:{id:61,query_id:41,check_type:'bad_data',schedule:'1 day',emails:'',state:'new'}};
   const list=records=>({records,page:1,per:100,count:records.length});
+  state.bots=Object.keys(BOTS).map(name=>({...effectiveBot({name,revision:'1',enabled:true}),account_available:true,next_run_at:now,jobs:{queued:0,running:0,failed:0}}));
   const reports=[{id:21,reporter_id:7,reportable_id:8,reportable_type:'User',reason:'Report <script>reason</script>',snapshot:'PRIVATE-SNAPSHOT <img src=x>',created_at:now,is_closed:false}];
   const backend=async(group,op,input)=>{
     state.calls.push({group,op,input});
@@ -30,6 +32,16 @@ async function fixture(t,{anonymous=false,admin=true,lizard=false}={}){
     if(group==='moderation'){
       if(state.unavailable)throw new HttpError(503,'Unavailable');
       if(op==='dashboard')return {open_reports:1,pending_domains:1,settings:{nnn_enabled:false}};
+      if(op==='bots')return {worker:{healthy:true,last_seen_at:now},bots:state.bots};
+      if(['bot-start','bot-stop','bot-update'].includes(op)){
+        const bot=state.bots.find(b=>b.name===input.bot);if(!bot)throw new HttpError(404,'Bot not found.');
+        if(input.revision!==bot.revision)throw new HttpError(409,'These bot settings changed. Refresh the page and try again.');
+        if(op==='bot-update'){
+          if(input.attributes.interval_seconds==='invalid')throw new HttpError(422,'Check interval must be a whole number between 60 and 86400.');
+          Object.assign(bot,input.attributes);
+        }else bot.enabled=op==='bot-start';
+        bot.revision=String(Number(bot.revision)+1);return {bot:bot.name,enabled:bot.enabled,revision:bot.revision};
+      }
       if(op==='invites')return {invites:list([{id:1,code:'INVITE',created_at:now,generated_by_id:7}]),users:[current],settings:{invite_only:false}};
       if(op==='emoji-links')return {decorations:list([{id:1,link_id:12,emoji:'✨'}])};
       if(op==='user-icons')return {icons:list([{id:1,user_id:8,icon_name:'person'}]),users:[target]};
@@ -71,19 +83,39 @@ async function fixture(t,{anonymous=false,admin=true,lizard=false}={}){
 }
 test('all help, moderation, lizard and configured Blazer pages render natively without Rails',async t=>{
   const {get}=await fixture(t);
-  for(const path of ['/help','/help/faq','/help/client_guide','/help/deprecated_client_guide','/users/8/reports/new','/links/12/reports/new','/mod_tools','/mod_tools/invites','/mod_tools/emoji_links','/mod_tools/user_icons','/mod_tools/clients','/mod_tools/profile_domains','/mod_tools/users?query=Bob','/mod_tools/users/deleted','/mod_tools/quarantine','/mod_tools/events','/mod_tools/passwords','/mod_tools/reports','/mod_tools/reports/21','/mod_tools/analytics/system','/mod_tools/analytics/activity','/lizard_tools','/lizard_tools/ki','/blazer','/blazer/queries/new','/blazer/queries/41-name','/blazer/queries/41/edit','/blazer/queries/docs','/blazer/queries/schema','/blazer/checks','/blazer/checks/new','/blazer/checks/61/edit','/blazer/dashboards/new','/blazer/dashboards/51','/blazer/dashboards/51/edit']){
+  for(const path of ['/help','/help/faq','/help/client_guide','/help/deprecated_client_guide','/users/8/reports/new','/links/12/reports/new','/mod_tools','/mod_tools/bots','/mod_tools/invites','/mod_tools/emoji_links','/mod_tools/user_icons','/mod_tools/clients','/mod_tools/profile_domains','/mod_tools/users?query=Bob','/mod_tools/users/deleted','/mod_tools/quarantine','/mod_tools/events','/mod_tools/passwords','/mod_tools/reports','/mod_tools/reports/21','/mod_tools/analytics/system','/mod_tools/analytics/activity','/lizard_tools','/lizard_tools/ki','/blazer','/blazer/queries/new','/blazer/queries/41-name','/blazer/queries/41/edit','/blazer/queries/docs','/blazer/queries/schema','/blazer/checks','/blazer/checks/new','/blazer/checks/61/edit','/blazer/dashboards/new','/blazer/dashboards/51','/blazer/dashboards/51/edit']){
     const response=await get(path);assert.equal(response.status,200,path);assert.equal(response.headers.get('x-walltaker-renderer'),'node-native',path);assert.doesNotMatch(await response.text(),/undefined|<%/);
   }
 });
 test('public help stays public; reports require login; staff and Blazer pages reject ordinary and delegated users',async t=>{
   const {state,get}=await fixture(t,{anonymous:true,admin:false});
   assert.equal((await get('/help')).status,200);assert.equal((await get('/users/8/reports/new')).headers.get('location'),'/login');assert.equal((await get('/blazer')).headers.get('location'),'/login');
-  state.anonymous=false;for(const path of ['/mod_tools','/mod_tools/users?query=Bob','/mod_tools/reports/21','/blazer','/blazer/queries/schema','/lizard_tools'])assert.equal((await get(path)).status,403,path);
+  state.anonymous=false;for(const path of ['/mod_tools','/mod_tools/bots','/mod_tools/users?query=Bob','/mod_tools/reports/21','/blazer','/blazer/queries/schema','/lizard_tools'])assert.equal((await get(path)).status,403,path);
   assert.ok(!state.calls.some(c=>c.group==='moderation'||c.group==='blazer'));
   state.admin=true;state.delegated=true;assert.equal((await get('/blazer')).status,403);assert.equal((await get('/mod_tools')).status,403);
 });
 test('named lizard staff can browse tools but cannot enter administration or SQL pages',async t=>{
   const {get}=await fixture(t,{admin:false,lizard:true});assert.equal((await get('/lizard_tools/ki')).status,200);assert.equal((await get('/mod_tools')).status,403);assert.equal((await get('/blazer')).status,403);
+});
+test('bot settings expose four escaped forms and actor-scoped saves/start/stop with CSRF and stale edit protection',async t=>{
+  const {state,get}=await fixture(t);
+  state.bots.find(b=>b.name==='ki').normal_tags='</textarea><script>alert(1)</script>';
+  const response=await get('/mod_tools/bots');assert.equal(response.status,200);const body=await response.text();
+  assert.match(body,/Worker active/);assert.equal((body.match(/class="accent-block bot-tools__bot"/g)||[]).length,4);
+  assert.match(body,/&lt;\/textarea&gt;&lt;script&gt;/);assert.doesNotMatch(body,/<script>alert/);
+  assert.match(body,/id="bot_ki_cooldown_seconds" name="bot\[cooldown_seconds\]" value="600" min="0"/);
+  const save=await get('/mod_tools/bots/ki',post({_method:'patch','bot[revision]':'1','bot[normal_tags]':'forest','bot[perverted_tags]':'latex','bot[interval_seconds]':'180','bot[cooldown_seconds]':'0','bot[round_limit]':'2','bot[enabled]':'0','actor_id':'99'}));
+  assert.equal(save.status,303);assert.equal(save.headers.get('location'),'/mod_tools/bots');
+  const call=state.calls.find(c=>c.op==='bot-update').input;assert.equal(call.actor_id,7);assert.equal(call.attributes.enabled,undefined);assert.equal(call.attributes.interval_seconds,'180');assert.equal(call.revision,'1');
+  await get('/mod_tools/bots/ki/stop',post({'bot[revision]':'2'}));assert.equal(state.bots.find(b=>b.name==='ki').enabled,false);
+  await get('/mod_tools/bots/ki/start',post({'bot[revision]':'3'}));assert.equal(state.bots.find(b=>b.name==='ki').enabled,true);
+  const before=state.calls.filter(c=>c.group==='moderation').length;
+  assert.equal((await get('/mod_tools/bots/ki/stop',post({'bot[revision]':'4',authenticity_token:'bad'}))).status,422);
+  assert.equal(state.calls.filter(c=>c.group==='moderation').length,before);
+  assert.equal((await get('/mod_tools/bots/ki/stop',post({'bot[revision]':'1'}))).status,303);assert.equal(state.bots.find(b=>b.name==='ki').enabled,true);
+  assert.equal((await get('/mod_tools/bots/ki',post({_method:'patch','bot[revision]':'4','bot[interval_seconds]':'invalid'}))).status,303);
+  state.delegated=true;assert.equal((await get('/mod_tools/bots')).status,403);assert.equal((await get('/mod_tools/bots/ki/stop',post({'bot[revision]':'4'}))).status,403);
+  state.delegated=false;state.admin=false;assert.equal((await get('/mod_tools/bots/ki/start',post({'bot[revision]':'4'}))).status,403);
 });
 test('report snapshots/reasons are escaped and reports create/close through actor-scoped commands',async t=>{
   const {state,get}=await fixture(t);

@@ -19,7 +19,9 @@ SELECT format('GRANT SELECT,DELETE ON node_account_events,node_tracker_events,no
 SELECT format('GRANT SELECT,INSERT ON node_moderation_events TO %I', :'moderation_user') \gexec
 SELECT format('GRANT UPDATE (delivery_attempts,available_at,updated_at) ON node_moderation_events TO %I', :'moderation_user') \gexec
 SELECT format('GRANT USAGE ON SEQUENCE invite_codes_id_seq,site_settings_id_seq,emoji_link_decorations_id_seq,user_icons_id_seq,wallpaper_clients_id_seq,profiles_id_seq,profile_domains_id_seq,banned_ips_id_seq,reports_id_seq,node_moderation_events_id_seq TO %I', :'moderation_user') \gexec
-SELECT format('GRANT SELECT ON node_automation_jobs TO %I', :'moderation_user') WHERE to_regclass('public.node_automation_jobs') IS NOT NULL \gexec
+SELECT format('GRANT SELECT ON node_automation_jobs TO %I', :'moderation_user') \gexec
+SELECT format('GRANT SELECT,UPDATE ON node_bot_settings TO %I', :'moderation_user') \gexec
+SELECT format('GRANT SELECT,INSERT,UPDATE ON node_automation_schedules TO %I', :'moderation_user') \gexec
 SELECT format('GRANT SELECT,DELETE ON node_activity_receipts TO %I', :'moderation_user') WHERE to_regclass('public.node_activity_receipts') IS NOT NULL \gexec
 SELECT
  format('GRANT SELECT,UPDATE (revoked_at) ON node_browser_sessions,node_browser_legacy_sessions TO %I', :'moderation_user') WHERE to_regclass('public.node_browser_sessions') IS NOT NULL \gexec

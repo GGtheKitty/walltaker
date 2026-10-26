@@ -14,6 +14,7 @@ SELECT format('GRANT SELECT (id,username,deleted_at,system_account,mascot,perver
 SELECT format('GRANT SELECT ON links,link_abilities,kinks,kink_havers,past_links,node_wallpaper_events,scoops TO %I', :'automation_user') \gexec
 SELECT format('GRANT UPDATE (was_shown,updated_at) ON scoops TO %I', :'automation_user') \gexec
 SELECT format('GRANT SELECT,INSERT,UPDATE ON node_automation_jobs,node_automation_schedules TO %I', :'automation_user') \gexec
+SELECT format('GRANT SELECT ON node_bot_settings TO %I', :'automation_user') \gexec
 SELECT format('GRANT SELECT ON node_newsroom_states TO %I', :'automation_user') \gexec
 SELECT format('GRANT UPDATE (generation,kind,entry,story,busy_until,throttle_until,updated_at) ON node_newsroom_states TO %I', :'automation_user') \gexec
 SELECT format('GRANT SELECT,INSERT ON node_automation_events TO %I', :'automation_user') \gexec
@@ -29,6 +30,7 @@ SELECT format('GRANT SELECT (job_id),DELETE ON solid_queue_ready_executions,soli
 SELECT format('GRANT SELECT ON links,link_abilities,kinks,kink_havers TO %I', :'writer_user') \gexec
 SELECT format('GRANT SELECT (username,mascot,pervert) ON users TO %I', :'writer_user') \gexec
 SELECT format('GRANT SELECT,INSERT ON node_automation_jobs TO %I', :'writer_user') \gexec
+SELECT format('GRANT SELECT ON node_bot_settings TO %I', :'writer_user') \gexec
 SELECT format('GRANT USAGE ON SEQUENCE node_automation_jobs_id_seq TO %I', :'writer_user') \gexec
 -- Existing moderation installations can inspect the new queue after rerunning
 -- their provisioning script; no job mutation is granted to administrators' DB role.

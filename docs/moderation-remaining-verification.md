@@ -21,6 +21,7 @@ pages. Blazer retains its separate Bootstrap/Ace layout.
 | Report user | `/users/<user_id>/reports/new` | Signed in; open from a profile, submit a disposable report |
 | Report link | `/links/<link_id>/reports/new` | Signed in; open from a visible link, submit a disposable report |
 | Admin dashboard | `/mod_tools` | Admin; navigation, counts and existing feature-toggle controls |
+| PornBot & PornLizards | `/mod_tools/bots` | Admin; per-mode tags, timing, batch limits, worker status, Save, Start/Stop and Check now |
 | Invites | `/mod_tools/invites` | Admin; generate/delete, redeemed state, pagination and invite-only toggle |
 | Link emoji | `/mod_tools/emoji_links` | Admin; create/edit/delete on a disposable link |
 | User icons | `/mod_tools/user_icons` | Admin; create/edit/delete for a disposable account |
@@ -46,6 +47,33 @@ pages. Blazer retains its separate Bootstrap/Ace layout.
 | Check forms | `/blazer/checks/new`, `/blazer/checks/<check_id>/edit` | Admin; query, alert condition, schedule, recipients, Save/Delete |
 | Dashboard forms | `/blazer/dashboards/new`, `/blazer/dashboards/<dashboard_id>/edit` | Admin; add/remove/reorder queries and Save/Delete |
 | Dashboard | `/blazer/dashboards/<dashboard_id>` | Admin; ordered panels, shared variables and Refresh |
+
+## Bot controls
+
+Open **Mod Tools → PornBot & PornLizards**. Each bot has separate tags for the
+link owner's normal/perverted preference. Checks run every 60–86,400 seconds;
+the wallpaper cooldown can be 0–604,800 seconds, and each check selects at most
+1–60 links. Cooldown measures time since any wallpaper change on that link.
+Existing link opt-ins, mascot selection, themes, blacklists and media rules
+still apply. Original defaults are preserved until saved.
+
+Save settings before using Start/Stop or Check now. Start and Check now enable
+the bot and schedule an immediate check; the worker normally notices within
+five seconds. Stop disables its checks and invalidates queued/in-flight
+selections before wallpaper persistence. Changes remain saved across restarts;
+older forms are rejected if another administrator changed that bot.
+
+Worker health comes from scheduler checks, not just the enabled flag. Refresh
+status to see the latest heartbeat, next check and job counts for the current
+settings. These controls manage the four bot schedules inside the existing
+Node worker; a worker outage still requires restoring the API service. A
+missing/inactive system account is identified and cannot be started.
+
+Deploy the SQL migration and rerun provisioning with `scripts/devenv run --rm
+--no-deps migrate` (use `scripts/compose` outside this preview). Bot state is in
+`node_bot_settings`. Moderation can change settings/schedules; automation and
+the wallpaper writer can only read the settings. Administrative mutations use
+the existing audited, actor-checked moderation commands and CSRF-protected forms.
 
 ## Blazer engine and deployment
 

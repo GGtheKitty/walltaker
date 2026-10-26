@@ -26,6 +26,16 @@ export function addModerationRoutes(router){
     router.add('POST',prefix+'/reports',async ctx=>{if(!await ctx.authorize())return;const input=target(ctx),url=(input.reportable_type==='Link'?'/links/':'/users/')+input.reportable_id+'/reports/new';await write(ctx,'report-create',{...input,reason:field(ctx.body.report?.reason,10000)},url,'Report was successfully created.');});
   }
   for(const path of ['/mod_tools','/mod_tools/'])router.add('GET',path,async ctx=>{if(!await ctx.authorize('admin'))return;await page(ctx,'mod-dashboard',{dashboard:await mod(ctx,'dashboard')});});
+  router.add('GET','/mod_tools/bots',async ctx=>{if(!await ctx.authorize('admin'))return;await page(ctx,'mod-bots',{botData:await mod(ctx,'bots')});});
+  router.add('PATCH','/mod_tools/bots/:bot',async ctx=>{
+    if(!await ctx.authorize('admin'))return;
+    await write(ctx,'bot-update',{bot:ctx.params.bot,revision:ctx.body.bot?.revision,
+      attributes:pick(ctx.body.bot,['normal_tags','perverted_tags','interval_seconds','cooldown_seconds','round_limit'])},'/mod_tools/bots','Bot settings saved.');
+  });
+  for(const action of ['start','stop'])router.add('POST','/mod_tools/bots/:bot/'+action,async ctx=>{
+    if(!await ctx.authorize('admin'))return;
+    await write(ctx,'bot-'+action,{bot:ctx.params.bot,revision:ctx.body.bot?.revision},'/mod_tools/bots',action==='start'?'Bot enabled. Its next check is scheduled now.':'Bot stopped. Queued selections will be skipped.');
+  });
   for(const [path,op,template] of [['invites','invites','mod-invites'],['emoji_links','emoji-links','mod-emojis'],['user_icons','user-icons','mod-icons'],['clients','clients','mod-clients'],['profile_domains','domains','mod-domains'],['users/deleted','deleted-users','mod-deleted'],['quarantine','quarantine','mod-quarantine'],['events','events','mod-events']]){
     router.add('GET','/mod_tools/'+path,async ctx=>{if(!await ctx.authorize('admin'))return;const data=await mod(ctx,op,pick(ctx.query,['page','pending_page','approved_page','blocked_page']));await page(ctx,template,{...data,modData:data,queryParams:ctx.query,currentPath:ctx.path});});
   }

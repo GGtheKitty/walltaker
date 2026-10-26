@@ -140,6 +140,7 @@ Mark a row checked only after its relevant controls, validation/empty states, im
 | Done | Page | URL | Access / setup | What to verify |
 | --- | --- | --- | --- | --- |
 | [ ] | Moderation home | `/mod_tools` | Admin | Navigation and role checks. |
+| [ ] | PornBot & PornLizards | `/mod_tools/bots` | Admin | Tags, timing, worker health, Save, Start/Stop and Check now. |
 | [ ] | Invites | `/mod_tools/invites` | Admin | List, creation, deletion and invite-only toggle. |
 | [ ] | Emoji links | `/mod_tools/emoji_links` | Admin | Create/edit/delete and validation. |
 | [ ] | User icons | `/mod_tools/user_icons` | Admin | Create/edit/delete and previews. |

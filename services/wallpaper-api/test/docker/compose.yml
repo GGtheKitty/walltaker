@@ -49,6 +49,7 @@ services:
       - ../../src:/app/wallpaper-api/src:ro
       - ../../../../scripts:/scripts:ro
       - ../../../web:/app/web:ro
+      - ../../../../db/migrations:/db/migrations:ro
       - ../../../accounts/src:/app/accounts/src:ro
       - ../../../accounts/package.json:/app/accounts/package.json:ro
     environment:

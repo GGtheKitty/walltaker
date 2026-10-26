@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { automationKey, enqueueAutomation } from './automation-queue.js';
 import { CommandError } from './updates.js';
+import {botSettings,currentBot,lockBot} from './bot-settings.js';
 
 export async function automationLink(c, id) {
   return (await c.query(`SELECT l.*,u.username AS owner_username,u.mascot,u.pervert,
@@ -23,6 +24,11 @@ export const isAutomationOnline = (row, ids, now = Date.now()) => ids.includes(S
   (row.last_ping && new Date(row.last_ping).getTime() > now - (row.last_ping_user_agent?.includes('widgetExtension') ? 1200000 : 60000));
 
 export async function verifyAutomationSelection(c, linkId, guard) {
+  if(guard.kind==='bot'){
+    await lockBot(c,guard.bot);
+    const definition=await botSettings(c,guard.bot);
+    if(!currentBot(definition,guard.botRevision))throw new CommandError(409,'This bot was stopped or its settings changed.');
+  }
   // Account policy changes must wait until this short wallpaper transaction
   // finishes. The link row itself is already locked by the writer.
   await c.query('SELECT u.id FROM users u JOIN links l ON l.user_id=u.id WHERE l.id=$1 FOR SHARE OF u', [linkId]);

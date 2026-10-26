@@ -211,6 +211,13 @@ test('backend RPC authenticates each namespace and only forwards browser cookies
   assert.equal(seen[0].headers.authorization,'Bearer '+createHmac('sha256',config.secretKeyBase).update('walltaker:browser:commands:v1').digest('hex'));
   assert.equal(seen[0].headers.cookie,'walltaker_session=private');assert.equal(seen[1].headers.cookie,undefined);
   assert.notEqual(seen[0].headers.authorization,seen[1].headers.authorization);
+  for(const op of ['bots','bot-update','bot-start','bot-stop']){
+    await backend('moderation',op,{actor_id:7,bot:'ki',revision:'1'},{cookie:'walltaker_session=private'});
+    const request=seen.at(-1);
+    assert.equal(request.url,'/_internal/moderation/'+op);
+    assert.equal(request.headers.authorization,'Bearer '+createHmac('sha256',config.secretKeyBase).update('walltaker:moderation:commands:v1').digest('hex'));
+    assert.equal(request.headers.cookie,undefined);assert.equal(request.body.actor_id,7);
+  }
   await assert.rejects(backend('browser','../../evil'),/Unsupported/);
 });
 test('RPC timeout, malformed JSON, private 500 details and redirects are contained', async t => {

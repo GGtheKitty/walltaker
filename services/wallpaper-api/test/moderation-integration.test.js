@@ -7,8 +7,8 @@ import {createModeration} from '../src/moderation.js';
 import {normalizeDomain,domainDecision} from '../src/moderation-domains.js';
 import {createAccounts} from '../../accounts/src/accounts.js';
 
-const READS=['admin-session','dashboard','invites','emoji-links','user-icons','clients','domains','system','activity','user','deleted-users','quarantine','events','reports','report'];
-const WRITES=['setting-toggle','invite-create','invite-delete','emoji-create','emoji-update','emoji-delete','icon-create','icon-update','icon-delete','client-create','client-update','client-delete','client-move','domain-update','user-update','user-restore','user-purge','user-assume','user-quarantine','user-ipban','event-ipban','password-reset','report-close','link-delete'];
+const READS=['admin-session','dashboard','invites','emoji-links','user-icons','clients','domains','system','activity','user','deleted-users','quarantine','events','reports','report','bots'];
+const WRITES=['setting-toggle','invite-create','invite-delete','emoji-create','emoji-update','emoji-delete','icon-create','icon-update','icon-delete','client-create','client-update','client-delete','client-move','domain-update','user-update','user-restore','user-purge','user-assume','user-quarantine','user-ipban','event-ipban','password-reset','report-close','link-delete','bot-update','bot-start','bot-stop'];
 
 test('domain normalization and most-specific decisions preserve policy',()=>{
  assert.equal(normalizeDomain(' CDN.Example.TEST. '),'cdn.example.test');assert.equal(normalizeDomain('BÜCHER.example'),'xn--bcher-kva.example');assert.equal(normalizeDomain('[::1]'),'::1');
@@ -22,6 +22,8 @@ test('moderation with production grants, schema foreign keys, concurrency and re
   await bootstrap.query('CREATE DATABASE node_moderation_test');
   const url=new URL(process.env.TEST_DATABASE_URL);url.pathname='/node_moderation_test';admin=new pg.Pool({connectionString:url.href,max:2});
   await admin.query(readFileSync(new URL('./fixtures/moderation-schema.sql',import.meta.url),'utf8'));
+  await admin.query(readFileSync(new URL('./fixtures/automation-schema.sql',import.meta.url),'utf8'));
+  await admin.query(readFileSync(new URL('../../../db/migrations/20261026050000_add_bot_controls.sql',import.meta.url),'utf8'));
   await admin.query(`CREATE TABLE node_moderation_events(id bigserial PRIMARY KEY,request_key varchar(160) NOT NULL UNIQUE CHECK(request_key<>'force-failure'),payload_digest varchar(64) NOT NULL,operation text NOT NULL,user_id bigint,result jsonb NOT NULL,effects jsonb NOT NULL,delivered_at timestamp,delivery_attempts integer DEFAULT 0,available_at timestamp DEFAULT now(),created_at timestamp NOT NULL,updated_at timestamp NOT NULL);
    CREATE ROLE node_moderation LOGIN PASSWORD 'test';
    REVOKE ALL ON FUNCTION public.walltaker_api_authenticate(text) FROM PUBLIC;
@@ -51,17 +53,37 @@ test('moderation with production grants, schema foreign keys, concurrency and re
   const cmd=(op,input={})=>manage(op,{actor_id:1,request_key:randomUUID(),...input});
   const denied=(promise,status)=>assert.rejects(promise,e=>e.status===status);
   const count=async table=>Number((await admin.query('SELECT count(*) FROM '+table)).rows[0].count);
+  await t.test('bot controls preserve defaults, validate settings, reject stale edits, and audit idempotent start/stop commands',async()=>{
+   const initial=await cmd('bots');assert.equal(initial.bots.length,4);assert.equal(initial.worker.healthy,false);
+   const ki=initial.bots.find(b=>b.name==='ki');assert.equal(ki.enabled,true);assert.equal(ki.interval_seconds,60);assert.equal(ki.cooldown_seconds,600);assert.equal(ki.round_limit,4);assert.equal(ki.account_available,true);
+   const attributes={normal_tags:'forest\n rating:e',perverted_tags:'latex rating:e',interval_seconds:180,cooldown_seconds:0,round_limit:2,enabled:false};
+   const input={actor_id:1,bot:'ki',revision:ki.revision,attributes,request_key:'custom-bot-settings'};
+   const saved=await manage('bot-update',input);assert.equal(saved.revision,'2');assert.equal(saved.enabled,true);
+   assert.deepEqual(await manage('bot-update',input),saved);await denied(cmd('bot-update',{bot:'ki',revision:'1',attributes}),409);
+   for(const invalid of [{interval_seconds:59},{interval_seconds:'1.5'},{cooldown_seconds:-1},{round_limit:61},{normal_tags:'x'.repeat(2001)}])
+    await denied(cmd('bot-update',{bot:'ki',revision:'2',attributes:{...attributes,...invalid}}),422);
+   await denied(cmd('bot-start',{bot:'__proto__',revision:'1'}),404);
+   const stopped=await cmd('bot-stop',{bot:'ki',revision:saved.revision});assert.equal(stopped.enabled,false);
+   const started=await cmd('bot-start',{bot:'ki',revision:stopped.revision});assert.equal(started.enabled,true);
+   const current=(await cmd('bots')).bots.find(b=>b.name==='ki');assert.equal(current.normal_tags,'forest rating:e');assert.equal(current.perverted_tags,'latex rating:e');assert.equal(current.cooldown_seconds,0);
+   assert.equal((await admin.query("SELECT count(*) FROM node_moderation_events WHERE operation='bot-update'")).rows[0].count,'1');
+   const races=await Promise.allSettled([cmd('bot-stop',{bot:'ki',revision:started.revision}),cmd('bot-update',{actor_id:6,bot:'ki',revision:started.revision,attributes})]);
+   assert.equal(races.filter(r=>r.status==='fulfilled').length,1);assert.equal(races.find(r=>r.status==='rejected').reason.status,409);
+   await admin.query("UPDATE node_automation_schedules SET last_checked_at=now() WHERE name='ki'");assert.equal((await cmd('bots')).worker.healthy,true);
+   await admin.query("UPDATE node_automation_schedules SET last_checked_at=now()-interval '1 minute' WHERE name='ki'");assert.equal((await cmd('bots')).worker.healthy,false);
+  });
   await t.test('role can administer intended data but cannot read hashes/API keys, promote users, or acknowledge receipts',async()=>{
    for(const sql of ['SELECT password_digest FROM users','SELECT api_key FROM users','UPDATE users SET admin=true','UPDATE users SET system_account=false','UPDATE users SET password_digest=\'x\'','UPDATE users SET api_key=\'x\'','UPDATE node_moderation_events SET delivered_at=now()','INSERT INTO users(username) VALUES(\'x\')'])await assert.rejects(pool.query(sql),{code:'42501'});
   });
   await t.test('every administrative operation rechecks active admin status and rejects delegated or forged privileges',async()=>{
+   const before=await count('node_moderation_events');
    for(const op of [...READS,...WRITES]) {
     await denied(cmd(op,{actor_id:2,admin:true}),403);
     await denied(cmd(op,{surrender_id:999}),403);
     await denied(manage(op,{request_key:randomUUID()}),403);
     await denied(cmd(op,{actor_id:4}),403);
    }
-   assert.equal(await count('node_moderation_events'),0);
+   assert.equal(await count('node_moderation_events'),before);
   });
   await t.test('settings toggle atomically; replay does not retoggle and conflicting retries roll back',async()=>{
    const input={actor_id:1,request_key:'toggle-once',key:'nnn_enabled'};

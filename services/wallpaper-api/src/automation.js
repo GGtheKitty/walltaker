@@ -4,16 +4,8 @@ import { createNewsroom } from './newsroom.js';
 import { CommandError } from './updates.js';
 import { validPostId } from './e621-policy.js';
 
-export const BOTS = {
-  taylor: { username: 'PornLizardTaylor', ability: 'can_be_set_by_lizard', mascot: 'taylor', limit: 4, cooldown: 600,
-    tags: ['public ~public_sex ~penis_milking ~public_masturbation ~free_use ~leaking_cum ~cum_on_face ~cum_on_butt ~cum_on_clothing score:>100 -swf', '~impregnation ~impregnation_request excessive_cum ~presenting_hindquarters ~cum_in_pussy ~cum_in_ass ~cum_pool score:>80 -swf'] },
-  warren: { username: 'PornLizardWarren', ability: 'can_be_set_by_lizard', mascot: 'warren', limit: 4, cooldown: 600,
-    tags: ['~big_penis ~big_balls close_up ~big_breasts ~plump_labia ~crotch_shot -obese -hyper ~huge_balls score:>50 -swf', 'hyper ~huge_breasts ~huge_penis ~himbo ~bimbofication ~horsecock ~hyper_breasts ~udders -obese score:>70 -swf'] },
-  ki: { username: 'PornLizardKi', ability: 'can_be_set_by_lizard', mascot: 'ki', limit: 4, cooldown: 600,
-    tags: ['~massage romantic ~embrace ~cuddle ~hug ~hand_holding score:>90 -swf', '~latex ~rubber glistening_body ~bdsm ~goo_creature ~slime score:>50 -swf'] },
-  pornbot: { username: 'PornBot', ability: 'can_be_set_by_porn_bot', mascot: null, limit: 60, cooldown: 1500,
-    tags: ['score:>100 -nightmare_fuel -nazi -swf rating:e', 'score:>100 -nightmare_fuel -nazi -swf rating:e'] },
-};
+import {BOTS,botSettings,currentBot,lockBot} from './bot-settings.js';
+export {BOTS} from './bot-settings.js';
 const positiveId = value => validPostId(value);
 const requestKey = input => {
   if (typeof input.request_key !== 'string' || !/^[A-Za-z0-9:_-]{1,160}$/.test(input.request_key)) throw new CommandError(422, 'Request key required.');
@@ -31,31 +23,38 @@ const normalizedEntry = value => {
 
 export function createAutomation({ pool, store, e621, writeWallpaper, pornbotInterval = 600, newsroom = createNewsroom(pool) }) {
   const queue = createAutomationQueue(pool);
-  const intervals = { taylor: 60, warren: 60, ki: 60, pornbot: Math.max(60,Math.min(86400,Number(pornbotInterval)||600)), scoops: 120 };
   const online = async () => (await store.onlineIds()).map(String);
   const schedule = async () => {
     const c = await pool.connect();
     try {
       await c.query('BEGIN');
-      for (const [name, seconds] of Object.entries(intervals)) {
+      await c.query("SET LOCAL lock_timeout='3s'");
+      for (const name of [...Object.keys(BOTS),'scoops']) {
+        let definition;
+        if(name!=='scoops'){
+          await lockBot(c,name);
+          definition=await botSettings(c,name,pornbotInterval);
+        }
+        const seconds=definition?.interval_seconds??120;
         await c.query(`INSERT INTO node_automation_schedules(name,next_run_at,created_at,updated_at)
           VALUES($1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ON CONFLICT(name) DO NOTHING`, [name]);
-        const row = (await c.query('SELECT * FROM node_automation_schedules WHERE name=$1 FOR UPDATE', [name])).rows[0];
+        const row = (await c.query('UPDATE node_automation_schedules SET last_checked_at=CURRENT_TIMESTAMP WHERE name=$1 RETURNING *', [name])).rows[0];
         const now = (await c.query('SELECT CURRENT_TIMESTAMP AS now')).rows[0].now;
-        if (row.next_run_at > now) continue;
+        if (definition?.enabled===false || row.next_run_at > now) continue;
         // One current round after downtime; never replay a backlog of bot rounds.
         const key = automationKey('schedule', `${name}:${row.next_run_at.toISOString()}`);
-        await enqueueAutomation(c, { key, kind: name==='scoops' ? 'scoop-round' : 'bot-round', payload: name==='scoops' ? {} : { bot: name } });
+        await enqueueAutomation(c, { key, kind: name==='scoops' ? 'scoop-round' : 'bot-round', payload: name==='scoops' ? {} : { bot: name,bot_revision:definition.revision } });
         await c.query(`UPDATE node_automation_schedules SET next_run_at=CURRENT_TIMESTAMP+$2::integer*INTERVAL '1 second',updated_at=CURRENT_TIMESTAMP WHERE name=$1`, [name,seconds]);
       }
       await c.query('COMMIT');
     } catch (error) { await c.query('ROLLBACK'); throw error; } finally { c.release(); }
   };
   const round = async job => {
-    const definition = BOTS[job.payload.bot];
-    if (!definition) throw new Error('UnknownBot');
     const ids = await online();
     return automationTransaction(pool, job, async c => {
+      await lockBot(c,job.payload.bot);
+      const definition=await botSettings(c,job.payload.bot,pornbotInterval);
+      if(!currentBot(definition,job.payload.bot_revision))return;
       const actor = (await c.query('SELECT id FROM users WHERE username=$1 AND deleted_at IS NULL AND system_account=true', [definition.username])).rows[0];
       if (!actor) return;
       const candidates = (await c.query(`SELECT l.id,
@@ -70,7 +69,7 @@ export function createAutomation({ pool, store, e621, writeWallpaper, pornbotInt
       for (let i=0;i<candidates.length;i++) {
         const row = candidates[i];
         await enqueueAutomation(c, { key: automationKey('bot-link', `${job.job_key}:${row.id}`), kind: 'bot-link',
-          payload: { bot: job.payload.bot, link_id: row.id, set_by_id: actor.id, expected_past_id: row.latest_past_id },
+          payload: { bot: job.payload.bot,bot_revision:definition.revision, link_id: row.id, set_by_id: actor.id, expected_past_id: row.latest_past_id },
           runAt: new Date(Date.now()+i*1000) });
       }
     });
@@ -94,6 +93,8 @@ export function createAutomation({ pool, store, e621, writeWallpaper, pornbotInt
   });
   const setWallpaper = async job => {
     const p = job.payload;
+    const definition=job.kind==='bot-link'?await botSettings(pool,p.bot,pornbotInterval):null;
+    if(definition&&!currentBot(definition,p.bot_revision))return;
     const writeKey = p.write_key || job.job_key;
     // The wallpaper transaction may have committed just before a worker crash.
     const prior = (await pool.query(`SELECT p.id,p.link_id,p.e621_post_id,p.set_by_id FROM node_wallpaper_events e
@@ -106,14 +107,12 @@ export function createAutomation({ pool, store, e621, writeWallpaper, pornbotInt
     if (!row) return;
     let guard, post;
     if (job.kind==='bot-link') {
-      const definition = BOTS[p.bot];
-      if (!definition) throw new Error('UnknownBot');
       const actor = (await pool.query('SELECT id FROM users WHERE id=$1 AND username=$2 AND system_account=true AND deleted_at IS NULL', [p.set_by_id,definition.username])).rows[0];
       const ids = await online();
       if (!actor || String(row.latest_past_id)!==String(p.expected_past_id) || !row.abilities.includes(definition.ability) ||
         (definition.mascot && row.mascot!==definition.mascot) || !isAutomationOnline(row,ids) ||
         (row.latest_past_at && row.latest_past_at.getTime()>Date.now()-definition.cooldown*1000)) return;
-      guard = { kind: 'bot', ability: definition.ability, mascot: definition.mascot, cooldown: definition.cooldown, onlineIds: ids, fingerprint: selectionFingerprint(row) };
+      guard = { kind: 'bot',bot:p.bot,botRevision:definition.revision, ability: definition.ability, mascot: definition.mascot, cooldown: definition.cooldown, onlineIds: ids, fingerprint: selectionFingerprint(row) };
       post = (await e621.search({ tags: `order:random ${definition.tags[row.pervert ? 1 : 0]} -nightmare_fuel`, limit: 1, policy: e621Policy(row) }))[0];
     } else {
       if (job.kind==='fork-link') {
@@ -154,7 +153,9 @@ export function createAutomation({ pool, store, e621, writeWallpaper, pornbotInt
       const key = requestKey(input);
       if (operation==='round') {
         if (!Object.hasOwn(BOTS,input.bot)) throw new CommandError(422,'Unknown bot.');
-        return queue.enqueue({ key,kind:'bot-round',payload:{bot:input.bot} });
+        const definition=await botSettings(pool,input.bot,pornbotInterval);
+        if(!definition.enabled)throw new CommandError(422,'This bot is stopped. Start it from Mod Tools first.');
+        return queue.enqueue({ key,kind:'bot-round',payload:{bot:input.bot,bot_revision:definition.revision} });
       }
       if (operation==='scoop-round') return queue.enqueue({key,kind:'scoop-round'});
       if (operation==='wallpaper-news' || operation==='scoop-news') {
