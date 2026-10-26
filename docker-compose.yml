@@ -1,8 +1,3 @@
-x-anycable-env: &anycable
-  ANYCABLE_SECRET: ${SECRET_KEY_BASE}
-  ANYCABLE_REDIS_URL: redis://${CACHE_HOST}:${CACHE_PORT}/1
-  ANYCABLE_REDIS_CHANNEL: __anycable__
-
 services:
   migrate:
     build:
@@ -194,25 +189,24 @@ services:
       - backend
 
   cable:
-    image: walltaker-anycable:liveness-node
-    build: ./services/anycable
+    image: walltaker-cable
+    build: ./services/cable
     restart: unless-stopped
+    stop_grace_period: 15s
+    mem_limit: 128m
+    memswap_limit: 160m
+    cpus: 0.5
     ports:
-      - "${ANYCABLE_HOST_PORT:-127.0.0.1:8080}:8080"
+      - "${CABLE_HOST_PORT:-127.0.0.1:8080}:8080"
     depends_on:
       - redis
       - wallpaper_api
     environment:
-      <<: *anycable
-      ANYCABLE_HOST: 0.0.0.0
-      ANYCABLE_PORT: 8080
-      ANYCABLE_RPC_HOST: http://wallpaper_api:3002/_internal/realtime-rpc
-      ANYCABLE_RPC_CONCURRENCY: 4
-      ANYCABLE_HEADERS: cookie,origin,user-agent,joihow,user_agent,wallpaper-engine-client
-      ANYCABLE_DISCONNECT_MODE: always
-      ANYCABLE_ENABLE_NATIVE_PINGS: "true"
-      ANYCABLE_PING_INTERVAL: "3"
-      ANYCABLE_PONG_TIMEOUT: "60"
+      NODE_OPTIONS: --max-old-space-size=64
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      REDIS_URL: redis://${CACHE_HOST}:${CACHE_PORT}/1
+      REALTIME_RPC_URL: http://wallpaper_api:3002/_internal/realtime-rpc
+      CABLE_REDIS_CHANNEL: __anycable__
     networks:
       - backend
       - frontend

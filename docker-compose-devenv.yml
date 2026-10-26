@@ -43,3 +43,8 @@ services:
     volumes:
       - ./services/wallpaper-api/src:/app/wallpaper-api/src:ro
       - ./services/e621-media/src:/app/e621-media/src:ro
+
+  cable:
+    command: ["node", "--watch", "--watch-preserve-output", "src/server.js"]
+    volumes:
+      - ./services/cable/src:/app/src:ro

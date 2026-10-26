@@ -33,7 +33,7 @@ initial browser pages. Only the API delivery worker can call the HMAC-protected
 `POST /_internal/broadcasts/render` endpoint. It accepts authorized record graphs,
 never template syntax or user-provided trusted HTML. Nginx blocks private RPC
 URLs, and direct callers must still authenticate. The API owns receipt locking,
-retries, recipient selection and publication to AnyCable.
+retries, recipient selection and publication to the Node websocket gateway.
 
 `X-Walltaker-Web: node` and `X-Walltaker-Renderer: node-native` identify native page
 responses; `X-Walltaker-Assets: node` identifies native static delivery. Unknown

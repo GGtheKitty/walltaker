@@ -18,7 +18,7 @@ and media tokens remain readable by Node compatibility codecs.
 | `accounts` | Authentication, bcrypt worker, settings, account/profile changes and credential access |
 | `migrate` | Node schema migrations, safe existing-database baseline, fresh-install seeds and isolated database role provisioning; exits after setup |
 | `e621_media` | Restricted signed media proxy |
-| `cable` | AnyCable websocket gateway, using Node RPC and existing liveness/lease settings; the gateway is Go, with no Ruby component |
+| `cable` | Node websocket gateway, using the existing realtime RPC, Action Cable JSON protocol and liveness/lease settings |
 | `router` | Nginx routes browser/API/media/websocket traffic to those services and blocks private RPC URLs |
 | `database`, `redis` | PostgreSQL 14 and Redis 7; persistent Docker volumes |
 
@@ -44,7 +44,7 @@ Requirements: Docker with Compose, Git, and Node 24/npm for local tests/builds.
    already built installation; Compose waits for database setup to succeed.
 4. Put the HTTP router (`WEB_HOST_PORT`, localhost port 3000 by default) behind
    your TLS proxy. Route websocket upgrades to `/cable` on the router or the
-   existing localhost AnyCable listener. Keep RPC ports private.
+   existing localhost Node websocket listener. Keep RPC ports private.
 5. On a fresh install, sign up for your own account, then explicitly grant admin
    access with `./scripts/compose run --rm migrate node admin.js --promote USERNAME`.
    `--demote` removes that role. No shared/default human admin password is seeded.

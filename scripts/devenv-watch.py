@@ -11,11 +11,9 @@ STATE=ROOT/'tmp/devenv-watch-state.json'
 SERVICES=['e621_media','wallpaper_api','accounts','node_web','router','cable']
 
 def action_for(path):
-    if path.startswith('services/anycable/') and path.endswith(('.go','.patch','Dockerfile')):
-        return 'build_cable'
     if path in {'.env','.env.example','walltaker.env','docker-compose.yml','docker-compose-devenv.yml'}:
         return 'recreate'
-    for folder,action in [('e621-media','build_media'),('wallpaper-api','build_api'),('accounts','build_accounts'),('web','build_node_web'),('database','build_database')]:
+    for folder,action in [('e621-media','build_media'),('wallpaper-api','build_api'),('accounts','build_accounts'),('web','build_node_web'),('database','build_database'),('cable','build_cable')]:
         if path in {f'services/{folder}/'+name for name in ['package.json','package-lock.json','Dockerfile','Dockerfile.dockerignore','.dockerignore']}:
             return action
     if path.startswith(('db/','services/database/','scripts/provision-')):
@@ -47,7 +45,7 @@ def apply_changes(paths):
             'build_accounts':('services/accounts/Dockerfile','walltaker-accounts','services/accounts',192),
             'build_node_web':('services/web/Dockerfile','walltaker-node_web','.',256),
             'build_database':('services/database/Dockerfile','walltaker-migrate','.',192),
-            'build_cable':('services/anycable/Dockerfile','walltaker-anycable:liveness-node','services/anycable',768)}
+            'build_cable':('services/cable/Dockerfile','walltaker-cable','services/cable',192)}
     for action,(dockerfile,tag,context,memory) in builds.items():
         if action in actions:
             subprocess.run(['docker','build',f'--memory={memory}m',f'--memory-swap={memory}m','--cpu-period=100000','--cpu-quota=50000','-f',dockerfile,'-t',tag,context],cwd=ROOT,check=True,timeout=1800)

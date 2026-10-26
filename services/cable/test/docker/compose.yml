@@ -1,0 +1,20 @@
+services:
+  redis:
+    image: redis:7-alpine
+    mem_limit: 32m
+    memswap_limit: 48m
+    cpus: 0.25
+  test:
+    build: ../..
+    command: [npm, test]
+    mem_limit: 160m
+    memswap_limit: 192m
+    cpus: 0.5
+    volumes:
+      - ..:/app/test:ro
+      - ../../src:/app/src:ro
+      - ../../../wallpaper-api/src:/wallpaper-api/src:ro
+      - ../../../wallpaper-api/package.json:/wallpaper-api/package.json:ro
+    environment:
+      TEST_REDIS_URL: redis://redis:6379/0
+    depends_on: [redis]

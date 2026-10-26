@@ -7,7 +7,7 @@ spec=importlib.util.spec_from_file_location('watcher',Path(__file__).resolve().p
 watcher=importlib.util.module_from_spec(spec);spec.loader.exec_module(watcher)
 class PreviewWatcherTest(unittest.TestCase):
     def test_source_edits_use_native_watchers(self):
-        for path in ['services/web/src/routes.js','services/wallpaper-api/src/server.js','services/accounts/src/server.js','app/javascript/controllers/message_controller.js','app/assets/stylesheets/link.css','services/web/frontend/application.js']:
+        for path in ['services/web/src/routes.js','services/wallpaper-api/src/server.js','services/accounts/src/server.js','services/cable/src/server.js','app/javascript/controllers/message_controller.js','app/assets/stylesheets/link.css','services/web/frontend/application.js']:
             self.assertIsNone(watcher.action_for(path))
     def test_database_edits_trigger_node_migrations(self):
         for path in ['db/migrations/20261025000001_example.sql','services/database/migrate.js','scripts/provision-browser.sh']:
@@ -34,9 +34,9 @@ class PreviewWatcherTest(unittest.TestCase):
     @patch.object(watcher,'run')
     @patch.object(watcher.subprocess,'run')
     def test_gateway_rebuild_does_not_depend_on_an_application_framework(self,build,run):
-        watcher.apply_changes(['services/anycable/native_presence.go'])
-        self.assertIn('--memory=768m',build.call_args.args[0]);run.assert_called_once_with('up','-d','--no-deps','--force-recreate','cable')
-        self.assertIsNone(watcher.action_for('services/anycable/README.md'))
+        watcher.apply_changes(['services/cable/package-lock.json'])
+        self.assertIn('--memory=192m',build.call_args.args[0]);run.assert_called_once_with('up','-d','--no-deps','--force-recreate','cable')
+        self.assertIsNone(watcher.action_for('services/cable/README.md'))
     @patch.object(watcher,'run')
     def test_router_is_validated_before_reload(self,run):
         watcher.apply_changes(['services/router/default.conf'])

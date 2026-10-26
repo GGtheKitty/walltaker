@@ -5,10 +5,13 @@ export NODE_OPTIONS=--max-old-space-size=96
 npm ci --prefix services/web --no-audit --no-fund
 npm test --prefix services/web
 node --test services/e621-media/test/*.test.js
+npm ci --prefix services/cable --no-audit --no-fund
+npm test --prefix services/cable
 python3 -m unittest discover -s test/scripts -p '*_test.py'
 test_compose=(docker compose -p walltaker-node-tests -f services/wallpaper-api/test/docker/compose.yml)
+cable_compose=(docker compose -p walltaker-cable-tests -f services/cable/test/docker/compose.yml)
 router_compose=(docker compose -p walltaker-router-tests -f services/e621-media/test/docker/compose.yml)
-cleanup() { "${test_compose[@]}" down --volumes >/dev/null; "${router_compose[@]}" down --volumes >/dev/null; }
+cleanup() { "${test_compose[@]}" down --volumes >/dev/null; "${router_compose[@]}" down --volumes >/dev/null; "${cable_compose[@]}" down --volumes >/dev/null; }
 trap cleanup EXIT
 cleanup
 "${test_compose[@]}" up -d database redis
@@ -22,3 +25,6 @@ docker run --rm --memory=128m --memory-swap=160m --network walltaker-node-tests_
 
 "${router_compose[@]}" up -d node_web wallpaper_api cable e621_media router
 "${router_compose[@]}" run --rm test
+
+"${cable_compose[@]}" up -d redis
+"${cable_compose[@]}" run --rm test

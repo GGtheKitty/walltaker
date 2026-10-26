@@ -9,7 +9,7 @@ for service in "$@"; do
     wallpaper_api) dockerfile=services/wallpaper-api/Dockerfile; context=services; tag=walltaker-wallpaper_api; memory=192 ;;
     accounts) dockerfile=services/accounts/Dockerfile; context=services/accounts; tag=walltaker-accounts; memory=192 ;;
     node_web) dockerfile=services/web/Dockerfile; context=.; tag=walltaker-node_web; memory=256 ;;
-    cable) dockerfile=services/anycable/Dockerfile; context=services/anycable; tag=walltaker-anycable:liveness-node; memory=768 ;;
+    cable) dockerfile=services/cable/Dockerfile; context=services/cable; tag=walltaker-cable; memory=192 ;;
     *) echo "Unknown application build target: $service" >&2; exit 1 ;;
   esac
   docker build --memory="${memory}m" --memory-swap="${memory}m" \

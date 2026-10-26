@@ -2,8 +2,9 @@
 
 The `node` branch serves **https://devenv.playctrl.me** without a Rails container.
 Application code, browser delivery, background workers and schema setup use Node.
-PostgreSQL/Redis, Nginx and the existing Go AnyCable gateway remain infrastructure.
-The gateway still uses the established Node RPC, heartbeat/pong and presence-lease
+PostgreSQL/Redis and Nginx remain infrastructure. The later
+[Node websocket migration](node-websocket-gateway.md) also replaces the Go gateway.
+The gateway uses the established Node RPC, heartbeat/pong and presence-lease
 settings; removing Rails does not extend connection lifetimes.
 
 ## What changed
@@ -19,7 +20,7 @@ settings; removing Rails does not extend connection lifetimes.
   recipient/membership policy, retries and newsroom-generation guards remain.
 - Native static delivery includes original public favicon/icon/robots/CSS/help
   URLs alongside content-addressed assets. Unknown URLs return local 404s.
-- Browser/API/media/websocket routes go directly to Node or AnyCable. No router
+- Browser/API/media/websocket routes go directly to Node. No router
   target or Compose service points to the removed Rails process.
 - Node schema setup uses `db/schema.sql`, baseline validation, SQL migrations,
   advisory locking, transactional changes and immutable checksums. Existing
