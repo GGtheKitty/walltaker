@@ -1,8 +1,0 @@
-development:
-  adapter: any_cable
-
-test:
-  adapter: test
-
-production:
-  adapter: any_cable

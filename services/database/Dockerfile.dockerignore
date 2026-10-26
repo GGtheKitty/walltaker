@@ -1,0 +1,13 @@
+**
+!services/
+!services/database/
+!services/database/**
+!db/
+!db/schema.sql
+!db/baseline.json
+!db/migrations/
+!db/migrations/**
+!scripts/
+!scripts/provision-*.sh
+**/node_modules
+**/*.env

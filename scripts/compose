@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+env_files=(--env-file .env.example)
+if [[ -f .env ]]; then env_files+=(--env-file .env); fi
+env_files+=(--env-file walltaker.env)
+files=(-f docker-compose.yml)
+if [[ "${WALLTAKER_PREVIEW:-0}" == 1 ]]; then files+=(-f docker-compose-devenv.yml); fi
+exec docker compose --project-name walltaker "${env_files[@]}" "${files[@]}" "$@"

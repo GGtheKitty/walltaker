@@ -1,5 +1,0 @@
-en:
-  activerecord:
-    attributes:
-      surrender:
-        accepted_consequences: "Consequences"

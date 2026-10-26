@@ -1,2 +1,0 @@
-class CachedPost < ApplicationRecord
-end

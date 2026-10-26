@@ -1,0 +1,37 @@
+/* The explainer SVG uses currentColor. As a standalone image its default is
+   black; preserve the old inline SVG's contrast for both dark-mode choices. */
+html.force-dark .explainer_graphic { filter: invert(1); }
+@media (prefers-color-scheme: dark) {
+  html:not(.force-light) .explainer_graphic { filter: invert(1); }
+}
+/* The closed off-canvas comments panel must not widen the document. */
+html:has(aside.comments-sidebar),
+body:has(aside.comments-sidebar) { overflow-x: clip; }
+/* Block frames contain card margins, so the heading must not add a second gap. */
+h2.owned-links-heading {
+  margin-bottom: 0;
+}
+/* Block frames avoid inline line boxes around the cards and their replies. */
+#links.owned-links > [data-controller="go"] > turbo-frame,
+#user > [data-controller="go"] > turbo-frame {
+  display: flow-root;
+}
+#links.owned-links > [data-controller="go"] + [data-controller="go"],
+#user > [data-controller="go"] + [data-controller="go"] {
+  margin-top: 1.25rem;
+}
+#links.owned-links > [data-controller="go"] + [data-controller="go"] .link,
+#links.owned-links > [data-controller="go"] + [data-controller="go"] > turbo-frame > .accent-block--link,
+#user > [data-controller="go"] + [data-controller="go"] .link,
+#user > [data-controller="go"] + [data-controller="go"] > turbo-frame > .accent-block--link {
+  margin-top: 0;
+}
+.user-tools__browse .return-from-surrender {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+}

@@ -7,7 +7,6 @@ import { createRedisStore } from '../src/redis.js';
 import { createUserReader } from '../src/users.js';
 import { createReactionWriter } from '../src/reactions.js';
 import { createKeyAuthenticator } from '../src/auth.js';
-import { startEventDelivery } from '../src/internal.js';
 import { setTimeout } from 'node:timers/promises';
 
 test('user status and reactions against real PostgreSQL permissions and Redis', { skip: !process.env.TEST_DATABASE_URL }, async (t) => {
@@ -197,19 +196,6 @@ test('user status and reactions against real PostgreSQL permissions and Redis', 
       await assert.rejects(writer.query("UPDATE site_settings SET value='false'"),{ code:'42501' });
       await assert.rejects(writer.query('UPDATE node_reaction_events SET delivered_at=now()'),{ code:'42501' });
       await assert.rejects(reader.query("UPDATE links SET response_text='bad'"),{ code:'25006' });
-    });
-    await t.test('reaction event delivery uses the matching private adapter and acknowledges retries', async () => {
-      await query('UPDATE node_reaction_events SET delivered_at=now()');
-      const event = await write({ link_id:801,type:'ok',request_key:'delivery' });
-      let sent;
-      const stop = startEventDelivery({ pool:writer,kind:'reaction',secretKeyBase:'test',railsUrl:'http://web',interval:20,
-        logger:{ warn() {} },fetchImpl:async (url,options) => {
-          sent={url,options}; await query('UPDATE node_reaction_events SET delivered_at=now() WHERE id=$1',[event.event_id]);
-          return new Response(null,{ status:204 });
-        } });
-      try { for (let i=0; !sent && i<100; i++) await setTimeout(20); } finally { await stop(); }
-      assert.equal(sent.url,`http://web/_internal/reaction-events/${event.event_id}.json`);
-      assert.match(sent.options.headers.authorization,/^Bearer [0-9a-f]{64}$/);
     });
   } finally {
     if (redis?.isOpen) { await redis.del('link:803:ws_client_leases'); await redis.close(); }

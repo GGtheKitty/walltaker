@@ -3,7 +3,7 @@ import { createSerializer, widget } from './payload.js';
 import { CommandError } from './updates.js';
 import { readApiBody } from './body.js';
 
-export function createApiServer({ repository, store, reportPresence, internalHandler, e621Handler, linkHandler, realtimeHandler, socialHandler, discoveryHandler, trackerHandler, moderationHandler, automationHandler, activityHandler, browserHandler, renderingHandler, readUser, authenticateKey, sessionViewer,
+export function createApiServer({ repository, store, reportPresence, internalHandler, e621Handler, linkHandler, realtimeHandler, socialHandler, discoveryHandler, trackerHandler, moderationHandler, automationHandler, activityHandler, browserHandler, blazerHandler, readUser, authenticateKey, sessionViewer,
   writeReaction, secretKeyBase, baseUrl, logger = console, now = Date.now }) {
   const serialize = createSerializer({ secretKeyBase, baseUrl });
   return http.createServer(async (request, response) => {
@@ -17,7 +17,7 @@ export function createApiServer({ repository, store, reportPresence, internalHan
     };
     try {
       const url = new URL(request.url, 'http://localhost');
-      if (url.pathname.startsWith('/_internal/rendering/') && renderingHandler) return await renderingHandler(request, response, url);
+      if(url.pathname.startsWith('/_internal/blazer/')&&blazerHandler)return await blazerHandler(request,response,url);
       if (url.pathname.startsWith('/_internal/browser/') && browserHandler) return await browserHandler(request, response, url);
       if (url.pathname.startsWith('/_internal/activity/') && activityHandler) return await activityHandler(request, response, url);
       if (url.pathname.startsWith('/_internal/automation/') && automationHandler) return await automationHandler(request, response, url);

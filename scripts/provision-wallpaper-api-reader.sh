@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run inside the database container as its admin, after Rails db:prepare.
+# Run inside the database container as its admin, after Node schema setup.
 set -eu
 : "${WALLPAPER_API_DB_USER:?required}"
 : "${WALLPAPER_API_DB_PASSWORD:?required}"

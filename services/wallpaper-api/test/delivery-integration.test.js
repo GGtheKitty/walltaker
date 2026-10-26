@@ -1,5 +1,5 @@
 import test from'node:test';import assert from'node:assert/strict';import pg from'pg';import{readFileSync}from'node:fs';
-import{createRenderer}from'../src/rendering/index.js';import{createNativeDelivery}from'../src/delivery.js';
+import{createBroadcastRenderer}from'../../web/src/broadcasts.js';import{createNativeDelivery}from'../src/delivery.js';
 pg.types.setTypeParser(1114,value=>new Date(value+'Z'));
 test('native rendering and durable deliveries acknowledge only after publication using restricted production roles',{skip:!process.env.TEST_DATABASE_URL},async t=>{
  const bootstrap=new pg.Pool({connectionString:process.env.TEST_DATABASE_URL,max:1});let admin,pool,browser;
@@ -22,7 +22,7 @@ test('native rendering and durable deliveries acknowledge only after publication
   const role=name=>{url.username=name;url.password='test';return new pg.Pool({connectionString:url.href,max:2});};pool=role('node_delivery');browser=role('node_delivery_browser');
   const published=[],queued=[],news=[],sent=[];let failPublish=false;
   const redis={publish:async(channel,message)=>{if(failPublish)throw Error('simulated Redis failure');published.push({channel,...JSON.parse(message)});},del:async()=>{}};
-  const renderer=createRenderer({secretKeyBase:'test',baseUrl:'https://example.test'});
+  const renderer={render:createBroadcastRenderer({secretKeyBase:'test',baseUrl:'https://example.test'})};
   const delivery=createNativeDelivery({pool,browserPool:browser,renderer,redis,queue:{enqueue:async job=>queued.push(job)},store:{connected:async()=>new Set()},discovery:async()=>({recent_posts:[],viewers:[],graph:{users:[]}}),automation:async(op,input)=>news.push([op,input]),moderation:async()=>({profiles:[],rules:[]}),accounts:async()=>({delivery:null}),sendReset:async(...args)=>sent.push(args)});
   const social=async effects=>(await admin.query("INSERT INTO node_social_events(request_key,payload_digest,operation,user_id,result,effects,created_at,updated_at) VALUES(md5(random()::text),repeat('a',64),'test',1,'{}',$1,now(),now()) RETURNING id",[JSON.stringify(effects)])).rows[0].id;
   await t.test('delivery role cannot read credentials, edit business data, forge events or change event identity',async()=>{

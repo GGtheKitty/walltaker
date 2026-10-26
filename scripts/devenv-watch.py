@@ -1,145 +1,84 @@
 #!/usr/bin/env python3
-"""Apply preview changes that Rails reloading and Node --watch cannot handle."""
-
+"""Apply Node preview changes not handled by source/asset watchers."""
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
 import time
-
-ROOT = Path(__file__).resolve().parent.parent
-STATE = ROOT / "tmp/devenv-watch-state.json"
-COMPOSE = [str(ROOT / "scripts/devenv")]
-SERVICES = ["web", "e621_media", "wallpaper_api", "accounts", "router", "cable"]
-
+ROOT=Path(__file__).resolve().parent.parent
+STATE=ROOT/'tmp/devenv-watch-state.json'
+SERVICES=['e621_media','wallpaper_api','accounts','node_web','router','cable']
 
 def action_for(path):
-    if path.startswith("services/anycable/") and (path.endswith((".go", ".patch")) or Path(path).name == "Dockerfile"):
-        return "build_cable"
-    if (path.startswith(("app/views/", "nuttracker/app/views/")) and path.endswith((".erb", ".jbuilder"))) or path == "scripts/compile-node-views.rb":
-        return "compile_views"
-    if path in {".env", ".env.example", "walltaker.env", "docker-compose.yml", "docker-compose-devenv.yml"}:
-        return "recreate"
-    # The engine is bind-mounted with the app. Source/template edits only need
-    # a restart; rebuilding would reinstall gems and precompile all assets.
-    if path.startswith("nuttracker/app/"):
-        return "restart_web"
-    if path in {"Gemfile", "Gemfile.lock", "Dockerfile", ".dockerignore"} or path.startswith("nuttracker/"):
-        return "build_web"
-    if path.startswith(("config/", "lib/", "scrubbers/", "db/migrate/", "app/jobs/")) or path == "config.ru":
-        return "restart_web"
-    if path.startswith("services/router/"):
-        return "reload_router"
-    if path in {"services/e621-media/package.json", "services/e621-media/package-lock.json",
-                "services/e621-media/Dockerfile", "services/e621-media/.dockerignore"}:
-        return "build_media"
-    if path in {"services/wallpaper-api/package.json", "services/wallpaper-api/package-lock.json",
-                "services/wallpaper-api/Dockerfile", "services/wallpaper-api/Dockerfile.dockerignore"}:
-        return "build_api"
-    if path in {"services/accounts/package.json", "services/accounts/package-lock.json",
-                "services/accounts/Dockerfile", "services/accounts/.dockerignore"}:
-        return "build_accounts"
-    if path in {"scripts/devenv", "scripts/devenv-watch.py"}:
-        return "restart_watcher"
+    if path.startswith('services/anycable/') and path.endswith(('.go','.patch','Dockerfile')):
+        return 'build_cable'
+    if path in {'.env','.env.example','walltaker.env','docker-compose.yml','docker-compose-devenv.yml'}:
+        return 'recreate'
+    for folder,action in [('e621-media','build_media'),('wallpaper-api','build_api'),('accounts','build_accounts'),('web','build_node_web'),('database','build_database')]:
+        if path in {f'services/{folder}/'+name for name in ['package.json','package-lock.json','Dockerfile','Dockerfile.dockerignore','.dockerignore']}:
+            return action
+    if path.startswith(('db/','services/database/','scripts/provision-')):
+        return 'migrate'
+    if path.startswith('services/web/scripts/') and path.endswith('.js'):
+        return 'restart_node_web'
+    if path.startswith('services/router/'):
+        return 'reload_router'
+    if path in {'scripts/devenv','scripts/compose','scripts/devenv-watch.py'}:
+        return 'restart_watcher'
     return None
 
-
 def snapshot():
-    paths = [ROOT / name for name in (
-        ".env", ".env.example", "walltaker.env", "docker-compose.yml", "docker-compose-devenv.yml",
-        "Gemfile", "Gemfile.lock", "Dockerfile", ".dockerignore", "config.ru",
-        "scripts/devenv", "scripts/devenv-watch.py", "scripts/compile-node-views.rb",
-    )]
-    for folder in ("config", "lib", "scrubbers", "db/migrate", "app/jobs", "app/views", "nuttracker", "services"):
-        directory = ROOT / folder
-        if directory.exists():
-            for parent, dirs, files in os.walk(directory):
-                dirs[:] = [name for name in dirs if name not in {".git", "node_modules", "tmp", "log", "vendor"}]
-                paths.extend(Path(parent) / name for name in files)
-    result = {}
-    for path in paths:
-        relative = path.relative_to(ROOT).as_posix()
-        if action_for(relative) and path.is_file():
-            stat = path.stat()
-            result[relative] = [stat.st_mtime_ns, stat.st_size]
-    return result
-
+    paths=[ROOT/name for name in ['.env','.env.example','walltaker.env','docker-compose.yml','docker-compose-devenv.yml']]
+    for folder in ['services','db','scripts']:
+        for parent,dirs,files in os.walk(ROOT/folder):
+            dirs[:]=[name for name in dirs if name not in {'.git','node_modules','tmp','dist','log','vendor','__pycache__'}]
+            paths.extend(Path(parent)/name for name in files)
+    return {path.relative_to(ROOT).as_posix():[path.stat().st_mtime_ns,path.stat().st_size] for path in paths if path.is_file() and action_for(path.relative_to(ROOT).as_posix())}
 
 def run(*args):
-    print("Applying:", " ".join(args), flush=True)
-    subprocess.run(COMPOSE + list(args), cwd=ROOT, check=True, timeout=1800)
-
+    print('Applying:',' '.join(args),flush=True)
+    subprocess.run([str(ROOT/'scripts/devenv'),*args],cwd=ROOT,check=True,timeout=1800)
 
 def apply_changes(paths):
-    actions = {action_for(path) for path in paths}
-    if "build_cable" in actions:
-        # Compiling the cable server needs headroom on the small preview VPS.
-        run("stop", "web")
-        try:
-            subprocess.run(["docker", "build", "--memory=768m", "--memory-swap=768m",
-                "--cpu-period=100000", "--cpu-quota=100000", "-t", "walltaker-anycable:liveness-node",
-                "services/anycable"], cwd=ROOT, check=True, timeout=1800)
-        finally:
-            run("up", "-d", "--no-deps", "web")
-    if "build_web" in actions:
-        run("build", "web")
-    if "build_media" in actions:
-        run("build", "e621_media")
-    if "build_api" in actions:
-        run("build", "wallpaper_api")
-    if "build_accounts" in actions:
-        run("build", "accounts")
-    if "recreate" in actions:
-        run("up", "-d", "--no-deps", "--force-recreate", *SERVICES)
+    actions={action_for(path) for path in paths}
+    builds={'build_media':('services/e621-media/Dockerfile','walltaker-e621_media','services/e621-media',192),
+            'build_api':('services/wallpaper-api/Dockerfile','walltaker-wallpaper_api','services',192),
+            'build_accounts':('services/accounts/Dockerfile','walltaker-accounts','services/accounts',192),
+            'build_node_web':('services/web/Dockerfile','walltaker-node_web','.',256),
+            'build_database':('services/database/Dockerfile','walltaker-migrate','.',192),
+            'build_cable':('services/anycable/Dockerfile','walltaker-anycable:liveness-node','services/anycable',768)}
+    for action,(dockerfile,tag,context,memory) in builds.items():
+        if action in actions:
+            subprocess.run(['docker','build',f'--memory={memory}m',f'--memory-swap={memory}m','--cpu-period=100000','--cpu-quota=50000','-f',dockerfile,'-t',tag,context],cwd=ROOT,check=True,timeout=1800)
+    if actions & {'migrate','build_database','recreate'}:
+        run('run','--rm','--no-deps','migrate')
+    if 'recreate' in actions:
+        run('up','-d','--no-deps','--force-recreate',*SERVICES)
     else:
-        if actions & {"build_web", "restart_web"}:
-            run("up", "-d", "--no-deps", "--force-recreate", "web")
-        if "build_cable" in actions:
-            run("up", "-d", "--no-deps", "--force-recreate", "cable")
-        if "build_media" in actions:
-            run("up", "-d", "--no-deps", "--force-recreate", "e621_media")
-        if "build_api" in actions:
-            run("up", "-d", "--no-deps", "--force-recreate", "wallpaper_api")
-        if "build_accounts" in actions:
-            run("up", "-d", "--no-deps", "--force-recreate", "accounts")
-        if "reload_router" in actions:
-            run("exec", "-T", "router", "nginx", "-t")
-            run("exec", "-T", "router", "nginx", "-s", "reload")
-    if "compile_views" in actions:
-        # Compile without booting another Rails process on this small VPS.
-        # The atomic manifest replacement triggers Node's existing file watch.
-        run("exec", "-T", "web", "bundle", "exec", "ruby", "scripts/compile-node-views.rb")
-    return "restart_watcher" in actions
-
+        for action,service in [('build_media','e621_media'),('build_api','wallpaper_api'),('build_accounts','accounts'),('build_node_web','node_web'),('build_cable','cable')]:
+            if action in actions or service=='node_web' and 'restart_node_web' in actions:
+                run('up','-d','--no-deps','--force-recreate',service)
+        if 'reload_router' in actions:
+            run('exec','-T','router','nginx','-t')
+            run('exec','-T','router','nginx','-s','reload')
+    return 'restart_watcher' in actions
 
 def main():
-    STATE.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        previous = json.loads(STATE.read_text())
-    except (FileNotFoundError, ValueError):
-        previous = snapshot()
-        STATE.write_text(json.dumps(previous))
-    print("Watching node checkout; Rails and Node handle ordinary source edits directly.", flush=True)
+    STATE.parent.mkdir(parents=True,exist_ok=True)
+    try:previous=json.loads(STATE.read_text())
+    except (FileNotFoundError,ValueError):previous=snapshot();STATE.write_text(json.dumps(previous))
+    print('Watching the Node checkout; source and asset edits reload directly.',flush=True)
     while True:
         time.sleep(2)
         try:
-            current = snapshot()
-            if current == previous:
-                continue
-            time.sleep(2)  # Debounce multi-file saves.
-            current = snapshot()
-            changed = sorted(path for path in previous.keys() | current.keys() if previous.get(path) != current.get(path))
-            print("Changed:", ", ".join(changed), flush=True)
-            restart = apply_changes(changed)
-            STATE.write_text(json.dumps(current))
-            previous = current
-            if restart:
-                os.execv(sys.executable, [sys.executable, str(Path(__file__).resolve())])
-        except (OSError, subprocess.SubprocessError) as error:
-            print(f"Preview update failed; retrying in 30 seconds: {error}", flush=True)
-            time.sleep(30)
-
-
-if __name__ == "__main__":
-    main()
+            current=snapshot()
+            if current==previous:continue
+            time.sleep(2)
+            current=snapshot();changed=sorted(p for p in previous.keys()|current.keys() if previous.get(p)!=current.get(p))
+            print('Changed:',', '.join(changed),flush=True)
+            restart=apply_changes(changed);STATE.write_text(json.dumps(current));previous=current
+            if restart:os.execv(sys.executable,[sys.executable,str(Path(__file__).resolve())])
+        except (OSError,subprocess.SubprocessError) as error:
+            print('Preview update failed; retrying in 30 seconds: '+str(error),flush=True);time.sleep(30)
+if __name__=='__main__':main()

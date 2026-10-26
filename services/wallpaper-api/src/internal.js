@@ -46,37 +46,3 @@ export function createInternalHandler({ secretKeyBase, writeWallpaper, readHisto
     }
   };
 }
-
-export function startEventDelivery({ pool, secretKeyBase, railsUrl, logger = console, fetchImpl = fetch, interval = 1000, kind = 'wallpaper' }) {
-  if (!['wallpaper', 'reaction', 'link', 'social', 'tracker', 'moderation', 'automation'].includes(kind)) throw new Error('Invalid event kind');
-  const table = `node_${kind}_events`;
-  let stopped = false;
-  let running;
-  const drain = async () => {
-    const rows = (await pool.query(`SELECT id FROM ${table}
-      WHERE delivered_at IS NULL AND available_at <= CURRENT_TIMESTAMP ORDER BY id LIMIT 10`)).rows;
-    for (const { id } of rows) {
-      if (stopped) break;
-      try {
-        const response = await fetchImpl(`${railsUrl}/_internal/${kind}-events/${id}.json`, {
-          method: 'POST', headers: { authorization: `Bearer ${eventToken(secretKeyBase)}` },
-          signal: AbortSignal.timeout(15000), redirect: 'error',
-        });
-        await response.arrayBuffer();
-        if (!response.ok) throw new Error(`Wallpaper event adapter returned ${response.status}`);
-      } catch (error) {
-        logger.warn(`Node ${kind} event ${id} delivery failed: ${error.code || error.name}`);
-        await pool.query(`UPDATE ${table} SET delivery_attempts = delivery_attempts + 1,
-          available_at = CURRENT_TIMESTAMP + LEAST(300, POWER(2, LEAST(delivery_attempts, 8))) * INTERVAL '1 second',
-          updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND delivered_at IS NULL`, [id]);
-      }
-    }
-  };
-  const timer = setInterval(() => {
-    if (running || stopped) return;
-    running = drain().catch((error) => logger.warn(`Node ${kind} event delivery failed: ${error.code || error.name}`))
-      .finally(() => { running = undefined; });
-  }, interval);
-  timer.unref();
-  return async () => { stopped = true; clearInterval(timer); await running; };
-}

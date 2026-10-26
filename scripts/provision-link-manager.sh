@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run as the database admin after db:prepare. Credentials stay in private env.
+# Run as the database admin after Node schema setup. Credentials stay in private env.
 set -eu
 : "${LINK_MANAGER_DB_USER:?required}"
 : "${LINK_MANAGER_DB_PASSWORD:?required}"

@@ -1,15 +1,14 @@
 import pg from 'pg';
 import { createPasswords } from './passwords.js';
 import { createAccounts } from './accounts.js';
-import { createServer,startDelivery } from './app.js';
-for(const key of ['DATABASE_URL','SECRET_KEY_BASE','RAILS_INTERNAL_URL'])if(!process.env[key])throw new Error(`${key} required`);
+import { createServer } from './app.js';
+for(const key of ['DATABASE_URL','SECRET_KEY_BASE'])if(!process.env[key])throw new Error(`${key} required`);
 pg.types.setTypeParser(1114,value=>new Date(value+'Z'));
 const pool=new pg.Pool({ connectionString:process.env.DATABASE_URL,max:2,connectionTimeoutMillis:3000,idleTimeoutMillis:10000,statement_timeout:15000 });
 pool.on('error',error=>console.error(`Accounts database: ${error.code||error.name}`));
 await pool.query('SELECT 1');
 const passwords=createPasswords();
-const stop=process.env.NODE_NATIVE_DELIVERY==='true' ? async()=>{} : startDelivery({ pool,secretKeyBase:process.env.SECRET_KEY_BASE,railsUrl:process.env.RAILS_INTERNAL_URL });
 const server=createServer({manage:createAccounts({pool,passwords,secretKeyBase:process.env.SECRET_KEY_BASE}),health:()=>pool.query('SELECT 1'),secretKeyBase:process.env.SECRET_KEY_BASE});
 server.listen(3003,'0.0.0.0',()=>console.log('Node accounts listening on 3003'));
-const shutdown=()=>{server.close(async()=>{await stop();await passwords.close();await pool.end();process.exit(0);});setTimeout(()=>process.exit(1),10000).unref();};
+const shutdown=()=>{server.close(async()=>{await passwords.close();await pool.end();process.exit(0);});setTimeout(()=>process.exit(1),10000).unref();};
 process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);

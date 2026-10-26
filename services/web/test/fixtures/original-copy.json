@@ -1,0 +1,470 @@
+{
+  "linkFormNew": [
+    "Tell people about yourself! What do you like, what do you not like? Customize your link to fit you.",
+    "Define when and by who your wallpaper can be set using this link.",
+    "Set the scope of content that users can select for this link. Pay attention to what you enter here, these are the most important settings for avoiding shock content."
+  ],
+  "linkFormEdit": [
+    "Tell people about yourself! What do you like, what do you not like? Customize your link to fit you.",
+    "Define when and by who your wallpaper can be set using this link.",
+    "Set the scope of content that users can select for this link. Pay attention to what you enter here, these are the most important settings for avoiding shock content.",
+    "Some clients support special features that aren't required to be possible on every client. You can toggle those here, but they make break compatibility with some clients that don't support them."
+  ],
+  "linkSetup": [],
+  "pornSelector": [
+    "This link's wallpaper was changed less than a minute ago, are you sure you want to overwrite it so soon?",
+    "Some searches may fail! You'll have to search with a lower number of tags.",
+    "You can select videos on this link."
+  ],
+  "help": {
+    "index": [
+      "A: Thanks for being willing to give Walltaker a try! It's pretty easy to get started, but it might seem a bit weird at first since there are some hoops we have to jump through to be able to update your wallpaper.",
+      "Firstly, you will need an account. You can make an account by pressing the Sign Up link on the top-right-hand side of the screen. Once you have created an account (which should only take a minute) return to this page. You must be logged in to continue.",
+      "Now that you have an account, you should make a Link. The core \"thing\" in Walltaker is links. They are the sharable page that you can post on social media or give to friends that lets them change your wallpaper. In order to create your own link:",
+      "There are 8 options to change here that affect who can set your wallpaper, and what restrictions they have to work within. Set these as you see fit, using the key below to explain what each option does.",
+      "Your link terms are simply an area to express what you'd like to see as wallpapers more generally. Nothing here is enforced, it's just a text field for you to leave a note that appears on the link. I suggest you outline what things turn you on here.",
+      "Ensures that the link will never expire, and people you allow to set the link will be able to do so until you delete it.",
+      "This restricts who can set wallpapers on this link.",
+      "A list of E621 tags that must NOT appear on wallpapers people submit. Tags are separated by spaces or commas.",
+      "Theme tags are special! This is a way to enforce all wallpapers submitted to this link to be tagged with a single, specific tag of your choosing. Use this when you're looking for something specific, like a specific species or sex act. You're horny, you'll come up with something fun. Be careful about how you type your tag in here. If you misspell this theme tag, no one will be able to submit anything until you remove it or correct the spelling. Confirm spelling on E621 if you have to. Filter tags cannot be used.",
+      "When you've set it up how you'd like, click the Create Link button.",
+      "Congratulations! You should have a fresh link ready to share with the world. However, it currently doesn't change the wallpaper on anything. This is because, as simply a website, Walltaker cannot change your wallpaper for you. To allow us to do this, we need a Walltaker Client, which is an app you can install on which ever devices you'd like to get wallpaper updates on. It will silently check your link every few seconds, and update your wallpaper if there's someone has updated your wallpaper, automatically.",
+      "You can download a client for which ever device you'd like to use. Follow the instructions for each one for how to install it, then return to this tutorial.",
+      "Once you've installed your client, you need to configure it to pull wallpapers from specifically YOUR link. You can do this by going to your link page, and getting the link ID.",
+      "Follow the instructions for your client to add this link to it. Normally it's in a menu where you can simply type in the link ID.",
+      "Wow! You have everything set up now! Let's just verify that everything is working, and then you can share your link publicly!",
+      "Your client NEVER successfully pinged the link. Are you sure your set the right link ID? Refer to step #2. Did your client crash?",
+      "Your client pinged this link at least once, but gave up! This could be due to a number of things: Did your client crash? Some phone operating systems kill background apps, this can sometimes affect clients. Refer to client documentation. Did you change the frequency of checks? It must be under 1 minute to appear Online ."
+    ],
+    "faq": [
+      "As always, if you think you're being harassed, contact an admin on the Discord (See link in the header) who can look into it for you, and will IP ban an anon user if they're trying to be malicious.",
+      "Yes! I have some API documentation on our GitHub. You can contact an admin on discord to get it listed on the site. Here are some tips for what makes a good client:"
+    ],
+    "client_guide": [
+      "Older polling clients still work for now.",
+      "You can also pass a client identifier during subscription, however this will only appear if a site admin adds your client to the list.",
+      "The JavaScript example uses the Action Cable client. Python and C++ connect directly and read the payload from the Action Cable envelope's message field; ignore control frames such as welcomes, pings, and subscription confirmations. The setWallpaper / set_wallpaper function is where your client downloads and applies the wallpaper.",
+      "Native clients may also identify themselves with WebSocket handshake headers such as User-Agent , joihow , User_Agent , or Wallpaper-Engine-Client . Browser WebSocket clients usually cannot set custom handshake headers, so use subscription params or announce_client .",
+      "The server sends this payload immediately after subscribing and every time client-visible link state changes. Treat post_url as the current wallpaper URL. If that request is rejected by the e621 CDN, clients can retry with post_url_backup , a Walltaker-hosted URL that supplies the CDN's required request headers. The backup is null when the primary URL is not a supported e621 media URL. The token below is a placeholder; use the complete backup URL received from the server. Users can enable videos and GIFs on some links, so clients should handle file types they cannot display. post_url can also be null if no wallpaper is set.",
+      "Link updates always include the fields above. set_by is a username or null ; response_type and response_text may be null before a reaction is sent. post_description is the full description in WebSocket updates. Presence and reaction changes also trigger updates, so download the wallpaper only when post_url changes.",
+      "If the link does not exist, the channel sends an error payload and does not stream link updates.",
+      "Set a response for a given link. There are 4 kinds of responses.",
+      "🔑 Requires the link owner's API key. Use the numeric id from the link payload in this endpoint.",
+      "⚠️ A disgust response rolls the wallpaper back to the previous image and sends the changed state over the WebSocket. If no previous image exists, post_url and post_thumbnail_url become null .",
+      "A successful request returns HTTP 200 and the link JSON below. Unlike a WebSocket link update, this response has no success field. set_by is omitted when no setter is recorded, and post_description is omitted when blank or truncated to 100 characters when present. An invalid API key returns 403 , an invalid reaction type returns 400 , and a missing link returns 404 ; these errors contain a message field.",
+      "🔓/🔐 API key required for some, but not all data.",
+      "ℹ️ The links array contains public, unexpired (or never-expiring) links. Each entry excludes success and set_by ; post_description is omitted when blank and truncated to 100 characters when present. friend and self are included only when an API key or browser session authenticates the viewer. The legacy field master contains the owner's username, or false if no owner is set.",
+      "Call watch_user again with a new username when the wallpaper is set by someone else.",
+      "Replace polling GET /api/links/[id].json with one long-lived LinkChannel subscription. The WebSocket message payload intentionally matches the link JSON shape, so most wallpaper update code can keep using post_url , post_url_backup , post_thumbnail_url , set_by , and updated_at ."
+    ],
+    "deprecated_client_guide": [
+      "Support for polling clients may be removed in the future.",
+      "Gets the current link status. This is what you could poll every 60 seconds to check if the wallpaper has changed. Use post_url as the current wallpaper's URL. This is always an image by default, but users can enable videos/gifs on a link, so please handle error checking if you see a file type you can't display.",
+      "🔓 No API key required.",
+      "Set a response for a given link. There are 4 kinds of responses.",
+      "🔑 Requires user's API Key.",
+      "⚠️ I suggest re-pinging the link after sending a \" disgust \" response, so you can reset the user's wallpaper to the previous version as soon as possible.",
+      "Get details about this user's status such as if they're online, a friend, or the currently authenticated user for a given session.",
+      "🔓/🔐 API key required for some, but not all data.",
+      "ℹ️ To ensure this query is processed quickly, set_by has been excluded from the links array."
+    ]
+  },
+  "lizardDescriptions": {
+    "ki:false": "They're demisexual. That means they need to sense a connection with someone before they can do anything in bed. (And just talking about it makes them blush!) They love cuddling, rubbing, and any sensual touch. Expect to see lots of very cozy posts. Not all posts may be explicit, sometimes they just like a cozy wallpaper you know?",
+    "ki:true": "They're demisexual... and they like you. You should be scared. They love touch, and nothing is more sensual to them than raw textural experiences. Latex, rubber, neoprene, slime, they love it all. They might even tickle you, it's hard to know what to expect! Just know, you're going to feel it.",
+    "warren:false": "He loves everything big. Big tits. Big dicks. Fat asses. All he cares about are your bits, just to feel the heft of it, what it smells like, and to taste anything dripping from them. Expect him to give you lots of larger than life close ups, and a little bit of light musk.",
+    "warren:true": "He loves everything big. Really big. Huge udders. Horse dicks. Fat haunches. All he cares about it your bits, just to feel the sheer size of it, what it reeks like, and to taste whatever gross fluid is leaking out of it. Expect him to give you lots of hyper content and heavy musk.",
+    "taylor:false": "She's a party girl, she'll fuck anyone that looks at her the right way. She especially loves showing off and she's maybe a bit competitive about it. Seeing anyone walking around with a fresh load dripping out their ass or cunt gets her looking for the closest cock she can milk. Expect public sex, creampies and facials.",
+    "taylor:true": "She's a party girl, she'll fuck anything really. She especially loves showing off and she's very competitive about it. Seeing anyone walking around with a fresh load dripping out their ass or cunt gets her looking for the closest cock to get bred by. She's never minded flashing her cunt to make that happen. Expect lots of public sex with flashing, excessive cum and impregnation."
+  },
+  "paragraphs": {
+    "app/views/history_events/index.html.erb": [
+      "This wallpaper link is no longer available."
+    ],
+    "app/views/link_wizard/kinks.html.erb": [
+      "\n      Your link terms is the best place to let people know what you like!\n    ",
+      "\n      Give us all the wet, sloppy, throbbing, sticky details!\n    ",
+      "\n      Exactly! Be detailed, but keep it fun! Big walls of text are rarely read unless they are absolutely dripping in\n      horny sheen.\n    ",
+      "\n      Great place to pick up twinks. That's why I call my terms the certified bussy magnets.\n    ",
+      "\n      I'm sure you're well accredited, Dr. Bussyterms.\n    ",
+      "\n      I am, thank you.\n    ",
+      "\n      Is that why you asked me go to the office store to laminate a picture of my ass with your named signed on it? They\n      kicked me out and said I can't bring nudes to the Staples ever again. They didn't even have any lick-n-stick gold\n      certification seals like you said they would!\n    ",
+      "\n      Staples isn't ready for my resea-\n    ",
+      "\n      Warren shut up.\n    ",
+      "\n        pssst, we're both perverts here based on how you're answering this quiz, so I spiced it up a bit!\n      "
+    ],
+    "app/views/link_wizard/control.html.erb": [
+      "\n      Without a blacklist, someone could send you really shocking posts!\n    ",
+      "\n      Probably from me heheheheheheheh\n    ",
+      "\n      Well, yes that sometimes does happen, where someone picks a wallpaper that they think you might like, but ends up\n      being something you'd rather not see. <strong>But there's also assholes out there that just like posting the worst E621\n      has to offer!</strong> We need to have a strong blacklist to put these dicks in their place!\n    ",
+      "\n      You can put my dick... You can put in place... My dick can be put in place by...\n    ",
+      "\n      ...\n    ",
+      "\n      I want to fuck your cunt again.\n    ",
+      "\n      ... you tried at least.\n    "
+    ],
+    "app/views/link_wizard/gender.html.erb": [
+      "\n      Sexual preference and gender identity are diverse subjects, and I'm sure you know many of the details already.\n    ",
+      "\n      Many of our users aren't strictly male or female, or straight or gay.\n    ",
+      "\n      We can't promise you that your link will always prevent content you'd rather not see from appearing, but we can\n      get you set up so it works most of the time.\n    "
+    ],
+    "app/views/link_wizard/summon.html.erb": [],
+    "app/views/link_wizard/orgasmic_conclusion.html.erb": [
+      "\n      Yeah that's a great looking link!!\n    ",
+      "\n      We really think you're going to like the site!\n    ",
+      "\n      There's some stuff in there we didn't tell you about actually, you should check it out!\n    "
+    ],
+    "app/views/link_wizard/intro.html.erb": [
+      "\n    OH! Hi, we were expecting you! Let me get the link-mages in here to get this on a roll! They will need a little\n    input from you, but it won't take long! I promise! There's just one little thing we need to get out of the way.\n  ",
+      "\n    Could you also, like, <em>just for joke or whatever,</em> just like...\n    <strong>vocalize your undying gratitude for porn and it's unrelenting desire to overtake humanity?</strong>\n  "
+    ],
+    "app/views/link_wizard/no_fun.html.erb": [
+      "\n      Babe, you're all over the internet.\n    ",
+      "\n      <em>*shlick shlick shlick shlick shlick shlick shlick shlick*</em>\n    ",
+      "\n      Warren, I literally just let you cum in my panties. The begging was getting intense.\n    ",
+      "\n      ... hey NO! That's not ho-\n    ",
+      "\n      You can always turn it off later!\n    "
+    ],
+    "app/views/link_wizard/surprise.html.erb": [
+      "\n      Sometimes, you want people to surprise you with what they think you'll get off too. Other times, you might want to\n      restrict the options to a specific theme.\n    ",
+      "\n      It's a good question to ask yourself! You might use different links for different moods. Maybe one for \"surprises\", and\n      another one for a specific... kink... or... somethi-... Warren. <strong>Focus.</strong>\n    ",
+      "\n      Yeah... &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I&nbsp;am.\n    ",
+      "\n      While he finishes up and probably cums in my face without asking for the 7th time today, I can tell you we're\n      talking about the <strong>theme tag</strong>! This limits surprises, but it's fun when you're just really\n      feeling... into something!\n    ",
+      "\n      Like slutty lizard boobs.\n    "
+    ],
+    "app/views/errors/not_found.html.erb": [],
+    "app/views/errors/server_error.html.erb": [
+      "\n  The site has shit the bed in a new and unique way! Gray will want to see the error shown below. Send it to him on\n  discord please!\n"
+    ],
+    "app/views/kink/_form.html.erb": [],
+    "app/views/kink/users_kinks.html.erb": [],
+    "app/views/kink/add.html.erb": [
+      "Find me in app/views/kink/add.html.erb"
+    ],
+    "app/views/kink/remove.turbo_stream.erb": [],
+    "app/views/kink/_kinks_for_search.html.erb": [],
+    "app/views/kink/_kink.html.erb": [],
+    "app/views/kink/update.turbo_stream.erb": [],
+    "app/views/kink/_e621_status.html.erb": [],
+    "app/views/kink/show.html.erb": [],
+    "app/views/kink/search_kinks.html.erb": [],
+    "app/views/kink/toggle_star.turbo_stream.erb": [],
+    "app/views/kink/_kinks.html.erb": [],
+    "app/views/kink/new.html.erb": [],
+    "app/views/past_links/index.html.erb": [],
+    "app/views/link_lists/_kink.html.erb": [],
+    "app/views/link_lists/show.html.erb": [],
+    "app/views/link_lists/index.html.erb": [],
+    "app/views/nut_pledges/_failure_preview.html.erb": [],
+    "app/views/nut_pledges/history.html.erb": [
+      "No NNN pledges yet."
+    ],
+    "app/views/nut_pledges/show.html.erb": [],
+    "app/views/nut_pledges/new.html.erb": [
+      "My participation is voluntary, unless of course this is being signed during an account surrender, in which case\n  it's not voluntary but still legally binding. (Of which legal jurisdiction is left as homework for the signee.)"
+    ],
+    "app/views/help/deprecated_client_guide.html.erb": [
+      "\n  <strong>Support for polling clients may be removed in the future.</strong>\n",
+      "Gets the current link status. This is what you could poll every 60 seconds to check if the wallpaper has changed. Use\n  <code>post_url</code> as the current wallpaper's URL. This is always an image by default, but users can enable\n  videos/gifs on a link, so please handle error checking if you see a file type you can't display.",
+      "🔓 No API key required.",
+      "Set a response for a given link. There are 4 kinds of responses.",
+      "🔑 Requires user's API Key.",
+      "⚠️ I suggest re-pinging the link after sending a \"<code>disgust</code>\" response, so you can reset the user's\n  wallpaper to the previous version as soon as possible.",
+      "Get details about this user's status such as if they're online, a friend, or the currently authenticated user for a\n  given session.",
+      "🔓/🔐 API key required for some, but not all data.",
+      "ℹ️ To ensure this query is processed quickly, <code>set_by</code> has been excluded from the links array."
+    ],
+    "app/views/help/faq.html.erb": [
+      "\n        As always, if you think you're being harassed, contact an admin on the Discord (See link in the header) who can\n        look into it for you, and will IP ban an anon user if they're trying to be malicious.\n      ",
+      "\n        Yes! I have some API documentation on our\n        <a href=\"https://github.com/pupgray/walltaker\" target=\"_blank\">GitHub.</a> You can contact\n        an admin on discord to get it listed on the site.\n        <br>\n        Here are some tips for what makes a good client:\n      "
+    ],
+    "app/views/help/client_guide.html.erb": [
+      "\n  Older polling clients still work <strong>for now.</strong>\n",
+      "\n  You can also pass a client identifier during subscription, however this will only appear if a site admin adds your client to the list.\n",
+      "\n  The JavaScript example uses the Action Cable client. Python and C++ connect directly and read the payload from the\n  Action Cable envelope's <code>message</code> field; ignore control frames such as welcomes, pings, and subscription confirmations.\n  The <code>setWallpaper</code>/<code>set_wallpaper</code> function is where your client downloads and applies the wallpaper.\n",
+      "\n  Native clients may also identify themselves with WebSocket handshake headers such as <code>User-Agent</code>,\n  <code>joihow</code>, <code>User_Agent</code>, or <code>Wallpaper-Engine-Client</code>. Browser WebSocket clients\n  usually cannot set custom handshake headers, so use subscription params or <code>announce_client</code>.\n",
+      "\n  The server sends this payload immediately after subscribing and every time client-visible link state changes. Treat\n  <code>post_url</code> as the current wallpaper URL. If that request is rejected by the e621 CDN, clients can retry\n  with <code>post_url_backup</code>, a Walltaker-hosted URL that supplies the CDN's required request headers. The backup\n  is <code>null</code> when the primary URL is not a supported e621 media URL. The token below is a placeholder;\n  use the complete backup URL received from the server. Users can enable videos and GIFs on some links, so clients\n  should handle file types they cannot display. <code>post_url</code> can also be <code>null</code> if no wallpaper is set.\n",
+      "\n  Link updates always include the fields above. <code>set_by</code> is a username or <code>null</code>;\n  <code>response_type</code> and <code>response_text</code> may be <code>null</code> before a reaction is sent.\n  <code>post_description</code> is the full description in WebSocket updates. Presence and reaction changes also trigger\n  updates, so download the wallpaper only when <code>post_url</code> changes.\n",
+      "\n  If the link does not exist, the channel sends an error payload and does not stream link updates.\n",
+      "Set a response for a given link. There are 4 kinds of responses.",
+      "🔑 Requires the link owner's API key. Use the numeric <code>id</code> from the link payload in this endpoint.",
+      "⚠️ A <code>disgust</code> response rolls the wallpaper back to the previous image and sends the changed state over the WebSocket.\n  If no previous image exists, <code>post_url</code> and <code>post_thumbnail_url</code> become <code>null</code>.",
+      "\n  A successful request returns HTTP <code>200</code> and the link JSON below. Unlike a WebSocket link update, this response\n  has no <code>success</code> field. <code>set_by</code> is omitted when no setter is recorded, and\n  <code>post_description</code> is omitted when blank or truncated to 100 characters when present.\n  An invalid API key returns <code>403</code>, an invalid reaction type returns <code>400</code>, and a missing link returns\n  <code>404</code>; these errors contain a <code>message</code> field.\n",
+      "🔓/🔐 API key required for some, but not all data.",
+      "ℹ️ The <code>links</code> array contains public, unexpired (or never-expiring) links. Each entry excludes\n  <code>success</code> and <code>set_by</code>; <code>post_description</code> is omitted when blank and truncated to 100 characters when present.\n  <code>friend</code> and <code>self</code> are included only when an API key or browser session authenticates the viewer.\n  The legacy field <code>master</code> contains the owner's username, or <code>false</code> if no owner is set.",
+      "Call <code>watch_user</code> again with a new username when the wallpaper is set by someone else.",
+      "\n  Replace polling <code>GET /api/links/[id].json</code> with one long-lived <code>LinkChannel</code> subscription.\n  The WebSocket message payload intentionally matches the link JSON shape, so most wallpaper update code can keep using\n  <code>post_url</code>, <code>post_url_backup</code>, <code>post_thumbnail_url</code>, <code>set_by</code>, and\n  <code>updated_at</code>.\n"
+    ],
+    "app/views/help/index.html.erb": [
+      "\n    <small>A:</small>\n    Thanks for being willing to give Walltaker a try! It's pretty easy to get started, but it might seem a bit weird at\n    first since there are some hoops we have to jump through to be able to update your wallpaper.\n  ",
+      "\n      Firstly, <strong>you will need an account.</strong> You can make an account by pressing the\n      <span class=\"mock-link\">Sign Up</span> link on the top-right-hand side of the screen. Once you have created\n      an account (which should only take a minute) return to this page. You must be logged in to continue.\n    ",
+      "\n      Now that you have an account, you should make a\n      <strong>\n        <ion-icon role=\"presentation\" name=\"document\"></ion-icon>\n        Link.\n      </strong>\n      The core \"thing\" in Walltaker is links. They are the sharable page that you can post on social media\n      or give to friends that lets them change your wallpaper. In order to create your own link:\n    ",
+      "\n          <strong>There are 8 options</strong> to change here that affect who can set your wallpaper, and what\n          restrictions they have to work within. Set these as you see fit, using the key below to explain what each\n          option does.\n        ",
+      "\n              Your link terms are simply an area to express what you'd like to see as wallpapers more generally. Nothing\n              here is enforced, it's just a text field for you to leave a note that appears on the link. I suggest you\n              outline what things turn you on here.\n            ",
+      "\n              Ensures that the link will never expire, and people you allow to set the link will be able to do so until\n              you delete it.\n            ",
+      "\n              This restricts who can set wallpapers on this link.\n            ",
+      "\n              A list of E621 tags that must NOT appear on wallpapers people submit.\n              <strong>Tags are separated by spaces or commas.</strong>\n            ",
+      "\n              Theme tags are special! This is a way to enforce all wallpapers submitted to this link to be tagged with a\n              single, specific tag of your choosing. Use this when you're looking for something specific, like a\n              specific\n              species or sex act. You're horny, you'll come up with something fun.\n              <strong>Be careful about how you type your tag in here.</strong> If you misspell this theme tag, no one\n              will be\n              able to submit anything until you remove it or correct the spelling. Confirm spelling on E621 if you have\n              to. Filter tags cannot be used.\n            ",
+      "\n      When you've set it up how you'd like, click the\n      <span class=\"mock-button\">Create Link</span>\n      button.\n    ",
+      "\n      Congratulations! You should have a fresh link ready to share with the world. However, it currently doesn't change\n      the wallpaper on anything. This is because, as simply a website, Walltaker cannot change your wallpaper for you.\n      To allow us to do this,\n      <strong>we need a Walltaker Client, which is an app you can install on which ever devices you'd\n        like to get wallpaper updates on.</strong> It will silently check your link every few seconds, and update your\n      wallpaper if there's someone has updated your wallpaper, automatically.\n    ",
+      "\n      You can download a client for which ever device you'd like to use. Follow the instructions for each one for how to\n      install it, then return to this tutorial.\n    ",
+      "\n      Once you've installed your client, you need to configure it to pull wallpapers from specifically YOUR link. You\n      can do this by going to your link page, and getting the link ID.\n    ",
+      "\n      Follow the instructions for your client to add this link to it. Normally it's in a menu where you can simply type\n      in the link ID.\n    ",
+      "\n      Wow! You have everything set up now! Let's just verify that everything is working, and then you can share your\n      link publicly!\n    ",
+      "\n              Your client NEVER successfully pinged the link.\n            <ul>\n              <li>Are you sure your set the right link ID?\n                <a href=\"#getting-started-configure-client\">Refer to step #2.</a></li>\n              <li>Did your client crash?</li>\n            </ul>\n            ",
+      "\n              Your client pinged this link at least once, but gave up! This could be due to a number of things:\n            <ul>\n              <li>Did your client crash?</li>\n              <li>Some phone operating systems kill background apps, this can sometimes affect clients. Refer to client\n                documentation.\n              </li>\n              <li>Did you change the frequency of checks? It must be under 1 minute to appear\n                <div class=\"mock-online\">Online\n                  <div class=\"text-charm text-charm__online\"></div>\n                </div>\n                .\n              </li>\n            </ul>\n            "
+    ],
+    "app/views/application/_notifications.html.erb": [],
+    "app/views/application/_notification.html.erb": [],
+    "app/views/application/_flashes.html.erb": [],
+    "app/views/application/_chyron.html.erb": [],
+    "app/views/application/_flash.html.erb": [],
+    "app/views/comments/_comment.html.erb": [],
+    "app/views/comments/_form.html.erb": [],
+    "app/views/comments/index.html.erb": [],
+    "app/views/comments/new.html.erb": [],
+    "app/views/session/new.html.erb": [],
+    "app/views/mod_tools/show_quarantine.html.erb": [],
+    "app/views/mod_tools/invites.html.erb": [
+      "No invite codes have been generated."
+    ],
+    "app/views/mod_tools/activity_analytics.html.erb": [],
+    "app/views/mod_tools/deleted_users.html.erb": [
+      "There are no deleted accounts."
+    ],
+    "app/views/mod_tools/_pick_user_form.erb": [],
+    "app/views/mod_tools/emoji_links.html.erb": [],
+    "app/views/mod_tools/show_recent_events.html.erb": [],
+    "app/views/mod_tools/_pagination.html.erb": [],
+    "app/views/mod_tools/index.html.erb": [
+      "\n    You can cause <strong>IRREVERSIBLE</strong> damage here. Both to the site, and our user's privacy. There are no\n    confirmations before you do an action. <strong>You need to think before you click.</strong>\n  ",
+      "\n    We consider the following to be PII (Personally Identifiable Information):\n  ",
+      "\n    This information should <strong>NEVER</strong> be provided to anyone. That includes,\n    <strong>NOT EVEN TELLING THE USER THEIR OWN PII INFO.</strong> Always assume someone's account is hacked and\n    <strong>that you are being manipulated.</strong> You may <strong>ONLY</strong> ask for THEM to provide it, and you\n    can confirm if it's correct or not. Provide no more information.\n  ",
+      "\n    If you fuck up with tools provided to you on this panel, you will lose all access.\n  "
+    ],
+    "app/views/mod_tools/update_password_reset.html.erb": [
+      "Find me in app/views/mod_tools/update_password_reset.html.erb"
+    ],
+    "app/views/mod_tools/show_user.html.erb": [],
+    "app/views/mod_tools/destroy_user.html.erb": [
+      "Find me in app/views/mod_tools/destroy_user.html.erb"
+    ],
+    "app/views/mod_tools/user_icons.html.erb": [],
+    "app/views/mod_tools/_password_reset_form.erb": [],
+    "app/views/mod_tools/profile_domains.html.erb": [
+      "\n  Unknown domains remain usable while pending. Approving a domain also approves its subdomains. Blocking a domain\n  removes matching URLs from saved profiles and removes them from future profile saves. A more-specific\n  domain decision takes precedence over its parent domain.\n",
+      "No domains are awaiting review.",
+      "No domains have been approved.",
+      "No domains have been blocked."
+    ],
+    "app/views/mod_tools/_edit_user_form.erb": [],
+    "app/views/mod_tools/wallpaper_clients.html.erb": [
+      "\n  Entries are displayed and matched from top to bottom. Choose where each entry appears on the homepage. To recognize a\n  client on user links, provide a unique piece of its user-agent or announced client name in “Match text.” Hidden\n  entries can still be used for link recognition.\n"
+    ],
+    "app/views/mod_tools/system_analytics.html.erb": [
+      "Machine metrics unavailable.",
+      "Queue metrics unavailable."
+    ],
+    "app/views/mod_tools/show_password_reset.html.erb": [
+      "\n  Ask something like the following: <strong>\"Can you give me all or part of the email you used to make the account? I only need it to confirm this is your account.\"</strong> A partial email is alright, as long as it contains something on the left side of the @ symbol. Make sure they at least give you most of it though, single words might be guessable. If they say \"it was a gmail.com address\", this does not count.\n",
+      "If they refuse, or say they forgot entirely, you cannot reset their password. Simply refuse, explain that it's required, and end the DM. They may be manipulating you to get access to the account. <strong>This has happened before.</strong>",
+      "If they used an email hiding service, that's not an excuse for not remembering it.",
+      "\n  Enter their response below. This does a check thru the user's table, looking for an email similar to the entered value. Capitalization is ignored, but it must be one whole chunk of the email address. (\"gray@gmail.com\" will match \"pup<u>gray@gmail.com</u>\", but NOT \"pupg@gmail.com\")\n",
+      "Be somewhat flexible if it's obvious they made a typo, but if there is no results, and they are sure that their email is that, end the DM. Give maybe 2 chances to try different ones.",
+      "If they used an email hiding service, that's not an excuse for not remembering it.",
+      "\n  Verify that you got a green checkbox in step 2, and that the user name that showed up matches what it should be for this user. If yes, <strong>you may give them the password reset link from step 2.</strong>\n",
+      "\n  If you got a red cross, this means no account was found. Use your best judgement about if user should be asked again. Remember, anyone could be trying to get into an account.\n"
+    ],
+    "app/views/shared/_wallpaper_clients.html.erb": [],
+    "app/views/porn_search/_input.html.erb": [],
+    "app/views/porn_search/search.html.erb": [],
+    "app/views/porn_search/index.html.erb": [
+      "Search is temporarily unavailable. Please try again shortly."
+    ],
+    "app/views/profiles/show.html.erb": [],
+    "app/views/profiles/index.html.erb": [
+      "\n      No public profile styles are available yet.\n    "
+    ],
+    "app/views/surrenders/_form.html.erb": [
+      "\n    Please check the checkbox below <strong>to confirm you understand the warnings above.</strong>\n  "
+    ],
+    "app/views/surrenders/_surrender.html.erb": [],
+    "app/views/surrenders/show.html.erb": [],
+    "app/views/surrenders/index.html.erb": [
+      "\n    Do you like <strong>profile play?</strong> Normally, accounts on most websites can only be given up to someone by\n    sharing a password. Not only is this a horrible idea for your own personal security, for a website, it's also\n    detrimental! We need to be able to attribute actions to a user to moderate and secure the site.\n  ",
+      "\n    So wouldn't it be cool if you could just...\n    <strong>give your account to a friend for a bit, no questions asked?</strong>\n  ",
+      "\n    This tool instead allows you to give <strong>full</strong> access to your account to any friend. You do not need to\n    share your password. <strong>They will <em>not</em> see your email address, or login credentials.</strong> (not even\n    walltaker can know what your plain-text password is in-fact!)\n  ",
+      "\n    A walltaker moderator will <strong>NEVER</strong> ask you to use this tool.\n  ",
+      "\n    Full access, means <strong>full access.</strong> This is giving up your account to someone temporarily! You are able\n    to abort during the time period when the other user has access to your account, but there is no easy undo option for\n    things they would've already done.\n  ",
+      "\n    If you aren't scared off, and want someone to control your account...\n  ",
+      "\n    You must stop your current surrender before you start another. You should see the\n    <span class=\"mock-button\">Stop and return account</span> button at the top of this page.\n  "
+    ],
+    "app/views/surrenders/new.html.erb": [
+      "\n      Remember, you are giving up your <strong>full account</strong>, for up to 2 weeks, to someone that will appear as\n      you on the website. <strong>You can abort this once started,</strong> however damage already done by the person\n      using your account is only reparable manually. (this includes social damage, they will be able to message your\n      friends in Goon Threads, or send gross wallpapers.)\n    "
+    ],
+    "app/views/orgasms/_form.html.erb": [],
+    "app/views/orgasms/show.html.erb": [],
+    "app/views/orgasms/index.html.erb": [],
+    "app/views/orgasms/edit.html.erb": [],
+    "app/views/orgasms/_orgasm.html.erb": [],
+    "app/views/orgasms/new.html.erb": [],
+    "app/views/message_thread/_single_message.html.erb": [],
+    "app/views/message_thread/show.html.erb": [],
+    "app/views/message_thread/_load_more_link.html.erb": [],
+    "app/views/message_thread/_controls.html.erb": [],
+    "app/views/message_thread/index.html.erb": [],
+    "app/views/message_thread/load_more.turbo_stream.erb": [],
+    "app/views/message_thread/edit.html.erb": [
+      "\n    If you are 100% sure you would like to leave this thread, click the red button below. Note that should you want to\n    rejoin, you will have to ask someone still in this thread to add you again, or contact support.\n  "
+    ],
+    "app/views/message_thread/_messages_from_thread.html.erb": [],
+    "app/views/news_room/_desk.html.erb": [],
+    "app/views/news_room/index.html.erb": [],
+    "app/views/news_room/_backdrop.html.erb": [],
+    "app/views/notification/index.html.erb": [],
+    "app/views/search/results.html.erb": [],
+    "app/views/search/index.html.erb": [
+      "\n        Woogle searches for links, but will look at the user's bio and username as well.\n        <strong>This means you may see links that don't seem to contain your search term.</strong> This just means the\n        word appeared in their user profile.\n      "
+    ],
+    "app/views/scoops/_form.html.erb": [],
+    "app/views/scoops/_interview.html.erb": [],
+    "app/views/scoops/show.html.erb": [],
+    "app/views/scoops/_scoop.html.erb": [
+      "Awaiting a newsroom slot..."
+    ],
+    "app/views/scoops/index.html.erb": [],
+    "app/views/scoops/edit.html.erb": [],
+    "app/views/scoops/new.html.erb": [],
+    "app/views/users/_past_links.html.erb": [],
+    "app/views/users/request_password_reset.html.erb": [],
+    "app/views/users/_user.html.erb": [],
+    "app/views/users/details.html.erb": [],
+    "app/views/users/_details_edit_advanced.html.erb": [],
+    "app/views/users/show.html.erb": [
+      "\n                Use this key to grant special powers to a client you're using. It does not grant full access to your\n                account,\n                but does allow clients to set a response on links on your behalf.\n                <strong>You can only have 1 API key at once.</strong> When you randomize a new one, the old one will\n                stop\n                working.\n              ",
+      "\n          You should pester them into making some! Click the\n          <strong>\n            <ion-icon role=\"presentation\" name=\"person-add\"></ion-icon>\n            Send Friends Request\n          </strong> button in the tool bar to send them a friend request. Maybe that's the motivation they\n          need!\n        ",
+      "This will delete the current page style, permanently. Please make sure you've kept a back up if you\n                  think there's a chance you will want it back."
+    ],
+    "app/views/users/apply_new_password.html.erb": [],
+    "app/views/users/_sharing_form.html.erb": [],
+    "app/views/users/sets.html.erb": [],
+    "app/views/users/_details_edit.html.erb": [],
+    "app/views/users/profile_shell.html.erb": [],
+    "app/views/users/_rendered_details.html.erb": [],
+    "app/views/users/_details.html.erb": [],
+    "app/views/users/new.html.erb": [],
+    "app/views/links/_form.html.erb": [
+      "\n      Tell people about yourself! What do you like, what do you not like? Customize your link to fit you.\n    ",
+      "\n      Define when and by who your wallpaper can be set using this link.\n    ",
+      "\n      Set the scope of content that users can select for this link. Pay attention to what you enter here, these are the\n      most important settings for avoiding shock content.\n    ",
+      "\n      Some clients support special features that aren't required to be possible on every client. You can toggle those\n      here, but they make break compatibility with some clients that don't support them.\n    "
+    ],
+    "app/views/links/_viewing_users.html.erb": [],
+    "app/views/links/browse.html.erb": [
+      "User's who created their account recently get featured here for a short amount of time.",
+      "My arbitrary algorithm that determines the order of this list.",
+      "\n      No links are currently being used. Maybe you should use your own? Click <strong>Links</strong> in the navigation\n      bar to get started.\n    "
+    ],
+    "app/views/links/export.html.erb": [],
+    "app/views/links/_embed_text.html.erb": [],
+    "app/views/links/_preview.html.erb": [],
+    "app/views/links/_links.html.erb": [
+      "\n      You'll need to create a link that others can use to push wallpapers to your device. Try the\n      <span class=\"mock-link\"><ion-icon role=\"presentation\" name=\"color-wand\"></ion-icon> Link Wizard</span>for a guided tutorial!\n    "
+    ],
+    "app/views/links/show.html.erb": [
+      "Are you sure you want to delete this link?",
+      "Your link has a really long blacklist! I know I ask that you fill out your blacklist as fully as you can, but we\n      can only make requests to e621 with a maximum number of tags. Your link still works, this is just a warning.",
+      "\n      Reply publicly to the user who set your wallpaper so they know what you like! If you select \"Hate it\", the\n      wallpaper will be reset to the previous wallpaper. If you select \"I came\" an orgasm will be logged on your user\n      profile.\n    ",
+      "\n              We support iOS only thru a widget app. This is a workaround for Apple's draconian adult-content rules.\n              <strong>You will need to install\n                <a href=\"https://apps.apple.com/us/app/widget-construction-set/id6444323235?platform=iphone\">Widget\n                  Construction Set</a> first.</strong> When installed, click the \"Add Widget\" button below and select\n              one of the widget\n              sizes you'd like. Then add the WCS widget to your homescreen!\n            ",
+      "\n        Links that are forks of this link will receive wallpaper changes that are set here; but only if their separete\n        blacklists allow it. You may receive responses from anyone of the following:\n      "
+    ],
+    "app/views/links/_submit.html.erb": [
+      "Search is temporarily unavailable. Please try again shortly."
+    ],
+    "app/views/links/index.html.erb": [],
+    "app/views/links/_porn_selector.html.erb": [
+      "This link's wallpaper was changed less than a minute ago, are you sure you want to overwrite it so soon?",
+      "Some searches may fail! You'll have to search with a lower number of tags.",
+      "\n        You can select\n        <strong>\n          <ion-icon class=\"video-icon\" role=\"presentation\" name=\"videocam\"></ion-icon>\n          videos\n        </strong>\n        on this link.\n      "
+    ],
+    "app/views/links/embed.html.erb": [],
+    "app/views/links/edit.html.erb": [],
+    "app/views/links/_link.html.erb": [],
+    "app/views/links/_details.html.erb": [],
+    "app/views/links/_embed_image.html.erb": [],
+    "app/views/links/new.html.erb": [],
+    "app/views/friendships/_form.html.erb": [],
+    "app/views/friendships/_pending_friendship.html.erb": [],
+    "app/views/friendships/_friendship.html.erb": [],
+    "app/views/friendships/show.html.erb": [],
+    "app/views/friendships/index.html.erb": [
+      "\n        Maybe everyone is already your friend! Send one of your links around and someone new may make a friend request.\n      ",
+      "\n        When viewing anyone else's links, you can click the <strong>\n        <ion-icon role=\"presentation\" name=\"person-add\"></ion-icon>\n        Send Friends Request</strong> button to start making some horny friends! If some one has already sent you a\n        request, you can see it by clicking <span class=\"mock-button\">Check Requests</span>\n      "
+    ],
+    "app/views/friendships/new.html.erb": [],
+    "app/views/lizard_tools/lizard_browse.html.erb": [],
+    "app/views/lizard_tools/index.html.erb": [],
+    "app/views/layouts/_title.erb": [],
+    "app/views/layouts/mailer.html.erb": [],
+    "app/views/layouts/full_width.html.erb": [],
+    "app/views/layouts/link_wizard.html.erb": [],
+    "app/views/layouts/_surrender.html.erb": [],
+    "app/views/layouts/errors.html.erb": [
+      "To keep things organized and peaceful, we ask that you verify your walltaker account in the discord when you join. It's really quick, doesn't require anything other than your username and a link ID from your account! <strong>We also kick discord accounts newer than a week old or those without profile pictures!</strong> Try again after that period if you can't join."
+    ],
+    "app/views/layouts/_mascot_picker.erb": [],
+    "app/views/layouts/application.html.erb": [
+      "To keep things organized and peaceful, we ask that you verify your walltaker account in the discord when\n            you\n            join. It's really quick, doesn't require anything other than your username and a link ID from your account!\n            <strong>We also kick discord accounts newer than a week old or those without profile pictures!</strong> Try\n            again after that period if you can't join."
+    ],
+    "app/views/layouts/mailer.text.erb": [],
+    "app/views/layouts/profile_shell.html.erb": [],
+    "app/views/layouts/base.html.erb": [
+      "Minors cannot use this website. Are you over the age of 18?"
+    ],
+    "app/views/layouts/_browse_link.html.erb": [],
+    "app/views/leashes/_form.html.erb": [],
+    "app/views/leashes/show.html.erb": [],
+    "app/views/leashes/_leash.html.erb": [],
+    "app/views/leashes/index.html.erb": [
+      "\n      A leash is an upgrade you can apply to any confirmed friendship. It's an owner/pet relationship, so\n      be careful! <u>There are some things you should know before leashing yourself.</u>\n    "
+    ],
+    "app/views/leashes/edit.html.erb": [],
+    "app/views/leashes/new.html.erb": [
+      "<strong>Remember!</strong> You need to have a confirmed friendship with your future owner first."
+    ],
+    "app/views/leaderboard/index.html.erb": [],
+    "app/views/reports/_control.html.erb": [
+      "We get a lot of reports everyday. It really helps us to keep the site a fun place to be, but it can be\n      overwhelming to get a lot of confusing or accidental reports.\n      <strong>Can you please provide a reason for this report?</strong>"
+    ],
+    "app/views/reports/show.html.erb": [],
+    "app/views/reports/index.html.erb": [],
+    "app/views/reports/_report.html.erb": [],
+    "app/views/reports/new.html.erb": [],
+    "app/views/password_reset_mailer/reset_password.html.erb": [
+      "This link expires one hour after the reset was requested."
+    ],
+    "app/views/dashboard/index.html.erb": [
+      "\n  First off:\n  <strong>Walltaker is an app built by adults, for adults. You must be over the age of 18 to use it.</strong>\n  Walltaker is inspired by the <a href=\"https://www.wallclaimer.com/\">WallClaimer</a> app, which allows you to set the\n  wallpaper of your friend's phones. This however leads to some weird cases where people post stuff that'd be on\n  your metaphorical blacklist. With that in mind, I wanted it to be restricted to\n  <a href=\"https://e621.net\">e621.net</a>\n  results, with an enforced blacklist. This keeps you in control, but not <em>too much</em> control.\n",
+      "\n  Walltaker requires you to <strong>make an account on the website (here!) first.</strong> Once you have an account, you\n  can generate\n  links to send to friends/enemies, which will enqueue new wallpapers for your account. When you want to start seeing\n  these new wallpapers, <strong>then you can download the companion apps listed below</strong> which is able to listen\n  to wallpaper changes to any\n  account. Enter your username, and then go about your day!\n",
+      "Extra tools that tie into Walltaker's site. These should help to integrate walltaker better or make the user\n  experience cleaner."
+    ],
+    "app/views/dashboard/_recent_posts.html.erb": [],
+    "app/views/dashboard/_users_viewing_links.erb": [],
+    "app/views/settings/save.html.erb": [
+      "Find me in app/views/settings/save.html.erb"
+    ],
+    "app/views/settings/index.html.erb": [
+      "\n      This action will delete your account forever. Enter your current password to continue.\n    "
+    ],
+    "nuttracker/app/views/nuttracker/orgasms/_form.html.erb": [
+      "\n        An orgasm will be recorded on your public profile for everyone to see! It's fun!\n      "
+    ],
+    "nuttracker/app/views/nuttracker/orgasms/show.html.erb": [],
+    "nuttracker/app/views/nuttracker/orgasms/_pagination.html.erb": [],
+    "nuttracker/app/views/nuttracker/orgasms/index.html.erb": [],
+    "nuttracker/app/views/nuttracker/orgasms/edit.html.erb": [],
+    "nuttracker/app/views/nuttracker/orgasms/_orgasm.html.erb": [],
+    "nuttracker/app/views/nuttracker/orgasms/index_for_user.html.erb": [],
+    "nuttracker/app/views/nuttracker/orgasms/new.html.erb": [],
+    "nuttracker/app/views/layouts/nuttracker/application.html.erb": []
+  }
+}

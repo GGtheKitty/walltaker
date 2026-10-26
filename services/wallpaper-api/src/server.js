@@ -1,7 +1,4 @@
 import pg from 'pg';
-const nativeDeliveryEnabled=process.env.NODE_NATIVE_DELIVERY==='true';
-const nativeRenderingEnabled=process.env.NODE_RENDERING_ENABLED==='true';
-if(nativeDeliveryEnabled&&!nativeRenderingEnabled)throw Error('Native delivery requires native rendering');
 import {createBrowserSessions,createBrowserLimiter} from './browser-sessions.js';
 import {createBrowserData} from './browser-data.js';
 import {createBrowserHandler} from './browser-handler.js';
@@ -16,6 +13,9 @@ import { createLegacyAutomationImporter } from './automation-legacy.js';
 import { enqueueWallpaperAutomation, verifyAutomationSelection } from './automation-wallpaper.js';
 import { createModeration } from './moderation.js';
 import { createModerationHandler } from './moderation-handler.js';
+import {createBlazer} from './blazer.js';
+import {createBlazerHandler} from './blazer-handler.js';
+import {createCheckNotifier} from './blazer-mail.js';
 import { createTracker } from './tracker.js';
 import { createTrackerHandler } from './tracker-handler.js';
 import { createDiscovery,createDiscoveryCache } from './discovery.js';
@@ -27,7 +27,7 @@ import { createClient } from 'redis';
 import { createApiServer } from './app.js';
 import { createRepository } from './repository.js';
 import { createRedisStore } from './redis.js';
-import { createPresenceReporter } from './presence.js';
+import {createBroadcastClient} from './broadcasts.js';
 import { createWallpaperWriter } from './updates.js';
 import { createHistoryReader } from './history.js';
 import { createReactionWriter } from './reactions.js';
@@ -38,7 +38,7 @@ import { createE621Store } from './e621-store.js';
 import { createE621Handler } from './e621-handler.js';
 import { createLinkManager } from './link-manager.js';
 import { createLinkHandler } from './link-handler.js';
-import { createInternalHandler, startEventDelivery } from './internal.js';
+import { createInternalHandler } from './internal.js';
 import { createRealtimeQueue, startRealtimeDelivery } from './realtime-queue.js';
 import { createRealtimePublisher } from './realtime-publisher.js';
 import { createRealtimePresence, startPresenceCleanup } from './realtime-presence.js';
@@ -74,18 +74,12 @@ const writerPool = process.env.WALLPAPER_WRITER_DATABASE_URL ? new pg.Pool({
   connectionTimeoutMillis: 3000, idleTimeoutMillis: 10000, statement_timeout: 10000,
 }) : null;
 writerPool?.on('error', (error) => console.error(`Wallpaper writer: ${error.code || error.name}`));
-const stopDelivery = writerPool && !nativeDeliveryEnabled ? startEventDelivery({ pool: writerPool, secretKeyBase: process.env.SECRET_KEY_BASE,
-  railsUrl: process.env.RAILS_INTERNAL_URL || 'http://web:3000' }) : async () => {};
-const stopReactionDelivery = writerPool && !nativeDeliveryEnabled ? startEventDelivery({ pool: writerPool, kind: 'reaction', secretKeyBase: process.env.SECRET_KEY_BASE,
-  railsUrl: process.env.RAILS_INTERNAL_URL || 'http://web:3000' }) : async () => {};
 const writeReaction = writerPool ? createReactionWriter(writerPool) : undefined;
 const managerPool = process.env.LINK_MANAGER_DATABASE_URL ? new pg.Pool({
   connectionString: process.env.LINK_MANAGER_DATABASE_URL, max: 2,
   connectionTimeoutMillis: 3000, idleTimeoutMillis: 10000, statement_timeout: 10000,
 }) : null;
 managerPool?.on('error', (error) => console.error(`Link manager database: ${error.code || error.name}`));
-const stopLinkDelivery = managerPool && !nativeDeliveryEnabled ? startEventDelivery({ pool: managerPool, kind: 'link', secretKeyBase: process.env.SECRET_KEY_BASE,
-  railsUrl: process.env.RAILS_INTERNAL_URL || 'http://web:3000' }) : async () => {};
 const realtimePool = process.env.REALTIME_DATABASE_URL ? new pg.Pool({
   connectionString: process.env.REALTIME_DATABASE_URL, max: 2,
   connectionTimeoutMillis: 3000, idleTimeoutMillis: 10000, statement_timeout: 5000,
@@ -98,24 +92,18 @@ const socialPool = process.env.SOCIAL_DATABASE_URL ? new pg.Pool({
 }) : null;
 socialPool?.on('error', error => console.error(`Social database: ${error.code || error.name}`));
 if (socialPool) await socialPool.query('SELECT 1');
-const stopSocialDelivery = socialPool && !nativeDeliveryEnabled ? startEventDelivery({ pool: socialPool, kind: 'social',
-  secretKeyBase: process.env.SECRET_KEY_BASE, railsUrl: process.env.RAILS_INTERNAL_URL || 'http://web:3000' }) : async () => {};
 const trackerPool = process.env.TRACKER_DATABASE_URL ? new pg.Pool({
   connectionString: process.env.TRACKER_DATABASE_URL, max: 2,
   connectionTimeoutMillis: 3000, idleTimeoutMillis: 10000, statement_timeout: 10000,
 }) : null;
 trackerPool?.on('error', error => console.error(`Tracker database: ${error.code || error.name}`));
 if (trackerPool) await trackerPool.query('SELECT 1');
-const stopTrackerDelivery = trackerPool && !nativeDeliveryEnabled ? startEventDelivery({ pool: trackerPool, kind: 'tracker',
-  secretKeyBase: process.env.SECRET_KEY_BASE, railsUrl: process.env.RAILS_INTERNAL_URL || 'http://web:3000' }) : async () => {};
 const moderationPool = process.env.MODERATION_DATABASE_URL ? new pg.Pool({
   connectionString: process.env.MODERATION_DATABASE_URL, max: 2,
   connectionTimeoutMillis: 3000, idleTimeoutMillis: 10000, statement_timeout: 15000,
 }) : null;
 moderationPool?.on('error', error => console.error(`Moderation database: ${error.code || error.name}`));
 if (moderationPool) await moderationPool.query('SELECT 1');
-const stopModerationDelivery = moderationPool && !nativeDeliveryEnabled ? startEventDelivery({ pool: moderationPool, kind: 'moderation',
-  secretKeyBase: process.env.SECRET_KEY_BASE, railsUrl: process.env.RAILS_INTERNAL_URL || 'http://web:3000' }) : async () => {};
 const activityPool = process.env.ACTIVITY_DATABASE_URL ? new pg.Pool({
   connectionString:process.env.ACTIVITY_DATABASE_URL,max:2,
   connectionTimeoutMillis:3000,idleTimeoutMillis:10000,statement_timeout:10000,
@@ -138,10 +126,8 @@ const automation = automationPool ? createAutomation({ pool:automationPool,store
   pornbotInterval:process.env.PORNBOT_INTERVAL_SECONDS }) : null;
 const stopAutomation = automation ? startAutomationWorker({ queue:automation.queue,run:automation.run,
   schedule:automation.schedule,importLegacy:createLegacyAutomationImporter(automationPool) }) : async () => {};
-const stopAutomationDelivery = automationPool && !nativeDeliveryEnabled ? startEventDelivery({ pool:automationPool,kind:'automation',
-  secretKeyBase:process.env.SECRET_KEY_BASE,railsUrl:process.env.RAILS_INTERNAL_URL || 'http://web:3000' }) : async () => {};
 const realtimeOptions = { secretKeyBase: process.env.SECRET_KEY_BASE,
-  baseUrl: process.env.WALLTAKER_BASE_URL, railsUrl: process.env.RAILS_INTERNAL_URL || 'http://web:3000' };
+  baseUrl: process.env.WALLTAKER_BASE_URL };
 const manageSocial=socialPool ? createSocial(socialPool,{activity:!!activityPool}) : null;
 const browserPool=process.env.BROWSER_DATABASE_URL ? new pg.Pool({
   connectionString:process.env.BROWSER_DATABASE_URL,max:2,connectionTimeoutMillis:3000,idleTimeoutMillis:10000,statement_timeout:10000,
@@ -160,15 +146,16 @@ const readUser = createUserReader({ pool, repository, store, ...realtimeOptions 
 const queue = createRealtimeQueue(redis);
 const manageTracker=trackerPool ? createTracker(trackerPool) : null;
 const manageModeration=moderationPool ? createModeration({pool:moderationPool,store,redis,secretKeyBase:process.env.SECRET_KEY_BASE,baseUrl:process.env.WALLTAKER_BASE_URL}) : null;
-let renderer,renderingHandler,nativeDelivery,deliveryPool,stopNativeDelivery=async()=>{};
-if(nativeRenderingEnabled) {
-  const {createRenderer}=await import('./rendering/index.js');
-  const {createRenderingHandler}=await import('./rendering/handler.js');
-  renderer=createRenderer({secretKeyBase:process.env.SECRET_KEY_BASE,baseUrl:process.env.WALLTAKER_BASE_URL,
-    services:{social:manageSocial,tracker:manageTracker,e621:e621Service,browser:readBrowserData}});
-  renderingHandler=createRenderingHandler({secretKeyBase:process.env.SECRET_KEY_BASE,renderer,publish:(stream,html)=>redis.publish('__anycable__',JSON.stringify({stream,data:JSON.stringify(html)}))});
-}
-if(nativeDeliveryEnabled) {
+const blazerPool=process.env.BLAZER_DATABASE_URL ? new pg.Pool({connectionString:process.env.MODERATION_DATABASE_URL,max:2,connectionTimeoutMillis:3000,idleTimeoutMillis:10000,statement_timeout:10000}):null;
+const blazerQueryPool=process.env.BLAZER_DATABASE_URL ? new pg.Pool({connectionString:process.env.BLAZER_DATABASE_URL,max:3,connectionTimeoutMillis:3000,idleTimeoutMillis:10000,statement_timeout:10000}):null;
+for(const p of [blazerPool,blazerQueryPool])p?.on('error',error=>console.error(`Blazer database: ${error.code || error.name}`));
+const blazer=blazerPool&&manageModeration?createBlazer({pool:blazerPool,queryPool:blazerQueryPool,authorize:input=>manageModeration('admin-session',input),notify:createCheckNotifier({baseUrl:process.env.WALLTAKER_BASE_URL})}):null;
+let blazerTick;
+const blazerTimer=blazer?setInterval(()=>{if(blazerTick)return;blazerTick=blazer.tick().catch(error=>console.error(`Blazer checks: ${error.code || error.name}`)).finally(()=>{blazerTick=null;});},30000):null;
+blazerTimer?.unref();
+const renderer=createBroadcastClient({secretKeyBase:process.env.SECRET_KEY_BASE,url:process.env.NODE_WEB_INTERNAL_URL || 'http://node_web:3004'});
+let nativeDelivery,deliveryPool,stopNativeDelivery;
+{
   if(!process.env.DELIVERY_DATABASE_URL || !browserPool || !manageModeration || !manageSocial || !automation)throw Error('Native delivery dependencies are missing');
   const {createNativeDelivery}=await import('./delivery.js');
   const {createResetMailer}=await import('./mail.js');
@@ -177,7 +164,7 @@ if(nativeDeliveryEnabled) {
   await deliveryPool.query('SELECT delivered_at FROM node_wallpaper_events LIMIT 0');
   nativeDelivery=createNativeDelivery({pool:deliveryPool,browserPool,renderer,redis,queue,store,
     discovery:readDiscovery,automation:automation.request,moderation:manageModeration,accounts:browserAccounts,
-    sendReset:createResetMailer({renderer,baseUrl:process.env.WALLTAKER_BASE_URL})});
+    sendReset:createResetMailer({baseUrl:process.env.WALLTAKER_BASE_URL})});
   stopNativeDelivery=nativeDelivery.start();
 }
 const publisher = createRealtimePublisher({ redis, repository, store, readUser, nativeRender:nativeDelivery?.renderRealtime, ...realtimeOptions });
@@ -190,7 +177,8 @@ const realtimeHandler = presence ? createRealtimeHandler({
   poll: presence.poll, ...realtimeOptions,
 }) : undefined;
 const server = createApiServer({
-  repository, store, browserHandler, renderingHandler,
+  repository, store, browserHandler,
+  blazerHandler:blazer?createBlazerHandler({secretKeyBase:process.env.SECRET_KEY_BASE,manage:blazer}):undefined,
   activityHandler:manageActivity ? createActivityHandler({secretKeyBase:process.env.SECRET_KEY_BASE,manage:manageActivity}) : undefined,
   automationHandler: automation ? createAutomationHandler({secretKeyBase:process.env.SECRET_KEY_BASE,manage:automation.request}) : undefined,
   moderationHandler: moderationPool ? createModerationHandler({ secretKeyBase: process.env.SECRET_KEY_BASE,
@@ -206,13 +194,12 @@ const server = createApiServer({
   authenticateKey, sessionViewer, readUser,
   internalHandler: createInternalHandler({ secretKeyBase: process.env.SECRET_KEY_BASE,
     writeWallpaper, readHistory: createHistoryReader(pool), writeReaction }),
-  reportPresence: presence?.poll || createPresenceReporter({ secretKeyBase: process.env.SECRET_KEY_BASE,
-    railsUrl: process.env.RAILS_INTERNAL_URL || 'http://web:3000' }),
+  reportPresence: presence.poll,
   secretKeyBase: process.env.SECRET_KEY_BASE, baseUrl: process.env.WALLTAKER_BASE_URL,
 });
 server.listen(Number(process.env.PORT || 3002), '0.0.0.0', () => console.log('Wallpaper API listening on 3002'));
 const shutdown = () => {
-  server.close(async () => { await stopAutomation(); await stopNativeDelivery(); await Promise.all([stopDelivery(), stopReactionDelivery(), stopLinkDelivery(), stopRealtimeDelivery(), stopPresenceCleanup(), stopSocialDelivery(), stopTrackerDelivery(), stopModerationDelivery(), stopAutomationDelivery()]); await Promise.all([pool.end(), writerPool?.end(), managerPool?.end(), realtimePool?.end(), socialPool?.end(), discoveryPool?.end(), trackerPool?.end(), moderationPool?.end(), automationPool?.end(), activityPool?.end(), browserPool?.end(), deliveryPool?.end(), redis.close()]); process.exit(0); });
+  server.close(async () => { clearInterval(blazerTimer); await blazerTick; await stopAutomation(); await stopNativeDelivery(); await Promise.all([stopRealtimeDelivery(), stopPresenceCleanup()]); await Promise.all([pool.end(), writerPool?.end(), managerPool?.end(), realtimePool?.end(), socialPool?.end(), discoveryPool?.end(), trackerPool?.end(), moderationPool?.end(), automationPool?.end(), activityPool?.end(), browserPool?.end(), deliveryPool?.end(), blazerPool?.end(), blazerQueryPool?.end(), redis.close()]); process.exit(0); });
   setTimeout(() => process.exit(1), 10000).unref();
 };
 process.once('SIGTERM', shutdown);

@@ -37,13 +37,13 @@ test('routes wallpaper reads to Node preserving host, scheme and query', async (
   assert.equal(result.headers.cookie, 'session=test');
 });
 
-test('wallpaper listing and widget use Node while writes, users and HTML use Rails', async () => {
+test('wallpaper/user APIs and browser pages route directly to their Node services', async () => {
   for (const path of ['/api/links.json?online', '/api/links/9/widget.json']) {
     assert.equal((await (await fetch('http://router:8080' + path)).json()).backend, 'node');
   }
   for (const [path, method] of [['/api/links/9/response.json', 'POST'], ['/api/links/9.json', 'POST'],
     ['/api/users/example.json', 'GET'], ['/links/9.json', 'GET']]) {
-    assert.equal((await (await fetch('http://router:8080' + path, { method })).json()).backend, 'rails');
+    assert.equal((await (await fetch('http://router:8080' + path, { method })).json()).backend, path.startsWith('/api/')?'node':'node-web');
   }
 });
 
@@ -57,7 +57,7 @@ test('uses HTTP for direct requests without forwarded scheme', async () => {
   assert.equal(result.headers['x-forwarded-proto'], 'http');
 });
 
-test('routes media to Node and does not fall through to Rails', async () => {
+test('routes media directly to Node without a fallback', async () => {
   for (const method of ['GET', 'HEAD']) {
     const response = await fetch('http://router:8080/e621-media?token=invalid', { method });
     assert.equal(response.status, 404);

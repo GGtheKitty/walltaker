@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run as the database admin after Rails migrations have created the event table.
+# Run as the database admin after Node schema setup has created the event table.
 set -eu
 : "${WALLPAPER_WRITER_DB_USER:?required}"
 : "${WALLPAPER_WRITER_DB_PASSWORD:?required}"

@@ -1,9 +1,6 @@
-import { createHmac } from 'node:crypto';
 import { createSerializer } from './payload.js';
 
-export const renderToken = (secret) => createHmac('sha256', secret).update('walltaker:realtime:render:v1').digest('hex');
-
-export function createRealtimePublisher({ redis, repository, store, readUser, secretKeyBase, baseUrl, railsUrl, nativeRender, fetchImpl = fetch }) {
+export function createRealtimePublisher({ redis, repository, store, readUser, secretKeyBase, baseUrl, nativeRender }) {
   const serialize = createSerializer({ secretKeyBase, baseUrl });
   const publish = (stream, message) => redis.publish('__anycable__', JSON.stringify({ stream, data: JSON.stringify(message) }));
   const linkPayload = async (row) => {
@@ -11,15 +8,8 @@ export function createRealtimePublisher({ redis, repository, store, readUser, se
     const result = serialize(row, { connected: connected.has(String(row.id)) });
     return { ...result, success: true, set_by: row.set_by_username ?? null, post_description: row.post_description };
   };
-  const render = async (kind, id) => {
-    if (nativeRender) return nativeRender(kind,id);
-    const response = await fetchImpl(`${railsUrl}/_internal/realtime-render.json`, {
-      method: 'POST', headers: { authorization: `Bearer ${renderToken(secretKeyBase)}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ kind, id }), signal: AbortSignal.timeout(15000), redirect: 'error',
-    });
-    await response.arrayBuffer();
-    if (!response.ok) throw new Error(`Realtime renderer returned ${response.status}`);
-  };
+  if(typeof nativeRender!=='function')throw Error('Native broadcast renderer is required');
+  const render=nativeRender;
   return {
     linkPayload,
     async deliver(job) {

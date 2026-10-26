@@ -1,33 +1,79 @@
-x-database-env: &database
-  DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
-
-x-redis-env: &redis
-  REDIS_URL: redis://${CACHE_HOST}:${CACHE_PORT}/1
-
-x-walltaker-env: &walltaker
-  WALLTAKER_HOST: ${WALLTAKER_HOST?error}
-  WALLTAKER_BASE_URL: ${WALLTAKER_URL?error}
-  E621_BACKEND_URL: http://wallpaper_api:3002
-  LINK_MANAGEMENT_URL: http://wallpaper_api:3002
-  NODE_REALTIME_URL: http://wallpaper_api:3002
-  ACCOUNTS_BACKEND_URL: http://accounts:3003
-  SOCIAL_BACKEND_URL: http://wallpaper_api:3002
-  DISCOVERY_BACKEND_URL: http://wallpaper_api:3002
-  TRACKER_BACKEND_URL: http://wallpaper_api:3002
-  MODERATION_BACKEND_URL: http://wallpaper_api:3002
-  AUTOMATION_BACKEND_URL: http://wallpaper_api:3002
-  ACTIVITY_BACKEND_URL: http://wallpaper_api:3002
-  BROWSER_BACKEND_URL: http://wallpaper_api:3002
-  RENDER_BACKEND_URL: http://wallpaper_api:3002
-  NODE_RENDER_ACTIVE: ${NODE_RENDER_ACTIVE:-false}
-  E621_USER_AGENT: ${WALLTAKER_HOST} (forked from ailurus and run by ${E621_USER})
-
 x-anycable-env: &anycable
   ANYCABLE_SECRET: ${SECRET_KEY_BASE}
   ANYCABLE_REDIS_URL: redis://${CACHE_HOST}:${CACHE_PORT}/1
   ANYCABLE_REDIS_CHANNEL: __anycable__
 
 services:
+  migrate:
+    build:
+      context: .
+      dockerfile: services/database/Dockerfile
+    restart: "no"
+    mem_limit: 128m
+    memswap_limit: 160m
+    cpus: 0.5
+    environment:
+      DATABASE_URL: postgres://${DB_ADMIN_USER}:${DB_ADMIN_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      WALLPAPER_API_DB_USER: ${WALLPAPER_API_DB_USER}
+      WALLPAPER_API_DB_PASSWORD: ${WALLPAPER_API_DB_PASSWORD}
+      WALLPAPER_WRITER_DB_USER: ${WALLPAPER_WRITER_DB_USER}
+      WALLPAPER_WRITER_DB_PASSWORD: ${WALLPAPER_WRITER_DB_PASSWORD}
+      LINK_MANAGER_DB_USER: ${LINK_MANAGER_DB_USER}
+      LINK_MANAGER_DB_PASSWORD: ${LINK_MANAGER_DB_PASSWORD}
+      REALTIME_DB_USER: ${REALTIME_DB_USER}
+      REALTIME_DB_PASSWORD: ${REALTIME_DB_PASSWORD}
+      ACCOUNTS_DB_USER: ${ACCOUNTS_DB_USER}
+      ACCOUNTS_DB_PASSWORD: ${ACCOUNTS_DB_PASSWORD}
+      SOCIAL_DB_USER: ${SOCIAL_DB_USER}
+      SOCIAL_DB_PASSWORD: ${SOCIAL_DB_PASSWORD}
+      DISCOVERY_DB_USER: ${DISCOVERY_DB_USER}
+      DISCOVERY_DB_PASSWORD: ${DISCOVERY_DB_PASSWORD}
+      TRACKER_DB_USER: ${TRACKER_DB_USER}
+      TRACKER_DB_PASSWORD: ${TRACKER_DB_PASSWORD}
+      MODERATION_DB_USER: ${MODERATION_DB_USER}
+      MODERATION_DB_PASSWORD: ${MODERATION_DB_PASSWORD}
+      AUTOMATION_DB_USER: ${AUTOMATION_DB_USER}
+      AUTOMATION_DB_PASSWORD: ${AUTOMATION_DB_PASSWORD}
+      ACTIVITY_DB_USER: ${ACTIVITY_DB_USER}
+      ACTIVITY_DB_PASSWORD: ${ACTIVITY_DB_PASSWORD}
+      BROWSER_DB_USER: ${BROWSER_DB_USER}
+      BROWSER_DB_PASSWORD: ${BROWSER_DB_PASSWORD}
+      DELIVERY_DB_USER: ${DELIVERY_DB_USER}
+      DELIVERY_DB_PASSWORD: ${DELIVERY_DB_PASSWORD}
+      BLAZER_DB_USER: ${BLAZER_DB_USER}
+      BLAZER_DB_PASSWORD: ${BLAZER_DB_PASSWORD}
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - backend
+
+  node_web:
+    build:
+      context: .
+      dockerfile: services/web/Dockerfile
+    restart: unless-stopped
+    mem_limit: 128m
+    memswap_limit: 160m
+    cpus: 0.5
+    environment:
+      NODE_OPTIONS: --max-old-space-size=64
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      WALLTAKER_BASE_URL: ${WALLTAKER_URL}
+      BROWSER_BACKEND_URL: http://wallpaper_api:3002
+      ACCOUNTS_BACKEND_URL: http://accounts:3003
+      NODE_WEB_ASSET_DIR: /app/web/dist
+      # Outer TLS proxy and the internal Nginx router.
+      NODE_WEB_TRUST_PROXY_HOPS: "2"
+      COMMIT_HASH: ${COMMIT_HASH:-}
+      COMMIT_LINK: ${COMMIT_LINK:-}
+      RELEASE_CREATED_AT: ${RELEASE_CREATED_AT:-}
+    depends_on:
+      - wallpaper_api
+    networks:
+      - frontend
+      - backend
+
   accounts:
     build: ./services/accounts
     restart: unless-stopped
@@ -36,9 +82,10 @@ services:
     cpus: 0.5
     environment:
       DATABASE_URL: postgres://${ACCOUNTS_DB_USER}:${ACCOUNTS_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
-      NODE_NATIVE_DELIVERY: ${NODE_NATIVE_DELIVERY:-false}
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      RAILS_INTERNAL_URL: http://web:3000
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     networks:
       - backend
 
@@ -46,13 +93,14 @@ services:
     image: nginx:stable-alpine
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${RAILS_HOST_PORT}:8080"
+      - "127.0.0.1:${WEB_HOST_PORT:-3000}:8080"
     volumes:
       - ./services/router/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - web
+      - node_web
       - e621_media
       - wallpaper_api
+      - cable
     networks:
       - frontend
 
@@ -80,8 +128,6 @@ services:
       LINK_MANAGER_DATABASE_URL: postgres://${LINK_MANAGER_DB_USER}:${LINK_MANAGER_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       MODERATION_DATABASE_URL: postgres://${MODERATION_DB_USER}:${MODERATION_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       AUTOMATION_DATABASE_URL: postgres://${AUTOMATION_DB_USER}:${AUTOMATION_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
-      NODE_RENDERING_ENABLED: ${NODE_RENDERING_ENABLED:-false}
-      NODE_NATIVE_DELIVERY: ${NODE_NATIVE_DELIVERY:-false}
       DELIVERY_DATABASE_URL: postgres://${DELIVERY_DB_USER}:${DELIVERY_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_SMTP_PASSWORD: ${RESEND_SMTP_PASSWORD:-}
@@ -94,6 +140,7 @@ services:
       BROWSER_DATABASE_URL: postgres://${BROWSER_DB_USER}:${BROWSER_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       ACCOUNTS_INTERNAL_URL: http://accounts:3003
       ACTIVITY_DATABASE_URL: postgres://${ACTIVITY_DB_USER}:${ACTIVITY_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      BLAZER_DATABASE_URL: postgres://${BLAZER_DB_USER}:${BLAZER_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       PORNBOT_INTERVAL_SECONDS: ${PORNBOT_INTERVAL_SECONDS:-600}
       TRACKER_DATABASE_URL: postgres://${TRACKER_DB_USER}:${TRACKER_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       DISCOVERY_DATABASE_URL: postgres://${DISCOVERY_DB_USER}:${DISCOVERY_DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
@@ -102,8 +149,15 @@ services:
       REDIS_URL: redis://${CACHE_HOST}:${CACHE_PORT}/1
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       WALLTAKER_BASE_URL: ${WALLTAKER_URL}
-      RAILS_INTERNAL_URL: http://web:3000
+      NODE_WEB_INTERNAL_URL: http://node_web:3004
       E621_USER_AGENT: ${WALLTAKER_HOST} (forked from ailurus and run by ${E621_USER})
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      accounts:
+        condition: service_started
     networks:
       - backend
       - frontend
@@ -113,13 +167,10 @@ services:
     restart: unless-stopped
     volumes:
       - postgres-data-v2:/var/lib/postgresql/data
-      - ./scripts/postgres-init-app-role.sh:/docker-entrypoint-initdb.d/10-create-app-role.sh:ro
     environment:
       POSTGRES_USER: ${DB_ADMIN_USER}
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
       interval: 30s
@@ -142,30 +193,6 @@ services:
     networks:
       - backend
 
-  web:
-    image: walltaker-web:anycable
-    build: .
-    restart: unless-stopped
-    mem_limit: 768m
-    memswap_limit: 896m
-    cpus: 1.0
-    command: bash -lc 'ruby -rsocket -e "loop { begin; TCPSocket.new(\"${DB_HOST}\", ${DB_PORT}).close; break; rescue; sleep 1; end }" && bundle exec rails assets:precompile && bundle exec rails db:prepare && bundle exec rails server -e production -b 0.0.0.0'
-    volumes:
-      - ./:/ror
-    depends_on:
-      - database
-      - redis
-    environment:
-      <<: [*database, *redis, *walltaker]
-      ENV: PROD
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
-      RAILS_ENV: production
-      RAILS_SERVE_STATIC_FILES: true
-      WALLPAPER_BACKEND_URL: http://wallpaper_api:3002
-    networks:
-      - backend
-      - frontend
-
   cable:
     image: walltaker-anycable:liveness-node
     build: ./services/anycable
@@ -173,7 +200,6 @@ services:
     ports:
       - "${ANYCABLE_HOST_PORT:-127.0.0.1:8080}:8080"
     depends_on:
-      - web
       - redis
       - wallpaper_api
     environment:
@@ -189,6 +215,7 @@ services:
       ANYCABLE_PONG_TIMEOUT: "60"
     networks:
       - backend
+      - frontend
 
 volumes:
   postgres-data-v2:

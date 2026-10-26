@@ -51,7 +51,7 @@ const baseConfig = {
 
 export default class WallEditorController extends Controller {
     static targets = ['template', 'csseditor', 'editor', 'saveBtnText', 'preview']
-    static values = {saveUrl: String}
+    static values = {saveUrl: String, source: String}
 
     connect() {
         this.editorTarget.options = {
@@ -63,7 +63,7 @@ export default class WallEditorController extends Controller {
             language: 'html',
         }
 
-        const buffers = this.templateTarget.innerHTML.split('<!-- EDITORSPLIT --><style>')
+        const buffers = (this.hasSourceValue ? this.sourceValue : this.templateTarget.innerHTML).split('<!-- EDITORSPLIT --><style>')
         const htmlValue = buffers?.[0] ?? ''
         const cssValue = buffers?.[1]?.replace('</style>', '') ?? ''
 
@@ -101,12 +101,16 @@ export default class WallEditorController extends Controller {
             },
             body
         }).then(res => {
+            if (!res.ok) throw new Error('Save failed')
             this.saveBtnTextTarget.innerText = 'Saved!'
             this.previewTarget.reload()
 
             setTimeout(() => {
                 this.saveBtnTextTarget.innerText = 'Save'
             }, 1000)
+        }).catch(() => {
+            this.saveBtnTextTarget.innerText = 'Save'
+            window.alert('Something went wrong')
         })
     }
 }

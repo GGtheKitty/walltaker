@@ -3,7 +3,6 @@ import { once } from 'node:events';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { createApiServer } from '../src/app.js';
-import { createPresenceReporter } from '../src/presence.js';
 const fixture = JSON.parse(readFileSync(new URL('./fixtures/rails.json', import.meta.url)));
 
 async function setup(t, options = {}) {
@@ -83,16 +82,4 @@ test('database failures return a generic 503 instead of a missing-link response'
   const response = await fetch(`${base}/api/links/1.json`);
   assert.equal(response.status, 503);
   assert.equal((await response.text()).includes('credentials'), false);
-});
-
-test('presence adapter uses separate non-cookie credentials and only client identity headers', async () => {
-  let sent;
-  const report = createPresenceReporter({ secretKeyBase: fixture.secretKeyBase, railsUrl: 'http://web:3000',
-    fetchImpl: async (url, options) => { sent = { url, options }; return new Response(null, { status: 204 }); } });
-  await report(123, { cookie: 'session=secret', authorization: 'untrusted', 'user-agent': 'Client/1', joihow: 'Identity' });
-  assert.equal(sent.url, 'http://web:3000/_internal/wallpaper-presence/123.json');
-  assert.match(sent.options.headers.authorization, /^Bearer [0-9a-f]{64}$/);
-  assert.equal(sent.options.headers.cookie, undefined);
-  assert.equal(sent.options.headers['user-agent'], 'Client/1');
-  assert.equal(sent.options.redirect, 'error');
 });

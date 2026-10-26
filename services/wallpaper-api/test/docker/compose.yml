@@ -1,4 +1,19 @@
 services:
+  accounts_test:
+    build: ../../../accounts
+    command: ["npm", "test"]
+    mem_limit: 160m
+    memswap_limit: 192m
+    cpus: 0.5
+    volumes:
+      - ../../../accounts/src:/app/src:ro
+      - ../../../accounts/test:/app/test:ro
+      - ../../../../scripts:/scripts:ro
+    environment:
+      TEST_DATABASE_URL: postgres://postgres:test@database:5432/wallpaper_api_test
+    depends_on:
+      database:
+        condition: service_healthy
   database:
     image: postgres:14
     mem_limit: 128m
@@ -33,6 +48,7 @@ services:
       - ..:/app/wallpaper-api/test:ro
       - ../../src:/app/wallpaper-api/src:ro
       - ../../../../scripts:/scripts:ro
+      - ../../../web:/app/web:ro
       - ../../../accounts/src:/app/accounts/src:ro
       - ../../../accounts/package.json:/app/accounts/package.json:ro
     environment:

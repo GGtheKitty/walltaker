@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+if [[ "$#" == 0 ]]; then set -- migrate e621_media wallpaper_api accounts node_web cable; fi
+for service in "$@"; do
+  case "$service" in
+    migrate) dockerfile=services/database/Dockerfile; context=.; tag=walltaker-migrate; memory=192 ;;
+    e621_media) dockerfile=services/e621-media/Dockerfile; context=services/e621-media; tag=walltaker-e621_media; memory=192 ;;
+    wallpaper_api) dockerfile=services/wallpaper-api/Dockerfile; context=services; tag=walltaker-wallpaper_api; memory=192 ;;
+    accounts) dockerfile=services/accounts/Dockerfile; context=services/accounts; tag=walltaker-accounts; memory=192 ;;
+    node_web) dockerfile=services/web/Dockerfile; context=.; tag=walltaker-node_web; memory=256 ;;
+    cable) dockerfile=services/anycable/Dockerfile; context=services/anycable; tag=walltaker-anycable:liveness-node; memory=768 ;;
+    *) echo "Unknown application build target: $service" >&2; exit 1 ;;
+  esac
+  docker build --memory="${memory}m" --memory-swap="${memory}m" \
+    --cpu-period=100000 --cpu-quota=50000 -f "$dockerfile" -t "$tag" "$context"
+done

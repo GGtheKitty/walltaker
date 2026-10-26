@@ -137,8 +137,8 @@ test('live updates and presence with real PostgreSQL grants and Redis', {
         assert.equal((await repository.findIdentifier('slug')).id,'1');
         const publisher = createRealtimePublisher({ redis,repository,store,
           readUser:async ({ username,audience }) => ({ username,authenticated:audience!=='anonymous',online:audience==='friend' }),
-          secretKeyBase:'test',baseUrl:'https://example.test',railsUrl:'http://renderer',
-          fetchImpl:async (_url,options) => { renders.push(JSON.parse(options.body)); return new Response(null,{ status:204 }); } });
+          secretKeyBase:'test',baseUrl:'https://example.test',
+          nativeRender:async (kind,id)=>{renders.push({kind,id});} });
         await publisher.deliver('presence-link:1'); await publisher.deliver('user:Alice'); await publisher.deliver('viewers:1');
         // Redis publishes and subscriptions use separate sockets.
         await new Promise((resolve) => setTimeout(resolve,30));

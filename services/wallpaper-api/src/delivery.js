@@ -1,26 +1,26 @@
 import{browserEventSeeds}from'./browser-events.js';
 import{browserGraph}from'./browser-graph.js';
-import{graphDocument,reference}from'./rendering/graph.js';
+const reference=(_type,id)=>id;
 import{filterProfileDomains}from'./profile-domains.js';
 const kinds=['wallpaper','reaction','link','account','social','tracker','moderation','automation'];
 const tables=Object.fromEntries(kinds.map(kind=>[kind,'node_'+kind+'_events']));
 export function createNativeDelivery({pool,browserPool,renderer,redis,queue,discovery,automation,moderation,accounts,sendReset,store,logger=console}) {
  const publish=(stream,html)=>redis.publish('__anycable__',JSON.stringify({stream,data:JSON.stringify(html)}));
  const turbo=(action,target,html='')=>`<turbo-stream action="${action}" target="${target}">${action==='remove'?'':`<template>${html}</template>`}</turbo-stream>`;
- const recordStream=(type,id)=>renderer.globalId({type,id});
+ const recordStream=(type,id)=>Buffer.from(`gid://walltaker/${type}/${id}`).toString('base64url');
  async function readGraph(kind,id){
   const c=await browserPool.connect();try{await c.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
    const bundle=await browserEventSeeds(c,{kind,event_id:id});const graph=await browserGraph(c,bundle.seeds,{store,internal:true});graph.revoked_surrenders=bundle.revokedSurrenders;
    await c.query('COMMIT');return graph;
   }catch(error){await c.query('ROLLBACK');throw error;}finally{c.release();}
  }
- const render=(graph,template,locals={},context={})=>renderer.render(graphDocument(graph,{template,partial:true,locals,context:{controller_path:template.split('/')[0],...context}}));
+ const render=(graph,template,locals={},context={})=>renderer.render({graph,template,locals});
  async function change(graph,stream,action,target,template,locals={}){return publish(stream,turbo(action,target,template?await render(graph,template,locals):''));}
  const linkIds=graph=>new Set(graph.links.map(row=>String(row.id)));
  const activeUser=(graph,id)=>graph.users.find(user=>String(user.id)===String(id)&&!user.deleted_at);
  async function linkPage(graph,id){
   if(!linkIds(graph).has(String(id)))return;
-  await change(graph,recordStream('Link',id),'update','link_'+id,'links/link',{link:reference('Link',id)});
+  await change(graph,recordStream('Link',id),'replace','link_'+id,'links/link',{link:reference('Link',id)});
   await change(graph,'link_preview_'+id+'_image','update','preview_image','links/embed_image',{link:reference('Link',id)});
   await change(graph,'link_preview_'+id+'_text','update','preview_text','links/embed_text',{link:reference('Link',id)});
  }

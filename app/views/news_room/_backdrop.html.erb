@@ -1,5 +1,0 @@
-<%# locals: (news_entry:) -%>
-<% if news_entry.image_url.present? %>
-  <%= image_tag news_entry.image_url, class: 'news-room__backdrop' %>
-  <%= image_tag news_entry.image_url, class: 'news-room__feature' %>
-<% end %>

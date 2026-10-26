@@ -1,0 +1,3512 @@
+[
+  {
+    "table": "action_mailbox_inbound_emails",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "action_mailbox_inbound_emails",
+    "column": "status",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_events",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_newsroom_states",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_newsroom_states",
+    "column": "generation",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_newsroom_states",
+    "column": "rendered_event_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_newsroom_states",
+    "column": "entry",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_newsroom_states",
+    "column": "story",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_newsroom_states",
+    "column": "busy_until",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_newsroom_states",
+    "column": "throttle_until",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_newsroom_states",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_newsroom_states",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "cached_posts",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "cached_posts",
+    "column": "post_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "cached_posts",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "cached_posts",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "crono_jobs",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "crono_jobs",
+    "column": "last_performed_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "crono_jobs",
+    "column": "healthy",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "crono_jobs",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "crono_jobs",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_pauses",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_pauses",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_processes",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_processes",
+    "column": "last_heartbeat_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_processes",
+    "column": "supervisor_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_processes",
+    "column": "pid",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_processes",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "payload",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "result",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "attempts",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "run_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "locked_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "completed_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_link_events",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_link_events",
+    "column": "link_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_link_events",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_link_events",
+    "column": "result",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_link_events",
+    "column": "delivered_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_link_events",
+    "column": "delivery_attempts",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_link_events",
+    "column": "available_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_link_events",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_link_events",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_browser_legacy_sessions",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_browser_legacy_sessions",
+    "column": "expires_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_browser_legacy_sessions",
+    "column": "revoked_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_browser_legacy_sessions",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "user_icons",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "user_icons",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "user_icons",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "user_icons",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_recurring_tasks",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_recurring_tasks",
+    "column": "priority",
+    "type": "int4",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_recurring_tasks",
+    "column": "static",
+    "type": "bool",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_recurring_tasks",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_recurring_tasks",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_semaphores",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_semaphores",
+    "column": "value",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_semaphores",
+    "column": "expires_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_semaphores",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_semaphores",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "history_events",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "history_events",
+    "column": "did_what",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "history_events",
+    "column": "ahoy_visit_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "history_events",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "history_events",
+    "column": "surrender_controller_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "history_events",
+    "column": "link_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "history_events",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "history_events",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "emoji_link_decorations",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "emoji_link_decorations",
+    "column": "link_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "emoji_link_decorations",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "emoji_link_decorations",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "users",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "users",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "users",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "users",
+    "column": "admin",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "set_count",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "users",
+    "column": "viewing_link_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "pervert",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "quarantined",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "colour_preference",
+    "type": "int4",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "advanced",
+    "type": "bool",
+    "nullable": "NO"
+  },
+  {
+    "table": "users",
+    "column": "profile_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "flagged",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "is_reporter",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "is_cutie",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "is_supporter",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "password_reset_sent_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "username_changed_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "deleted_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "system_account",
+    "type": "bool",
+    "nullable": "NO"
+  },
+  {
+    "table": "site_settings",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "site_settings",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "site_settings",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "deprecated",
+    "type": "bool",
+    "nullable": "NO"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "position",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "match_position",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "profiles",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "profiles",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "profiles",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "profiles",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "profiles",
+    "column": "public",
+    "type": "bool",
+    "nullable": "NO"
+  },
+  {
+    "table": "profiles",
+    "column": "origin_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "banned_ips",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "banned_ips",
+    "column": "banned_by_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "banned_ips",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "banned_ips",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "nut_pledges",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "nut_pledges",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "nut_pledges",
+    "column": "past_link_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "nut_pledges",
+    "column": "failed_on",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "nut_pledges",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "nut_pledges",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "nut_pledges",
+    "column": "year",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "nuttracker_orgasms",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "nuttracker_orgasms",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "nuttracker_orgasms",
+    "column": "is_ruined",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "nuttracker_orgasms",
+    "column": "rating",
+    "type": "int4",
+    "nullable": "YES"
+  },
+  {
+    "table": "nuttracker_orgasms",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "nuttracker_orgasms",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "nuttracker_orgasms",
+    "column": "caused_by_user_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "latitude",
+    "type": "float8",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "longitude",
+    "type": "float8",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "started_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "form_elements",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "form_elements",
+    "column": "kind",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "form_elements",
+    "column": "survey_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "form_elements",
+    "column": "sort_order",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "form_elements",
+    "column": "required",
+    "type": "bool",
+    "nullable": "NO"
+  },
+  {
+    "table": "form_elements",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "form_elements",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "survey_response_answers",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "survey_response_answers",
+    "column": "form_element_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "survey_response_answers",
+    "column": "survey_response_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "survey_response_answers",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "survey_response_answers",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "message_threads",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "message_threads",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "message_threads",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "notifications",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "notifications",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "notifications",
+    "column": "notification_type",
+    "type": "int4",
+    "nullable": "YES"
+  },
+  {
+    "table": "notifications",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "notifications",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "scoops",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "scoops",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "scoops",
+    "column": "link_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "scoops",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "scoops",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "scoops",
+    "column": "was_shown",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "kinks",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "kinks",
+    "column": "works_on_e621",
+    "type": "bool",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_queries",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_queries",
+    "column": "creator_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_queries",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_queries",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_dashboards",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_dashboards",
+    "column": "creator_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_dashboards",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_dashboards",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "action_mailbox_inbound_emails",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "action_mailbox_inbound_emails",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_blobs",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_blobs",
+    "column": "byte_size",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_blobs",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_claimed_executions",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_claimed_executions",
+    "column": "job_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_claimed_executions",
+    "column": "process_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_claimed_executions",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_failed_executions",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_failed_executions",
+    "column": "job_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_failed_executions",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "message_thread_participants",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "message_thread_participants",
+    "column": "message_thread_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "message_thread_participants",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "message_thread_participants",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "message_thread_participants",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "message_thread_participants",
+    "column": "notify",
+    "type": "bool",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_account_events",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_account_events",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_account_events",
+    "column": "notification_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_account_events",
+    "column": "result",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_account_events",
+    "column": "delivered_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_account_events",
+    "column": "delivery_attempts",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_account_events",
+    "column": "available_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_account_events",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_account_events",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_blocked_executions",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_blocked_executions",
+    "column": "job_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_blocked_executions",
+    "column": "priority",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_blocked_executions",
+    "column": "expires_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_blocked_executions",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_tracker_events",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_tracker_events",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_tracker_events",
+    "column": "result",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_tracker_events",
+    "column": "effects",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_tracker_events",
+    "column": "delivered_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_tracker_events",
+    "column": "delivery_attempts",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_tracker_events",
+    "column": "available_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_tracker_events",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_tracker_events",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "surrenders",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "surrenders",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "surrenders",
+    "column": "friendship_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "surrenders",
+    "column": "expires_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "surrenders",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "surrenders",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "surrenders",
+    "column": "accepted_consequences",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "surrenders",
+    "column": "pending",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "surrenders",
+    "column": "logged_in",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "surrenders",
+    "column": "controller_user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "surrenders",
+    "column": "duration_hours",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_audits",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_audits",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_audits",
+    "column": "query_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_audits",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_checks",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_checks",
+    "column": "creator_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_checks",
+    "column": "query_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_checks",
+    "column": "last_run_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_checks",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_checks",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_dashboard_queries",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_dashboard_queries",
+    "column": "dashboard_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_dashboard_queries",
+    "column": "query_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_dashboard_queries",
+    "column": "position",
+    "type": "int4",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_dashboard_queries",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_dashboard_queries",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "profile_domains",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "profile_domains",
+    "column": "status",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "profile_domains",
+    "column": "seen_count",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "profile_domains",
+    "column": "first_seen_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "profile_domains",
+    "column": "last_seen_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "profile_domains",
+    "column": "reviewed_by_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "profile_domains",
+    "column": "reviewed_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "profile_domains",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "profile_domains",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "link_abilities",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "link_abilities",
+    "column": "link_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "link_abilities",
+    "column": "ability",
+    "type": "ability",
+    "nullable": "NO"
+  },
+  {
+    "table": "link_abilities",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "link_abilities",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "links",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "links",
+    "column": "expires",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "links",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "links",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "links",
+    "column": "last_ping",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "set_by_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "friends_only",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "never_expires",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "response_type",
+    "type": "int4",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "ahoy_visit_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "min_score",
+    "type": "int4",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "live_client_started_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "forked_from_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "e621_post_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_ready_executions",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_ready_executions",
+    "column": "job_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_ready_executions",
+    "column": "priority",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_ready_executions",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "reports",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "reports",
+    "column": "reporter_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "reports",
+    "column": "reportable_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "reports",
+    "column": "is_closed",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "reports",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "reports",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_jobs",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_jobs",
+    "column": "priority",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_jobs",
+    "column": "scheduled_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_jobs",
+    "column": "finished_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_jobs",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_jobs",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_social_events",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_social_events",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_social_events",
+    "column": "result",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_social_events",
+    "column": "effects",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_social_events",
+    "column": "delivered_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_social_events",
+    "column": "delivery_attempts",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_social_events",
+    "column": "available_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_social_events",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_social_events",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "past_links",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "past_links",
+    "column": "user_id",
+    "type": "int4",
+    "nullable": "YES"
+  },
+  {
+    "table": "past_links",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "past_links",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "past_links",
+    "column": "link_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "past_links",
+    "column": "set_by_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "past_links",
+    "column": "ahoy_visit_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "past_links",
+    "column": "e621_post_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_moderation_events",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_moderation_events",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_moderation_events",
+    "column": "result",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_moderation_events",
+    "column": "effects",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_moderation_events",
+    "column": "delivered_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_moderation_events",
+    "column": "delivery_attempts",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_moderation_events",
+    "column": "available_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_moderation_events",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_moderation_events",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_schedules",
+    "column": "next_run_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_schedules",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_schedules",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "leashes",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "leashes",
+    "column": "friendship_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "leashes",
+    "column": "master_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "leashes",
+    "column": "pet_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "leashes",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "leashes",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_browser_sessions",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_browser_sessions",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_browser_sessions",
+    "column": "original_actor_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_browser_sessions",
+    "column": "surrender_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_browser_sessions",
+    "column": "legacy_fingerprints",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_browser_sessions",
+    "column": "remember",
+    "type": "bool",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_browser_sessions",
+    "column": "expires_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_browser_sessions",
+    "column": "revoked_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_browser_sessions",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_browser_sessions",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_activity_receipts",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_activity_receipts",
+    "column": "result",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_activity_receipts",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_activity_receipts",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_activity_receipts",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "surveys",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "surveys",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "surveys",
+    "column": "public",
+    "type": "bool",
+    "nullable": "NO"
+  },
+  {
+    "table": "surveys",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "surveys",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_scheduled_executions",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_scheduled_executions",
+    "column": "job_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_scheduled_executions",
+    "column": "priority",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_scheduled_executions",
+    "column": "scheduled_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_scheduled_executions",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_recurring_executions",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_recurring_executions",
+    "column": "job_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_recurring_executions",
+    "column": "run_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_recurring_executions",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_variant_records",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_variant_records",
+    "column": "blob_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "action_text_rich_texts",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "action_text_rich_texts",
+    "column": "record_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "action_text_rich_texts",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "action_text_rich_texts",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_attachments",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_attachments",
+    "column": "record_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_attachments",
+    "column": "blob_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_attachments",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_wallpaper_events",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_wallpaper_events",
+    "column": "link_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_wallpaper_events",
+    "column": "past_link_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_wallpaper_events",
+    "column": "delivered_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_wallpaper_events",
+    "column": "delivery_attempts",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_wallpaper_events",
+    "column": "available_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_wallpaper_events",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_wallpaper_events",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "messages",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "messages",
+    "column": "message_thread_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "messages",
+    "column": "from_user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "messages",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "messages",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "kink_havers",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "kink_havers",
+    "column": "kink_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "kink_havers",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "kink_havers",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "kink_havers",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "kink_havers",
+    "column": "is_starred",
+    "type": "bool",
+    "nullable": "NO"
+  },
+  {
+    "table": "ahoy_events",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "ahoy_events",
+    "column": "visit_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_events",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_events",
+    "column": "time",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_reaction_events",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_reaction_events",
+    "column": "link_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_reaction_events",
+    "column": "comment_ids",
+    "type": "_int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_reaction_events",
+    "column": "notification_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_reaction_events",
+    "column": "history_changed",
+    "type": "bool",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_reaction_events",
+    "column": "delivered_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_reaction_events",
+    "column": "delivery_attempts",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_reaction_events",
+    "column": "available_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_reaction_events",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_reaction_events",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "survey_responses",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "survey_responses",
+    "column": "survey_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "survey_responses",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "survey_responses",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "survey_responses",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "invite_codes",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "invite_codes",
+    "column": "generated_by_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "invite_codes",
+    "column": "redeemed_by_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "invite_codes",
+    "column": "redeemed_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "invite_codes",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "invite_codes",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "comments",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "comments",
+    "column": "link_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "comments",
+    "column": "user_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "comments",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "comments",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "friendships",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "friendships",
+    "column": "sender_id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "friendships",
+    "column": "receiver_id",
+    "type": "int8",
+    "nullable": "YES"
+  },
+  {
+    "table": "friendships",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "friendships",
+    "column": "updated_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "friendships",
+    "column": "confirmed",
+    "type": "bool",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_automation_events",
+    "column": "id",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_events",
+    "column": "generation",
+    "type": "int8",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_events",
+    "column": "effects",
+    "type": "jsonb",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_events",
+    "column": "delivered_at",
+    "type": "timestamp",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_automation_events",
+    "column": "delivery_attempts",
+    "type": "int4",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_events",
+    "column": "available_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_events",
+    "column": "created_at",
+    "type": "timestamp",
+    "nullable": "NO"
+  },
+  {
+    "table": "action_mailbox_inbound_emails",
+    "column": "message_id",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "action_mailbox_inbound_emails",
+    "column": "message_checksum",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "utm_campaign",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "password_reset_token",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_events",
+    "column": "name",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "active_storage_blobs",
+    "column": "key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_blobs",
+    "column": "filename",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_blobs",
+    "column": "content_type",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "active_storage_blobs",
+    "column": "metadata",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "active_storage_blobs",
+    "column": "service_name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "ahoy_events",
+    "column": "properties",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "active_storage_blobs",
+    "column": "checksum",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "mascot",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "locked_by",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_reaction_events",
+    "column": "request_key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_reaction_events",
+    "column": "payload_digest",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "past_links",
+    "column": "post_url",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "past_links",
+    "column": "post_thumbnail_url",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "last_error",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_failed_executions",
+    "column": "error",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "app_version",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "os_version",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "platform",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_queries",
+    "column": "description",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "past_links",
+    "column": "tags",
+    "type": "text",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_link_events",
+    "column": "request_key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_link_events",
+    "column": "payload_digest",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_moderation_events",
+    "column": "request_key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_account_events",
+    "column": "request_key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_account_events",
+    "column": "payload_digest",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_moderation_events",
+    "column": "payload_digest",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_account_events",
+    "column": "operation",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_account_events",
+    "column": "previous_username",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_moderation_events",
+    "column": "operation",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_queries",
+    "column": "statement",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "form_elements",
+    "column": "label",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_link_events",
+    "column": "operation",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "kinks",
+    "column": "name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_queries",
+    "column": "data_source",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "scoops",
+    "column": "details",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "message_threads",
+    "column": "name",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "survey_responses",
+    "column": "comment",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_blocked_executions",
+    "column": "queue_name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_schedules",
+    "column": "name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_blocked_executions",
+    "column": "concurrency_key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_queries",
+    "column": "status",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "invite_codes",
+    "column": "code",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_dashboards",
+    "column": "name",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_tracker_events",
+    "column": "request_key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_tracker_events",
+    "column": "payload_digest",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_tracker_events",
+    "column": "operation",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_browser_legacy_sessions",
+    "column": "fingerprint",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "users",
+    "column": "deleted_username",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_queries",
+    "column": "name",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "visit_token",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "site_settings",
+    "column": "key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "site_settings",
+    "column": "value",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "leashes",
+    "column": "flair",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "visitor_token",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_browser_sessions",
+    "column": "token_digest",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "comments",
+    "column": "content",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "user_icons",
+    "column": "icon_name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "notifications",
+    "column": "text",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "ip",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_recurring_tasks",
+    "column": "key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_recurring_tasks",
+    "column": "schedule",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_recurring_tasks",
+    "column": "command",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "surrenders",
+    "column": "current_page",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_recurring_tasks",
+    "column": "class_name",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_recurring_tasks",
+    "column": "arguments",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "surrenders",
+    "column": "token",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_activity_receipts",
+    "column": "request_key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_activity_receipts",
+    "column": "payload_digest",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_activity_receipts",
+    "column": "operation",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "blazer_audits",
+    "column": "statement",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_audits",
+    "column": "data_source",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_automation_events",
+    "column": "request_key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_recurring_tasks",
+    "column": "queue_name",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "section",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "url",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_checks",
+    "column": "state",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_checks",
+    "column": "schedule",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_checks",
+    "column": "emails",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_checks",
+    "column": "slack_channels",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_checks",
+    "column": "check_type",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "blazer_checks",
+    "column": "message",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_recurring_tasks",
+    "column": "description",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "platform",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "surveys",
+    "column": "title",
+    "type": "text",
+    "nullable": "NO"
+  },
+  {
+    "table": "surveys",
+    "column": "description",
+    "type": "text",
+    "nullable": "NO"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "user_agent",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "match_text",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_semaphores",
+    "column": "key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "link_name",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "icon_name",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_scheduled_executions",
+    "column": "queue_name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "profile_domains",
+    "column": "domain",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_newsroom_states",
+    "column": "kind",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "wallpaper_clients",
+    "column": "device_type",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "referrer",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "referring_domain",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "landing_page",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_recurring_executions",
+    "column": "task_key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "browser",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "os",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "device_type",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "profiles",
+    "column": "name",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "active_storage_variant_records",
+    "column": "variation_digest",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "cached_posts",
+    "column": "url",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "action_text_rich_texts",
+    "column": "name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "action_text_rich_texts",
+    "column": "body",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "action_text_rich_texts",
+    "column": "record_type",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "profiles",
+    "column": "content",
+    "type": "text",
+    "nullable": "NO"
+  },
+  {
+    "table": "links",
+    "column": "terms",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "country",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "region",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "blacklist",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "post_url",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "post_thumbnail_url",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "post_description",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "crono_jobs",
+    "column": "job_id",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_attachments",
+    "column": "name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "active_storage_attachments",
+    "column": "record_type",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "links",
+    "column": "last_ping_user_agent",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "crono_jobs",
+    "column": "log",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "theme",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "links",
+    "column": "response_text",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "city",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "emoji_link_decorations",
+    "column": "emoji",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "notifications",
+    "column": "link",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_wallpaper_events",
+    "column": "request_key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "links",
+    "column": "custom_url",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_wallpaper_events",
+    "column": "payload_digest",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "links",
+    "column": "wizard_page",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "survey_response_answers",
+    "column": "value",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "banned_ips",
+    "column": "ip_address",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_pauses",
+    "column": "queue_name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_ready_executions",
+    "column": "queue_name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "users",
+    "column": "email",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "username",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_processes",
+    "column": "kind",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "users",
+    "column": "password_digest",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "reports",
+    "column": "reportable_type",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "utm_source",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "utm_medium",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "reports",
+    "column": "snapshot",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_processes",
+    "column": "hostname",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "messages",
+    "column": "content",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "reports",
+    "column": "reason",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_processes",
+    "column": "metadata",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_jobs",
+    "column": "queue_name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_jobs",
+    "column": "class_name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "solid_queue_jobs",
+    "column": "arguments",
+    "type": "text",
+    "nullable": "YES"
+  },
+  {
+    "table": "users",
+    "column": "details",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_jobs",
+    "column": "active_job_id",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_processes",
+    "column": "name",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "utm_term",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "solid_queue_jobs",
+    "column": "concurrency_key",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "job_key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "kind",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "users",
+    "column": "api_key",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_social_events",
+    "column": "request_key",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_social_events",
+    "column": "payload_digest",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "node_social_events",
+    "column": "operation",
+    "type": "varchar",
+    "nullable": "NO"
+  },
+  {
+    "table": "ahoy_visits",
+    "column": "utm_content",
+    "type": "varchar",
+    "nullable": "YES"
+  },
+  {
+    "table": "node_automation_jobs",
+    "column": "status",
+    "type": "varchar",
+    "nullable": "NO"
+  }
+]

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+export NODE_OPTIONS=--max-old-space-size=96
+npm ci --prefix services/web --no-audit --no-fund
+npm test --prefix services/web
+node --test services/e621-media/test/*.test.js
+python3 -m unittest discover -s test/scripts -p '*_test.py'
+test_compose=(docker compose -p walltaker-node-tests -f services/wallpaper-api/test/docker/compose.yml)
+router_compose=(docker compose -p walltaker-router-tests -f services/e621-media/test/docker/compose.yml)
+cleanup() { "${test_compose[@]}" down --volumes >/dev/null; "${router_compose[@]}" down --volumes >/dev/null; }
+trap cleanup EXIT
+cleanup
+"${test_compose[@]}" up -d database redis
+"${test_compose[@]}" run --rm test
+"${test_compose[@]}" run --rm accounts_test
+
+docker build --memory=192m --memory-swap=224m -f services/database/Dockerfile -t walltaker-migrate .
+docker run --rm --memory=128m --memory-swap=160m --network walltaker-node-tests_default \
+  -e TEST_DATABASE_URL=postgres://postgres:test@database:5432/wallpaper_api_test \
+  walltaker-migrate node --test test/migrations.test.js
+
+"${router_compose[@]}" up -d node_web wallpaper_api cable e621_media router
+"${router_compose[@]}" run --rm test

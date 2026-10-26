@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run after db:prepare inside PostgreSQL as its admin. Never grant this login
+# Run after Node schema setup inside PostgreSQL as its admin. Never grant this login
 # to the wallpaper services: only accounts may read credential hashes.
 set -eu
 : "${ACCOUNTS_DB_USER:?required}"

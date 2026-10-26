@@ -2,7 +2,7 @@ import{parseDocument}from'htmlparser2';
 import render from'dom-serializer';
 import{marked}from'marked';
 import{domainDecision,normalizeDomain}from'./moderation-domains.js';
-import{marker}from'./rendering/html.js';
+import{marker}from'./html.js';
 export function filterProfileDomains(content,rules=[]) {
  content=String(content ?? '');const domains=new Set(),blocked=new Set();
  const blockedUrl=raw=>{

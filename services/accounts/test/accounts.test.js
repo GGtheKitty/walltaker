@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import pg from 'pg';
 import { createAccounts } from '../src/accounts.js';
 import { createPasswords,validatePassword } from '../src/passwords.js';
-import { createServer,accountToken,accountEventToken,startDelivery } from '../src/app.js';
+import { createServer,accountToken } from '../src/app.js';
 
 test('password handling preserves bcrypt and rejects oversized UTF-8 and confirmation mismatches',async()=>{
   const passwords=createPasswords({rounds:4});
@@ -37,24 +37,6 @@ test('HTTP commands require their own private credential and reject malformed an
     assert.equal(calls.length,1);assert.equal(calls[0][0],'authenticate');
   } finally {await new Promise(resolve=>server.close(resolve));}
 });
-test('durable deliveries use the event credential and back off failed events without blocking later events',async()=>{
-  const updates=[],calls=[];let queried=false,resolve;
-  const done=new Promise(value=>{resolve=value;});
-  const pool={query:async(sql,params)=>{
-    if(sql.startsWith('SELECT')){const rows=queried?[]:[{id:'1'},{id:'2'}];queried=true;return {rows};}
-    updates.push([sql,params]);return {rows:[]};
-  }};
-  const stop=startDelivery({pool,secretKeyBase:'test',railsUrl:'http://renderer',interval:10,logger:{warn(){}},fetchImpl:async(url,options)=>{
-    calls.push([url,options]);if(url.endsWith('/2.json'))resolve();return new Response(null,{status:url.endsWith('/1.json')?503:204});
-  }});
-  let deadline;
-  try {await Promise.race([done,new Promise((_,reject)=>{deadline=setTimeout(()=>reject(new Error('Delivery did not finish')),2000);})]);}
-  finally {clearTimeout(deadline);await stop();}
-  assert.equal(calls.length,2);assert.equal(updates.length,1);assert.deepEqual(updates[0][1],['1']);
-  assert.equal(calls[0][1].headers.authorization,`Bearer ${accountEventToken('test')}`);
-  assert.notEqual(accountToken('test'),accountEventToken('test'));
-});
-
 test('accounts and profiles use atomic PostgreSQL transactions and the actual restricted role',{skip:!process.env.TEST_DATABASE_URL},async(t)=>{
   const bootstrap=new pg.Pool({connectionString:process.env.TEST_DATABASE_URL,max:1});
   let admin,pool;const passwords=createPasswords({rounds:4});

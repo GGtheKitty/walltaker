@@ -5,7 +5,6 @@ import {readFileSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import {createTracker} from '../src/tracker.js';
 import {createReactionWriter} from '../src/reactions.js';
-import {startEventDelivery} from '../src/internal.js';
 import {setTimeout} from 'node:timers/promises';
 
 test('tracker and pledges: real permissions, atomic writes, cooldown races and statistics', {skip:!process.env.TEST_DATABASE_URL},async t=>{
@@ -159,13 +158,6 @@ test('tracker and pledges: real permissions, atomic writes, cooldown races and s
    }
    await admin.query('UPDATE users SET deleted_at=NULL WHERE id=2; DELETE FROM surrenders');
    assert.equal(await scalar('SELECT count(*) FROM nuttracker_orgasms'),0);
-  });
-  await t.test('tracker outbox worker uses the protected Rails adapter and backs off without acknowledging on its own',async()=>{
-   await admin.query('UPDATE node_tracker_events SET delivered_at=now()');await cmd('entry-create',{rating:3,caused_by:'Bob'});
-   const calls=[];const stop=startEventDelivery({pool,kind:'tracker',secretKeyBase:'test-secret',railsUrl:'http://web:3000',interval:5,logger:{warn(){}},fetchImpl:async(url,options)=>{calls.push([url,options]);return {ok:false,status:503,arrayBuffer:async()=>new ArrayBuffer(0)};}});
-   try {for(let i=0;i<60&&!calls.length;i++)await setTimeout(5);} finally {await stop();}
-   assert.equal(calls.length,1);assert.match(calls[0][0],/^http:\/\/web:3000\/_internal\/tracker-events\/\d+\.json$/);assert.equal(calls[0][1].method,'POST');assert.match(calls[0][1].headers.authorization,/^Bearer [a-f0-9]{64}$/);
-   const pending=(await admin.query('SELECT * FROM node_tracker_events WHERE delivered_at IS NULL')).rows[0];assert.equal(pending.delivery_attempts,1);
   });
  } finally {await pool?.end();await admin?.end();await bootstrap.end();}
 });

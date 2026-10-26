@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import test from 'node:test';
 import { createApiServer } from '../src/app.js';
-import { createSessionViewer, viewerToken } from '../src/auth.js';
+import { createSessionViewer } from '../src/auth.js';
 import { createReactionWriter } from '../src/reactions.js';
 import { readFileSync } from 'node:fs';
 const fixture = JSON.parse(readFileSync(new URL('./fixtures/rails.json', import.meta.url)));
@@ -88,18 +88,10 @@ test('new endpoints preserve HEAD and preflight and reject unsupported methods',
   assert.equal(writes.length, 0);
 });
 
-test('session viewer forwards only cookies with its own service credential', async () => {
-  let sent;
-  const resolve = createSessionViewer({ secretKeyBase: 'test', railsUrl: 'http://web', fetchImpl: async (url, options) => {
-    sent = { url, options }; return Response.json({ user_id: 123 });
-  } });
-  assert.equal(await resolve({}), null);
-  assert.equal(await resolve({ cookie: 'session', authorization: 'bad', 'user-agent': 'private' }), 123);
-  assert.equal(sent.url, 'http://web/_internal/api-viewer.json');
-  assert.deepEqual(sent.options.headers, { authorization: `Bearer ${viewerToken('test')}`, cookie: 'session' });
-  assert.equal(sent.options.redirect, 'error');
-  const unavailable = createSessionViewer({ secretKeyBase: 'test', railsUrl: 'http://web', fetchImpl: async () => new Response(null, { status: 503 }) });
-  await assert.rejects(unavailable({ cookie: 'session' }));
+test('session viewer resolves native sessions and cannot fall back to HTTP',async()=>{
+ const cookies=[];const viewer=createSessionViewer({resolveSession:async cookie=>{cookies.push(cookie);return {user:{id:123}};}});
+ assert.equal(await viewer({}),null);assert.equal(await viewer({cookie:'opaque-session'}),123);assert.deepEqual(cookies,['opaque-session']);
+ assert.throws(()=>createSessionViewer({}),/required/);
 });
 
 test('invalid reaction types, IDs, keys and long text fail before database access', async () => {

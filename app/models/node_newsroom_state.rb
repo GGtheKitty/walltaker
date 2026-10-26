@@ -1,2 +1,0 @@
-class NodeNewsroomState < ApplicationRecord
-end

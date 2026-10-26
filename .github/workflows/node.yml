@@ -1,0 +1,14 @@
+name: Node services
+on:
+  push:
+    branches: [node, main, 'dev-*']
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: ./scripts/test

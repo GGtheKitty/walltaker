@@ -1,47 +1,26 @@
 services:
-  web:
+  node_web:
     image: node:24-alpine
-    command:
-      - node
-      - -e
-      - |
-        require('node:http').createServer((req, res) => {
-          res.setHeader('content-type', 'application/json');
-          res.end(JSON.stringify({ backend: 'rails', path: req.url, headers: req.headers }));
-        }).listen(3000, '0.0.0.0');
-        process.on('SIGTERM', () => process.exit(0));
-
+    command: [node, -e, "require('node:http').createServer((req,res)=>{res.setHeader('content-type','application/json');res.end(JSON.stringify({backend:'node-web',path:req.url,headers:req.headers}));}).listen(3004,'0.0.0.0')"]
   wallpaper_api:
     image: node:24-alpine
-    command:
-      - node
-      - -e
-      - |
-        require('node:http').createServer((req, res) => {
-          res.setHeader('content-type', 'application/json');
-          res.end(JSON.stringify({ backend: 'node', path: req.url, headers: req.headers }));
-        }).listen(3002, '0.0.0.0');
-        process.on('SIGTERM', () => process.exit(0));
-
+    command: [node, -e, "require('node:http').createServer((req,res)=>{res.setHeader('content-type','application/json');res.end(JSON.stringify({backend:'node',path:req.url,headers:req.headers}));}).listen(3002,'0.0.0.0')"]
+  cable:
+    image: node:24-alpine
+    command: [node, -e, "require('node:http').createServer((req,res)=>res.end('gateway')).listen(8080,'0.0.0.0')"]
   e621_media:
     build: ../..
     environment:
       SECRET_KEY_BASE: node-proxy-test-secret
       E621_USER_AGENT: Walltaker-test (by test on e621)
-
   router:
     image: nginx:stable-alpine
     volumes:
       - ../../../router/default.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - web
-      - e621_media
-      - wallpaper_api
-
+    depends_on: [node_web,wallpaper_api,e621_media,cable]
   test:
     image: node:24-alpine
-    command: ["node", "--test", "/tests/router.test.js"]
+    command: [node, --test, /tests/router.test.js]
     volumes:
       - ./router.test.js:/tests/router.test.js:ro
-    depends_on:
-      - router
+    depends_on: [router]

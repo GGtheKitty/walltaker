@@ -6,7 +6,6 @@ import { createRepository } from '../src/repository.js';
 import { createRedisStore } from '../src/redis.js';
 import { createWallpaperWriter } from '../src/updates.js';
 import { createHistoryReader } from '../src/history.js';
-import { startEventDelivery } from '../src/internal.js';
 import { setTimeout } from 'node:timers/promises';
 
 test('real PostgreSQL filtering, read permissions, Redis presence and rate limits', {
@@ -180,29 +179,6 @@ test('real PostgreSQL filtering, read permissions, Redis presence and rate limit
       await assert.rejects(writer.query('SELECT email FROM users'), { code: '42501' });
       await assert.rejects(writer.query('DELETE FROM users'), { code: '42501' });
       await assert.rejects(writer.query('UPDATE node_wallpaper_events SET delivered_at=now()'), { code: '42501' });
-    });
-    await t.test('failed notifications back off without blocking later events', async () => {
-      await admin.query('UPDATE node_wallpaper_events SET delivered_at=now()');
-      const failed = await write(command('delivery-fails'));
-      const succeeds = await write(command('delivery-succeeds'));
-      const stop = startEventDelivery({ pool: writer, secretKeyBase: 'test', railsUrl: 'http://web', interval: 20,
-        logger: { warn() {} }, fetchImpl: async (url, options) => {
-          assert.match(options.headers.authorization, /^Bearer [0-9a-f]{64}$/);
-          if (url.includes(`/wallpaper-events/${failed.event_id}.json`)) return new Response(null, { status: 503 });
-          await admin.query('UPDATE node_wallpaper_events SET delivered_at=now() WHERE id=$1', [succeeds.event_id]);
-          return new Response(null, { status: 204 });
-        } });
-      try {
-        for (let i=0; i<100; i++) {
-          if ((await admin.query('SELECT delivered_at FROM node_wallpaper_events WHERE id=$1', [succeeds.event_id])).rows[0].delivered_at) break;
-          await setTimeout(20);
-        }
-      } finally { await stop(); }
-      const rows = (await admin.query('SELECT * FROM node_wallpaper_events WHERE id=ANY($1::bigint[]) ORDER BY id', [[failed.event_id,succeeds.event_id]])).rows;
-      assert.equal(rows[0].delivered_at, null);
-      assert.ok(rows[0].delivery_attempts >= 1);
-      assert.ok(rows[0].available_at > rows[0].created_at);
-      assert.ok(rows[1].delivered_at);
     });
   } finally {
     await Promise.all([admin.end(), reader?.end(), writer?.end(), redis.close()]);

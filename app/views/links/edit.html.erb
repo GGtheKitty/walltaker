@@ -1,9 +1,0 @@
-<% content_for(:html_title) { "Edit Link #{@link.id}" } %>
-
-<div data-turbo-prefetch="false" class="task-tools">
-  <div class="left">
-    <%= link_to "Back to link", @link %>
-  </div>
-</div>
-
-<%= render "form", link: @link %>
