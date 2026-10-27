@@ -3,8 +3,8 @@ import {readForm} from './forms.js';
 import {HttpError} from './errors.js';
 import {nativeAssets,assetUrl} from './native-assets.js';
 import {createTokenIssuer} from '../../e621-media/src/token.js';
-import {html,empty,icon,userPath,button,safeUrl} from './templates/html.js';
-import {card,details,comment} from './templates/wallpaper.js';
+import {html,empty,userPath,safeUrl} from './templates/html.js';
+import {card,details,comment,viewingUsers} from './templates/wallpaper.js';
 import {message,newsDesk,newsBackdrop} from './templates/social.js';
 import {headerNotifications,surrenderBanner} from './templates/layout.js';
 
@@ -23,7 +23,7 @@ export function createBroadcastRenderer(config){
       case 'links/details':content=details(view,find('links',locals.link));break;
       case 'links/embed_image':{const l=find('links',locals.link);content=l.post_thumbnail_url?html`<img src="${view.media(l.post_thumbnail_url)}" alt="Current wallpaper">`:html`No image set! :(`;break;}
       case 'links/embed_text':{const l=find('links',locals.link),past=(graph.past_links || []).filter(p=>String(p.link_id)===String(l.id)).sort((a,b)=>Number(b.id)-Number(a.id))[0];content=html`Set by: ${users.get(String(l.set_by_id))?.username || 'anon'} ${past?html`<time datetime="${past.created_at}">${past.created_at}</time>`:empty}`;break;}
-      case 'links/viewing_users':content=html`<turbo-frame id="link_viewing_users_${locals.link}">${(graph.viewer_users || []).filter(u=>String(u.viewing_link_id)===String(locals.link)&&!u.deleted_at).map(u=>html`<span>${icon('person')} <a href="${userPath(u)}" target="_top" data-controller="user-reference">${u.username}</a></span>`)}</turbo-frame>`;break;
+      case 'links/viewing_users':content=viewingUsers(view,{id:locals.link});break;
       case 'comments/comment':content=comment(view,find('comments',locals.comment));break;
       case 'message_thread/single_message':content=message(view,find('messages',locals.message));break;
       case 'application/notifications':content=headerNotifications({...view,notifications:(locals.notifications || []).map(id=>find('notifications',id))});break;

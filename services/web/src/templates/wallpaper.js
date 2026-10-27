@@ -138,10 +138,13 @@ export function setup(v,l) {
     </div>
   </div>`;
 }
+export function viewingUsers(v,l) {
+  const viewers=(v.graph.viewer_users || []).filter(user=>String(user.viewing_link_id)===String(l.id)&&!user.deleted_at);
+  return html`<turbo-frame id="link_viewing_users_${l.id}">${viewers.length>1?html`<div class="accent-block"><div class="accent-block__charm">${icon('eye')} Who's here right now</div><div class="viewing-users__users">${viewers.map(user=>html`<a href="${userPath(user)}" target="_top" data-controller="user-reference">${user.username}</a>`)}</div></div>`:empty}</turbo-frame>`;
+}
 export function show(v) {
   const l=v.link,u=owner(v,l),isOwn=own(v,l),masterEdge=(v.graph.leashes || []).find(edge=>String(edge.pet_id)===String(l.user_id)),master=v.users.get(String(masterEdge?.master_id));
   const restricted=ability(v,l,'is_master_only')&&String(masterEdge?.master_id)!==String(v.user?.id),packProperty=ability(v,l,'is_master_only')&&master;
-  const viewers=(v.graph.viewer_users || []).filter(user=>String(user.viewing_link_id)===String(l.id));
   const blacklistCount=(l.blacklist || '').split(/\s+/).filter(Boolean).length;
   const forkCount=(v.graph.fork_counts || []).find(f=>String(f.link_id)===String(l.id))?.count || 0;
   return html`
@@ -214,7 +217,7 @@ export function show(v) {
           <p>${ability(v,l,'is_master_only')?html`Only bots and you, the owner of ${u?.username}, will be able to set wallpapers.`:html`Anyone can set wallpapers for this link.`}</p>
         </div><div class="abilities__ability__controls">${button(ability(v,l,'is_master_only')?'Make Public':'Make Owner Only',linkPath(l)+'/abilities/is_master_only',v.csrf,{className:ability(v,l,'is_master_only')?'enabled':'disabled'})}</div></div>
       </div>`:empty}
-    ${v.stream('link_viewing_users_'+l.id)}<turbo-frame id="link_viewing_users_${l.id}">${viewers.length>1?html`<div class="accent-block"><div class="accent-block__charm">${icon('eye')} Who's here right now</div><div class="viewing-users__users">${viewers.map(user=>html`<a href="${userPath(user)}" target="_top" data-controller="user-reference">${user.username}</a>`)}</div></div>`:empty}</turbo-frame>
+    ${v.stream('link_viewing_users_'+l.id)}${viewingUsers(v,l)}
     ${forkCount>0?html`
       <div class="accent-block accent-block__charm--accordion" data-controller="accordion">
         <div class="accent-block__charm accent-block__charm--accordion-header" data-action="click->accordion#toggle" tabindex="0">${icon('git-branch')} ${plural(forkCount,'fork')} will also be changed ${icon('chevron-down','accent-block__charm--accordion-header__indicator')}</div>

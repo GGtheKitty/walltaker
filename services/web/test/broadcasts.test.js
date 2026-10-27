@@ -4,15 +4,35 @@ import {createHmac} from 'node:crypto';
 import http from 'node:http';
 import {createBroadcastRenderer} from '../src/broadcasts.js';
 import {createApp} from '../src/app.js';
+import {show} from '../src/templates/wallpaper.js';
+import {empty} from '../src/templates/html.js';
 const config={baseUrl:'https://example.test',secretKeyBase:'broadcast-tests',backendUrl:'http://localhost'};
 const graph={users:[{id:1,username:'Alice'},{id:2,username:'Bob',viewing_link_id:4}],links:[{id:4,user_id:1,set_by_id:2,never_expires:true,blacklist:'',terms:'<script>unsafe</script>',post_thumbnail_url:'https://static1.e621.net/data/ab/cd/01234567890123456789012345678901.jpg'}],past_links:[{id:5,link_id:4,user_id:1,created_at:new Date().toISOString(),post_thumbnail_url:'https://example.test/image.png'}],viewer_users:[{id:2,username:'Bob',viewing_link_id:4}],comments:[{id:8,user_id:2,content:'<script>comment</script>'}],messages:[{id:9,from_user_id:2,content:'<script>message</script>',created_at:new Date().toISOString()}],notifications:[{id:10,user_id:1,text:'<script>notification</script>',created_at:new Date().toISOString()}],surrenders:[{id:11,user_id:1,controller_user_id:2}],revoked_surrenders:['11']};
 test('every broadcast uses native fragments, escaped content and current native assets without an ERB manifest',async()=>{
   const render=createBroadcastRenderer(config);
   for(const [template,locals,expected] of [['links/link',{link:4},'id="link_4"'],['links/details',{link:4},'id="link_details_4"'],['links/embed_image',{link:4},'/e621-media?token='],['links/embed_text',{link:4},'Set by: Bob'],['links/viewing_users',{link:4},'Bob'],['comments/comment',{comment:8},'id="comment_8"'],['message_thread/single_message',{message:9},'id="message_9"'],['application/notifications',{notifications:[10]},'id="header_notifications"'],['layouts/surrender',{surrender:11,revoked:true},'no longer has access'],['dashboard/recent_posts',{recent_posts:[5]},'id="recent_posts"'],['dashboard/users_viewing_links',{users_viewing_links:[2]},"Who's Browsing"],['application/chyron',{message:'<script>news</script>'},'WTN'],['news_room/desk',{news_entry:{message:'hello',lizard_image_url:'mascot/news/TaylorDeskOpen.png'}},'/node-assets/images/mascot/news/'],['news_room/backdrop',{news_entry:{image_url:'https://example.test/image.png'}},'news-room__feature']]){
-    const output=await render({template,graph,locals});assert.ok(output.includes(expected),template);assert.doesNotMatch(output,/<script>|<%|\/assets\//,template);
+    const output=await render({template,graph:template==='links/viewing_users'?{...graph,viewer_users:[...graph.viewer_users,{id:1,username:'Alice',viewing_link_id:4}]}:graph,locals});assert.ok(output.includes(expected),template);assert.doesNotMatch(output,/<script>|<%|\/assets\//,template);
     if(template==='links/link')assert.equal(output.match(/id="link_4"/g).length,1);
   }
   await assert.rejects(render({template:'arbitrary-file',graph}),{status:404});
+});
+test('live link viewers preserve the page panel, visibility threshold and profile links',async()=>{
+  const render=createBroadcastRenderer(config);
+  const viewers=[{id:1,username:'Alice',viewing_link_id:'4'},{id:2,username:'Bob & friends',viewing_link_id:4},{id:3,username:'Charlie',viewing_link_id:4}];
+  for(const count of [0,1,2,3]) {
+    const currentGraph={...graph,viewer_users:[...viewers.slice(0,count),{id:9,username:'Elsewhere',viewing_link_id:5},{id:10,username:'Deleted',viewing_link_id:4,deleted_at:'2026-01-01'}]};
+    const page=String(show({graph:currentGraph,link:graph.links[0],users:new Map(graph.users.map(u=>[String(u.id),u])),stream:()=>empty,globalStream:()=>'',media:source=>source,asset:name=>'/node-assets/'+name,user:null,flash:{}}));
+    const output=await render({template:'links/viewing_users',graph:currentGraph,locals:{link:'4'}});
+    assert.equal(output,/<turbo-frame id="link_viewing_users_4">[\s\S]*?<\/turbo-frame>/.exec(page)?.[0]);
+    assert.doesNotMatch(output,/Elsewhere|Deleted/);
+    if(count<2)assert.equal(output,'<turbo-frame id="link_viewing_users_4"></turbo-frame>');
+    else {
+      assert.match(output,/class="accent-block"/);
+      assert.match(output,/class="accent-block__charm"[\s\S]*Who's here right now/);
+      assert.match(output,/class="viewing-users__users"/);
+      assert.match(output,/href="\/users\/Bob%20%26%20friends" target="_top" data-controller="user-reference">Bob &amp; friends<\/a>/);
+    }
+  }
 });
 test('broadcast HTTP endpoint rejects public callers and never resolves a browser session',async t=>{
   const server=http.createServer(createApp(config,{backend:()=>assert.fail('Broadcast attempted a browser/backend call'),logger:{error(){}}}));
